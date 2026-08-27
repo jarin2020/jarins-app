@@ -1,0 +1,15 @@
+node_modules
+.next
+.turbo
+.pnpm-store
+coverage
+playwright-report
+test-results
+.env
+.env.local
+.open-next
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.DS_Store
+*.tsbuildinfo

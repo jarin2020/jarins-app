@@ -1,0 +1,2 @@
+-- Development seed intentionally contains fictional data only.
+-- Auth-bound records are created by scripts after a local test user signs up.

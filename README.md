@@ -25,7 +25,7 @@ pnpm build:cloudflare
 
 ## Cloudflare Workers deployment
 
-The app uses Cloudflare's OpenNext adapter, Workers Static Assets, generated binding types, and Workers observability. `apps/web/wrangler.jsonc` serves `jarins.com`; a separate minimal Worker permanently redirects `www.jarins.com` while preserving paths and query strings.
+The app uses Cloudflare's OpenNext adapter, Workers Static Assets, generated binding types, and Workers observability. `apps/web/wrangler.jsonc` routes the existing proxied `jarins.com` DNS through the app Worker; a separate minimal Worker permanently redirects `www.jarins.com` while preserving paths and query strings.
 
 ```bash
 pnpm cf-typegen

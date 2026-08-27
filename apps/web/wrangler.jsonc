@@ -9,7 +9,7 @@
     "binding": "ASSETS"
   },
   "routes": [
-    { "pattern": "jarins.com", "custom_domain": true }
+    { "pattern": "jarins.com/*", "zone_name": "jarins.com" }
   ],
   "observability": {
     "enabled": true,

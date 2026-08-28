@@ -44,3 +44,38 @@ h1, h2, h3, p { margin-top: 0; } h1 { font-size: clamp(2.1rem, 4vw, 3.6rem); lin
 @media (prefers-reduced-motion: reduce) { *, *:before, *:after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 @media (max-width: 760px) { .inbox-row > div:last-child { flex-wrap: wrap; }.records-section { padding: 17px; }.records-heading { align-items: stretch; flex-direction: column; }.record-filters { align-items: stretch; flex-direction: column; }.record-filters label, .record-filters select { width: 100%; }.record-row { grid-template-columns: auto 1fr; }.record-actions { grid-column: 2; }.form-grid { grid-template-columns: 1fr; }.reset-actions { align-items: center; gap: 8px; }.reset-actions .save-state { display: none; } }
 @media (max-width: 760px) { .login-layout { min-height: 0; grid-template-columns: 1fr; }.login-message { min-height: 310px; padding: 28px 22px; }.login-message .brand { margin-bottom: 55px; }.login-card { padding: 30px 22px; } }
+
+/* Visual consistency and readability pass */
+.page-intro h1 { text-transform: none; }
+.outcome-grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.snapshot-main p, .soft-notice, .outcome-card p, .timeline-item p, .check-list small, .bridge-action p, .reset-banner p, .module-card p, .empty-state-inline p, .checkin-panel p, .career-trail p, .privacy-notice p, .record-copy > p, .settings-panel p { font-size: 12px; }
+.subnav a { min-height: 36px; display: inline-flex; align-items: center; font-size: 11px; }
+.stat-card span { font-size: 11px; }
+.calendar-grid span { font-size: 10px; }
+.calendar-grid small { padding: 5px 6px; font-size: 10px; line-height: 1.25; }
+.record-kind { font-size: 9.5px; }
+.record-meta { font-size: 10.5px; }
+.record-progress small { font-size: 9.5px; }
+.records-heading p { font-size: 11px; }
+.records-empty p, .today-empty p { font-size: 11.5px; }
+.chips button { min-height: 34px; font-size: 11px; }
+.settings-layout { align-items: start; }
+.settings-layout > nav, .settings-panel { width: 100%; }
+.settings-panel { min-height: 0; }
+.settings-layout nav a { min-height: 40px; font-size: 12px; }
+.settings-actions { justify-content: flex-start; }
+.settings-actions .danger { margin-left: auto; }
+
+@media (max-width: 760px) {
+  .stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stat-card { padding: 13px 10px; }
+  .stat-card strong { font-size: 22px; }
+  .stat-card span { font-size: 10px; }
+  .mobile-nav a, .mobile-nav button { font-size: 10px; }
+  .page-intro > .button { flex: 0 0 42px; }
+  .page-intro > .button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .subnav a { min-height: 40px; }
+  .chips button { min-height: 42px; padding-inline: 13px; }
+  .record-check { width: 40px; height: 40px; }
+  .settings-actions .danger { margin-left: 0; }
+}

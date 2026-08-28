@@ -17,18 +17,24 @@ const subsectionKinds: Partial<Record<LifeRecord["module"], Record<string, strin
   future: { goals: ["This month", "3 months", "12 months", "3 years", "Someday"], projects: ["Project"] },
 };
 
+export function recordsInSection(records: LifeRecord[], module: LifeRecord["module"], subsection?: string, today = new Date().toISOString().slice(0, 10)) {
+  const allowedKinds = subsection ? subsectionKinds[module]?.[subsection] : undefined;
+  return records.filter((record) => record.module === module)
+    .filter((record) => !allowedKinds || allowedKinds.includes(record.kind))
+    .filter((record) => subsection !== "upcoming" && subsection !== "expiring" || Boolean(record.date && record.date >= today && record.status !== "done"));
+}
+
 export function RecordsWorkspace({ module, subsection }: { module: LifeRecord["module"]; subsection?: string }) {
   const { records, add, update, remove } = useLifeRecords();
   const today = new Date().toISOString().slice(0, 10);
   const allowedKinds = subsection ? subsectionKinds[module]?.[subsection] : undefined;
   const defaultKind = allowedKinds?.[0] ?? kindOptions[module][0];
+  const workspaceLabel = subsection ? subsection.replaceAll("-", " ") : moduleLabels[module];
   const [query, setQuery] = useState(""); const [statusFilter, setStatusFilter] = useState<"all" | LifeRecord["status"]>("all");
-  const items = useMemo(() => records.filter((record) => record.module === module)
-    .filter((record) => !allowedKinds || allowedKinds.includes(record.kind))
-    .filter((record) => subsection !== "upcoming" && subsection !== "expiring" || Boolean(record.date && record.date >= today && record.status !== "done"))
+  const items = useMemo(() => recordsInSection(records, module, subsection, today)
     .filter((record) => statusFilter === "all" || record.status === statusFilter)
     .filter((record) => !query.trim() || `${record.title} ${record.detail} ${record.kind}`.toLowerCase().includes(query.trim().toLowerCase()))
-    .sort((a, b) => (a.date ?? "9999").localeCompare(b.date ?? "9999")), [records, module, allowedKinds, subsection, today, statusFilter, query]);
+    .sort((a, b) => (a.date ?? "9999").localeCompare(b.date ?? "9999")), [records, module, subsection, today, statusFilter, query]);
   const [open, setOpen] = useState(false); const [editing, setEditing] = useState<string>(); const [draft, setDraft] = useState<Draft>(() => blank(defaultKind));
   const counts = useMemo(() => ({ total: items.length, done: items.filter((item) => item.status === "done").length, upcoming: items.filter((item) => item.date && item.date >= new Date().toISOString().slice(0,10) && item.status !== "done").length }), [items]);
   const begin = (record?: LifeRecord) => { setEditing(record?.id); setDraft(record ? { kind: record.kind, title: record.title, detail: record.detail, date: record.date ?? "", status: record.status, amount: record.amount?.toString() ?? "", progress: record.progress?.toString() ?? "", essential: record.essential ?? false } : blank(defaultKind)); setOpen(true); };
@@ -36,7 +42,7 @@ export function RecordsWorkspace({ module, subsection }: { module: LifeRecord["m
   const formatDate = (date?: string) => date ? new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${date}T12:00:00`)) : "No date";
 
   return <section className="records-section">
-    <div className="records-heading"><div><span className="kicker">Your information</span><h2>{subsection ? subsection.replaceAll("-", " ") : moduleLabels[module]} workspace</h2><p>{counts.total} shown · {counts.done} completed · {counts.upcoming} upcoming</p></div><button className="button primary" onClick={() => begin()}><Plus size={16}/> Add {defaultKind.toLowerCase()}</button></div>
+    <div className="records-heading"><div><span className="kicker">Your information</span><h2>{workspaceLabel[0]?.toUpperCase()}{workspaceLabel.slice(1)} workspace</h2><p>{counts.total} shown · {counts.done} completed · {counts.upcoming} upcoming</p></div><button className="button primary" onClick={() => begin()}><Plus size={16}/> Add {defaultKind.toLowerCase()}</button></div>
     <div className="record-filters"><label><Search size={15}/><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter this workspace…" aria-label="Filter workspace" /></label><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} aria-label="Filter by status"><option value="all">All statuses</option><option value="open">Open</option><option value="in-progress">In progress</option><option value="done">Done</option><option value="paused">Paused</option></select></div>
     <div className="records-list">{items.length ? items.map((record) => <article className={`record-row ${record.status === "done" ? "complete" : ""}`} key={record.id}>
       <button className="record-check" onClick={() => update(record.id, { status: record.status === "done" ? "open" : "done", progress: record.status === "done" ? record.progress : 100 })} aria-label={`${record.status === "done" ? "Reopen" : "Complete"} ${record.title}`}>{record.status === "done" ? <Check size={15}/> : <Circle size={15}/>}</button>

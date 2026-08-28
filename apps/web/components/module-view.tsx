@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, Check, ChevronRight, Download, FileUp, Plus, Search, ShieldCheck, Trash2, Upload } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, Download, FileUp, Search, ShieldCheck, TimerReset, Trash2, Upload } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { findModule } from "@/lib/modules";
 import { moduleData } from "@/lib/sample-data";
 import { type CapturedItem, readInbox } from "./quick-capture";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { moduleLabels, readLifeRecords, replaceLifeRecords, type LifeRecord, useLifeRecords } from "@/lib/jarins-store";
-import { RecordsWorkspace } from "./records-workspace";
+import { RecordsWorkspace, recordsInSection } from "./records-workspace";
 import { PREFERENCES_KEY, usePreferences } from "@/lib/preferences-store";
 
 export function ModuleView({ slug }: { slug: string[] }) {
@@ -25,7 +25,8 @@ export function ModuleView({ slug }: { slug: string[] }) {
 }
 
 function PageIntro({ eyebrow, title, description, action, onAction }: { eyebrow: string; title: string; description: string; action?: string; onAction?: () => void }) {
-  return <header className="page-intro"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div>{action && <button className="button dark" onClick={onAction}><Plus size={17} /> {action}</button>}</header>;
+  const displayTitle = title.replaceAll("-", " ").split(" ").map((word) => `${word[0]?.toUpperCase() ?? ""}${word.slice(1)}`).join(" ");
+  return <header className="page-intro"><div><span className="eyebrow">{eyebrow}</span><h1>{displayTitle}</h1><p>{description}</p></div>{action && <button className="button dark" onClick={onAction} aria-label={action} title={action}><TimerReset size={17} /> <span>{action}</span></button>}</header>;
 }
 
 function LifeModule({ root, subsection }: { root: string; subsection?: string }) {
@@ -33,10 +34,10 @@ function LifeModule({ root, subsection }: { root: string; subsection?: string })
   const data = moduleData[root as keyof typeof moduleData];
   const { records } = useLifeRecords();
   if (!data) return <Empty title={currentModule.label} />;
-  const moduleRecords = records.filter((record) => record.module === root);
-  const openCount = moduleRecords.filter((record) => record.status !== "done").length;
-  const doneCount = moduleRecords.filter((record) => record.status === "done").length;
-  const upcomingCount = moduleRecords.filter((record) => record.date && record.date >= new Date().toISOString().slice(0,10) && record.status !== "done").length;
+  const sectionRecords = recordsInSection(records, root as LifeRecord["module"], subsection);
+  const openCount = sectionRecords.filter((record) => record.status !== "done").length;
+  const doneCount = sectionRecords.filter((record) => record.status === "done").length;
+  const upcomingCount = sectionRecords.filter((record) => record.date && record.date >= new Date().toISOString().slice(0,10) && record.status !== "done").length;
   const subnav: Record<string, string[]> = {
     family: ["Overview", "Calendar", "Routines", "Clothing", "Documents", "Memories"],
     home: ["Overview", "Meals", "Groceries", "Routines", "Maintenance"],
@@ -50,7 +51,7 @@ function LifeModule({ root, subsection }: { root: string; subsection?: string })
   return <>
     <PageIntro eyebrow={currentModule.eyebrow} title={subsection ? subsection.replaceAll("-", " ") : currentModule.label} description={currentModule.description} />
     <nav className="subnav" aria-label={`${currentModule.label} sections`}>{subnav[root]?.map((item) => { const part = item.toLowerCase().replaceAll(" ", "-"); const href = part === "overview" ? `/${root}` : `/${root}/${part}`; return <Link key={item} href={href} className={(subsection ?? "overview") === part ? "active" : ""}>{item}</Link>; })}</nav>
-    <div className="stat-grid"><div className="stat-card"><strong>{moduleRecords.length}</strong><span>Total items</span></div><div className="stat-card"><strong>{openCount}</strong><span>Need attention</span></div><div className="stat-card"><strong>{upcomingCount}</strong><span>Upcoming · {doneCount} done</span></div></div>
+    <div className="stat-grid"><div className="stat-card"><strong>{sectionRecords.length}</strong><span>Total items</span></div><div className="stat-card"><strong>{openCount}</strong><span>Need attention</span></div><div className="stat-card"><strong>{upcomingCount}</strong><span>Upcoming · {doneCount} done</span></div></div>
     {root === "self" && <CheckinPanel />}
     {root === "career" && <CareerTrail />}
     {root === "documents" && <PrivacyNotice />}

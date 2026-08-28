@@ -6,6 +6,7 @@ import { Bell, Command, Menu, Plus, Search, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { primaryModules, utilityModules } from "@/lib/modules";
 import { QuickCapture } from "./quick-capture";
+import { usePreferences } from "@/lib/preferences-store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,6 +14,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [captureOpen, setCaptureOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const { preferences } = usePreferences();
+  const initials = preferences.name.split(/\s+/).filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "J";
 
   const openCapture = useCallback(() => setCaptureOpen(true), []);
   useEffect(() => {
@@ -49,7 +52,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <nav className="nav-list nav-utility">
           {utilityModules.slice(0, 2).map(({ href, icon: Icon, label }) => <Link key={href} href={href} onClick={() => setMobileOpen(false)} className={pathname.startsWith(href) ? "active" : ""}><Icon size={18} /><span>{label}</span></Link>)}
         </nav>
-        <div className="family-mini"><div className="avatar-stack"><span>FJ</span><span>A</span><span>B</span></div><strong>Your family space</strong><small>3 profiles · private by design</small></div>
+        <div className="family-mini"><div className="avatar-stack"><span>{initials}</span><span>A</span><span>B</span></div><strong>{preferences.household}</strong><small>Local-first · private by design</small></div>
       </aside>
 
       {mobileOpen && <button className="nav-scrim" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
@@ -58,7 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="topbar">
           <button className="icon-button mobile-only" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={20} /></button>
           <form className="search-box" onSubmit={navigateSearch} role="search"><Search size={17} /><input id="global-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search tasks, people, documents…" aria-label="Search jarins" /><kbd>⌘ /</kbd></form>
-          <div className="top-actions"><Link href="/calendar" className="icon-button" aria-label="Upcoming reminders"><Bell size={18} /></Link><Link href="/settings/profile" className="profile-chip"><span>FJ</span><b>Faria</b></Link></div>
+          <div className="top-actions"><Link href="/calendar" className="icon-button" aria-label="Upcoming reminders"><Bell size={18} /></Link><Link href="/settings/profile" className="profile-chip"><span>{initials}</span><b>{preferences.name}</b></Link></div>
         </header>
         <div className="page-content">{children}</div>
       </main>

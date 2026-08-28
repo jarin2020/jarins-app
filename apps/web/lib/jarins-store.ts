@@ -64,6 +64,11 @@ function writeLifeRecords(records: LifeRecord[]) {
   window.dispatchEvent(new Event(EVENT_NAME));
 }
 
+export function replaceLifeRecords(records: LifeRecord[]) {
+  if (!Array.isArray(records) || records.some((record) => !record?.id || !record?.module || !record?.title)) throw new Error("This backup does not contain valid life records.");
+  writeLifeRecords(records);
+}
+
 export function useLifeRecords() {
   const [records, setRecords] = useState<LifeRecord[]>([]);
   useEffect(() => {
@@ -87,12 +92,12 @@ export const moduleLabels: Record<LifeRecord["module"], string> = {
 };
 
 export const kindOptions: Record<LifeRecord["module"], string[]> = {
-  family: ["Event", "Routine", "Child note", "Clothing", "Packing list", "Memory"],
-  home: ["Meal", "Grocery", "Routine", "Maintenance", "Contract"],
-  self: ["Check-in", "Protected time", "Routine", "Reflection"],
-  learning: ["Program", "Study session", "Certificate", "Evidence"],
-  career: ["Transition", "Timeline", "Evidence", "Portfolio", "Job readiness"],
-  money: ["Monthly cost", "Annual cost", "One-off cost", "Subscription", "Savings goal", "Education cost"],
-  documents: ["Identity", "Family", "Certificate", "Insurance", "Finance", "Home", "Medical admin", "Other"],
-  future: ["This month", "3 months", "12 months", "3 years", "Someday", "Project"],
+  family: ["Event", "Routine", "Child note", "Clothing", "Packing list", "Memory", "Task"],
+  home: ["Meal", "Grocery", "Routine", "Maintenance", "Contract", "Task"],
+  self: ["Check-in", "Protected time", "Routine", "Reflection", "Task"],
+  learning: ["Program", "Study session", "Certificate", "Evidence", "Task"],
+  career: ["Transition", "Timeline", "Evidence", "Portfolio", "Job readiness", "Task"],
+  money: ["Monthly cost", "Annual cost", "One-off cost", "Subscription", "Savings goal", "Education cost", "Task"],
+  documents: ["Identity", "Family", "Certificate", "Insurance", "Finance", "Home", "Medical admin", "Other", "Task"],
+  future: ["This month", "3 months", "12 months", "3 years", "Someday", "Project", "Task"],
 };

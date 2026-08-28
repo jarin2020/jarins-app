@@ -12,7 +12,7 @@ export const viewport: Viewport = { themeColor: "#315f4b", colorScheme: "light" 
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>{children}</body>
     </html>
   );

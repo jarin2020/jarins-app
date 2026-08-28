@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="topbar">
           <button className="icon-button mobile-only" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={20} /></button>
           <form className="search-box" onSubmit={navigateSearch} role="search"><Search size={17} /><input id="global-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search tasks, people, documents…" aria-label="Search jarins" /><kbd>⌘ /</kbd></form>
-          <div className="top-actions"><button className="icon-button" aria-label="Notifications"><Bell size={18} /></button><Link href="/settings/profile" className="profile-chip"><span>FJ</span><b>Faria</b></Link></div>
+          <div className="top-actions"><Link href="/calendar" className="icon-button" aria-label="Upcoming reminders"><Bell size={18} /></Link><Link href="/settings/profile" className="profile-chip"><span>FJ</span><b>Faria</b></Link></div>
         </header>
         <div className="page-content">{children}</div>
       </main>

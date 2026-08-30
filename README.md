@@ -2,6 +2,9 @@
 
 A calm, private life operating system for family, home, self, learning, career, money, documents and long-term direction.
 
+Picking this up cold? Start with [HANDOFF.md](HANDOFF.md) — current state,
+what is verified, what is not, and the ordered next steps.
+
 ## Run locally
 
 Requirements: Node 22+ and pnpm 11+ (`packageManager` pins the exact version). A local PostgreSQL is needed only for `pnpm test:rls`.

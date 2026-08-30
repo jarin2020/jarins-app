@@ -1,16 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { preferencesSchema } from "./records/schema";
 
-export type Preferences = {
-  name: string;
-  timezone: string;
-  locale: string;
-  household: string;
-  reminders: boolean;
-  minimalAnalytics: boolean;
-  aiFeatures: boolean;
-};
+export type { Preferences } from "./records/schema";
+import type { Preferences } from "./records/schema";
 
 export const preferenceDefaults: Preferences = {
   name: "Faria",
@@ -28,7 +22,12 @@ const EVENT_NAME = "jarins-preferences-changed";
 export function readPreferences(): Preferences {
   if (typeof window === "undefined") return preferenceDefaults;
   try {
-    return { ...preferenceDefaults, ...JSON.parse(localStorage.getItem(PREFERENCES_KEY) ?? "{}") };
+    const stored = preferencesSchema
+      .partial()
+      .safeParse(JSON.parse(localStorage.getItem(PREFERENCES_KEY) ?? "{}"));
+    return stored.success
+      ? { ...preferenceDefaults, ...stored.data }
+      : preferenceDefaults;
   } catch {
     return preferenceDefaults;
   }
@@ -46,7 +45,10 @@ export function usePreferences() {
     queueMicrotask(load);
     window.addEventListener(EVENT_NAME, load);
     window.addEventListener("storage", load);
-    return () => { window.removeEventListener(EVENT_NAME, load); window.removeEventListener("storage", load); };
+    return () => {
+      window.removeEventListener(EVENT_NAME, load);
+      window.removeEventListener("storage", load);
+    };
   }, []);
   const save = useCallback((next: Preferences) => writePreferences(next), []);
   return { preferences, save };

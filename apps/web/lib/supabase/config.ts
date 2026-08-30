@@ -1,0 +1,24 @@
+/**
+ * Jarins runs in two modes.
+ *
+ * Without Supabase credentials it is a local-only demo: every screen works,
+ * data lives in this browser, and no route is guarded. With credentials it is
+ * a real multi-device app behind authentication.
+ *
+ * `NEXT_PUBLIC_*` values are inlined at build time, so this resolves the same
+ * way in the browser, on the server and inside the Cloudflare Worker.
+ */
+export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+/** Narrows the two values for call sites that have already checked the flag. */
+export function requireSupabaseConfig() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+    );
+  }
+  return { url: supabaseUrl, anonKey: supabaseAnonKey };
+}

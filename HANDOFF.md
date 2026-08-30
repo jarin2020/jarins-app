@@ -34,19 +34,30 @@ reminders worker (task 6), as a Wrangler secret.
 
 ## Task 1 — Stand up Supabase. Nothing else can be verified first.
 
-1. Create a project in **eu-central-1**.
-2. SQL Editor → paste both migrations **in order**, once, against the empty
-   database. They are not idempotent:
-   - `supabase/migrations/202608270001_initial_schema.sql`
-   - `supabase/migrations/202608300001_harden_and_records.sql`
-3. Authentication → URL Configuration:
-   - Site URL `http://localhost:3000`
-   - Redirect URLs: `http://localhost:3000/auth/callback`, `https://jarins.com/auth/callback`
-   - Magic links fail silently without these.
-4. `cp apps/web/.env.example apps/web/.env.local` and fill in the project URL and
-   the **anon** key. The anon key is public by design — it ships in the browser
-   bundle, and authorization comes from RLS.
-5. Restart the dev server. The app switches from local-demo to account mode.
+A human runs `npx supabase login` once. Everything after that is scriptable:
+
+```bash
+npx supabase orgs list
+npx supabase projects create jarins \
+  --org-id <ORG_ID> --region eu-central-1 --db-password "<GENERATE ONE>"
+npx supabase link --project-ref <REF>
+npx supabase db push
+npx supabase projects api-keys --project-ref <REF> --output-format json
+```
+
+Then write `apps/web/.env.local` from `.env.example` with the project URL and the
+**anon** key, set the auth redirect URLs to `http://localhost:3000/auth/callback`
+and `https://jarins.com/auth/callback` (magic links fail silently without them —
+`supabase/config.toml` already lists both, so `npx supabase config push` may
+cover it), and restart the dev server.
+
+Two things stay human: the **database password**, which is not recoverable from
+the CLI later and belongs in a password manager, and **which organization** the
+project lands in. `--region eu-central-1` is not negotiable — this holds
+children's names, insurance and identity documents, and the region is fixed at
+creation.
+
+Flags verified against Supabase CLI 2.116.0.
 
 ### Then verify, in this order — none of it has ever run live
 

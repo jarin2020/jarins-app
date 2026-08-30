@@ -25,17 +25,38 @@ can be verified before it.
 
 ## Your first task
 
-Stand up Supabase (Frankfurt / eu-central-1 — this holds children's names,
-insurance and identity documents), run both migrations in order once, set the
-auth redirect URLs, and fill in `apps/web/.env.local`. Exact steps are in
-`HANDOFF.md`.
+Supabase is not connected yet. Do this before anything else.
 
-Then work through the six-item verification checklist there. Treat this one as
-most likely to fail: `public.handle_new_user()` is a trigger on `auth.users` that
-creates the profile, household and owner membership. It passes against local
-PostgreSQL, but hosted `auth.users` is owned by `supabase_auth_admin`. If it does
-not fire, accounts cannot save anything, because every record hangs off
-`household_id`.
+Prerequisite the human handles once: `npx supabase login`.
+
+```bash
+npx supabase orgs list                     # pick the org id
+npx supabase projects create jarins \
+  --org-id <ORG_ID> --region eu-central-1 \
+  --db-password "<GENERATE ONE>"           # give it to the human for their password manager
+npx supabase link --project-ref <REF>
+npx supabase db push                       # runs both migrations in order
+npx supabase projects api-keys --project-ref <REF> --output-format json
+```
+
+`--region eu-central-1` is not optional. This database holds children's names,
+insurance records and identity documents, and the region is fixed at creation.
+
+Then write `apps/web/.env.local` from `apps/web/.env.example`, using the project
+URL and the **anon** key (`publishable`/`anon`, never `service_role`), and set the
+auth redirect URLs to `http://localhost:3000/auth/callback` and
+`https://jarins.com/auth/callback` — magic links fail silently without them.
+`supabase/config.toml` already lists both, so `npx supabase config push` may do it.
+
+Finally, restart the dev server and work through the six-item verification
+checklist in `HANDOFF.md`. Treat this one as most likely to fail:
+`public.handle_new_user()` is a trigger on `auth.users` that creates the profile,
+household and owner membership. It passes against local PostgreSQL, but hosted
+`auth.users` is owned by `supabase_auth_admin`. If it does not fire, accounts
+cannot save anything, because every record hangs off `household_id`.
+
+CLI flags were verified against Supabase CLI 2.116.0; check `--help` if yours
+differs.
 
 ## Then, in order
 

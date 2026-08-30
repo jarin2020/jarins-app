@@ -4,24 +4,43 @@ A calm, private life operating system for family, home, self, learning, career, 
 
 ## Run locally
 
-Requirements: Node 22+, pnpm 10+, and optionally the Supabase CLI/Docker for the local backend.
+Requirements: Node 22+ and pnpm 11+ (`packageManager` pins the exact version). A local PostgreSQL is needed only for `pnpm test:rls`.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:3000`. Copy `apps/web/.env.example` to `apps/web/.env.local` when connecting a Supabase project.
+Open `http://localhost:3000`.
+
+Jarins runs in two modes. With no Supabase credentials it is a **local demo**:
+every screen works, data lives in that browser, and no route is guarded. Copy
+`apps/web/.env.example` to `apps/web/.env.local` to switch it into **account
+mode**, where middleware guards every route and records live in Postgres behind
+row-level security. Anything captured before signing up is carried into the
+account on first authenticated load.
 
 ## Verification
 
 ```bash
+pnpm format:check
 pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
 pnpm build:cloudflare
 ```
+
+Row-level security is verified separately, against a real PostgreSQL rather than
+mocks — policy bugs are invisible to unit tests because the code is correct and
+the boundary is wrong:
+
+```bash
+pnpm test:rls
+```
+
+It needs a local `postgres` reachable by `psql`; no Docker or Supabase CLI. See
+`supabase/tests/README.md` for what it asserts.
 
 ## Cloudflare Workers deployment
 
@@ -37,9 +56,13 @@ The deployment uses Wrangler OAuth locally. CI deployments should use a scoped `
 
 ## Architecture
 
-- `apps/web`: Next.js App Router responsive web/PWA
+- `apps/web`: Next.js App Router responsive web app
 - `packages/domain`: framework-independent planning rules
 - `supabase/migrations`: PostgreSQL schema, RLS and private storage policies
+- `supabase/tests`: row-level security assertions
 - `docs`: privacy and architecture decisions
 
-The interface works with local demo state before Supabase credentials exist. Production data paths must use Supabase Auth, RLS, and private buckets.
+Records are stored in `life_records`, shaped to match the interface. The
+normalised tables alongside it (`tasks`, `documents`, `events`, and the rest) are
+not yet wired to any screen — modules move onto them as their features mature.
+See `docs/architecture.md` for why.

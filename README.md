@@ -2,8 +2,9 @@
 
 A calm, private life operating system for family, home, self, learning, career, money, documents and long-term direction.
 
-Picking this up cold? Start with [HANDOFF.md](HANDOFF.md) — current state,
-what is verified, what is not, and the ordered next steps.
+Picking this up cold? Start with [PROMPT.md](PROMPT.md) for the short brief,
+then [HANDOFF.md](HANDOFF.md) for the detail — current state, what is verified,
+what is not, and the ordered next steps. In Claude Code, `/pickup` loads both.
 
 ## Run locally
 

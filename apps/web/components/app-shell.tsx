@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Command, LogOut, Menu, Plus, Search, X } from "lucide-react";
+import {
+  Bell,
+  Command,
+  LogIn,
+  LogOut,
+  Menu,
+  Plus,
+  Search,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { primaryModules, utilityModules } from "@/lib/modules";
 import { QuickCapture } from "./quick-capture";
@@ -107,13 +116,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ? "Synced · private by design"
               : "This browser only · export to keep a copy"}
           </small>
-          {status === "signed-in" && (
+          {/* There must always be a visible way in or out of an account. Gating
+              this on "signed-in" left the signed-out and demo states with no
+              entry point at all — the pages existed but nothing linked to them. */}
+          {status === "signed-in" ? (
             <button
-              className="text-button signout"
+              className="text-button account-action"
               onClick={() => void signOut()}
             >
               <LogOut size={13} /> Sign out
             </button>
+          ) : (
+            <Link className="text-button account-action" href="/login">
+              <LogIn size={13} />{" "}
+              {status === "demo" ? "About accounts" : "Sign in"}
+            </Link>
           )}
         </div>
       </aside>

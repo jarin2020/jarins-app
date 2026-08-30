@@ -3,12 +3,10 @@
   "name": "jarins-www-redirect",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-27",
-  "routes": [
-    { "pattern": "www.jarins.com/*", "zone_name": "jarins.com" }
-  ],
+  "routes": [{ "pattern": "www.jarins.com/*", "zone_name": "jarins.com" }],
   "observability": {
     "enabled": true,
     "logs": { "head_sampling_rate": 1 },
-    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
-  }
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 },
+  },
 }

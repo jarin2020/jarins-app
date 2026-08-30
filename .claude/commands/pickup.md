@@ -2,8 +2,8 @@
 description: Pick up the jarins work where the last developer left off
 ---
 
-Read `PROMPT.md` and then `HANDOFF.md`, both at the repo root, before doing
-anything else. Together they describe the current state of this project, what is
+Read `AGENTS.md`, then `PROMPT.md`, then `HANDOFF.md`, all at the repo root,
+before doing anything else. Together they describe the current state of this project, what is
 verified, what is explicitly not, and the ordered next steps.
 
 Then:

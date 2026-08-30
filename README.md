@@ -4,7 +4,8 @@ A calm, private life operating system for family, home, self, learning, career, 
 
 Picking this up cold? Start with [PROMPT.md](PROMPT.md) for the short brief,
 then [HANDOFF.md](HANDOFF.md) for the detail — current state, what is verified,
-what is not, and the ordered next steps. In Claude Code, `/pickup` loads both.
+what is not, and the ordered next steps. Coding agents should read
+[AGENTS.md](AGENTS.md) first; in Claude Code, `/pickup` loads all three.
 
 ## Run locally
 

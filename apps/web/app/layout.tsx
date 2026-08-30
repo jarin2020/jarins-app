@@ -12,6 +12,20 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
+/**
+ * Every route renders per request.
+ *
+ * The CSP nonce is generated in middleware and has to be stamped onto each
+ * script tag. A statically prerendered page has its HTML baked at build time,
+ * so no nonce can be injected — and because the policy uses 'strict-dynamic',
+ * unnonced scripts are refused rather than merely unverified. That combination
+ * white-screened /today in production while every dynamic route worked.
+ *
+ * The cost here is close to zero: every screen is client-rendered and, once
+ * Supabase is configured, sits behind an auth check in middleware anyway.
+ */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: { default: "jarins — Life OS", template: "%s · jarins" },
   description:

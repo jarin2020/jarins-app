@@ -11,6 +11,7 @@ import {
   LogIn,
   LogOut,
   Menu,
+  MessageCircle,
   Plus,
   Search,
   ShieldCheck,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { primaryModules, utilityModules } from "@/lib/modules";
+import { MessageCenter } from "./message-center";
 import { QuickCapture } from "./quick-capture";
 import { usePreferences } from "@/lib/preferences-store";
 import { useAuth } from "./auth-provider";
@@ -29,12 +31,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [captureOpen, setCaptureOpen] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const { preferences } = usePreferences();
-  const { profile, status, signOut } = useAuth();
+  const { profile, status, signOut, user } = useAuth();
   const displayName =
     status === "signed-in" && profile
       ? profile.displayName
@@ -136,33 +139,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        <div className="family-mini">
-          <div className="avatar-stack">
-            <span>{initials}</span>
-          </div>
-          <strong>{preferences.household}</strong>
-          <small>
-            {status === "signed-in"
-              ? "Synced · private by design"
-              : "This browser only · export to keep a copy"}
-          </small>
-          {/* There must always be a visible way in or out of an account. Gating
-              this on "signed-in" left the signed-out and demo states with no
-              entry point at all — the pages existed but nothing linked to them. */}
-          {status === "signed-in" ? (
-            <button
-              className="text-button account-action"
-              onClick={() => void signOut()}
-            >
-              <LogOut size={13} /> Sign out
-            </button>
-          ) : (
-            <Link className="text-button account-action" href="/login">
-              <LogIn size={13} />{" "}
-              {status === "demo" ? "About accounts" : "Sign in"}
-            </Link>
-          )}
-        </div>
+        <button
+          className="sidebar-capture"
+          type="button"
+          onClick={openCapture}
+          aria-label="Quick capture a task, note or reminder"
+        >
+          <span className="sidebar-capture-icon">
+            <Plus size={18} />
+          </span>
+          <span className="sidebar-capture-copy">
+            <strong>Quick capture</strong>
+            <small>Task, note or reminder</small>
+          </span>
+          <kbd>
+            <Command size={11} />K
+          </kbd>
+        </button>
       </aside>
 
       {mobileOpen && (
@@ -272,6 +265,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       >
                         <Database size={16} /> Data &amp; export
                       </Link>
+                      {status === "demo" && (
+                        <Link
+                          href="/login"
+                          role="menuitem"
+                          onClick={() => setAccountMenuOpen(false)}
+                        >
+                          <LogIn size={16} /> About accounts
+                        </Link>
+                      )}
                     </div>
                     {status === "signed-in" && (
                       <button
@@ -296,15 +298,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       <button
-        className="capture-fab"
-        onClick={openCapture}
-        aria-label="Quick capture"
+        className="message-fab"
+        onClick={() => setMessagesOpen(true)}
+        aria-label="Open messages"
       >
-        <Plus size={19} />
-        <span>Quick capture</span>
-        <kbd>
-          <Command size={12} />K
-        </kbd>
+        <MessageCircle size={19} />
+        <span>Messages</span>
       </button>
       <nav className="mobile-nav" aria-label="Mobile navigation">
         {primaryModules
@@ -329,6 +328,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </button>
       </nav>
       <QuickCapture open={captureOpen} onClose={() => setCaptureOpen(false)} />
+      <MessageCenter
+        open={messagesOpen}
+        onClose={() => setMessagesOpen(false)}
+        ownerId={user?.id ?? "local"}
+        author={displayName}
+      />
     </div>
   );
 }

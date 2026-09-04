@@ -52,6 +52,7 @@ export const capturedItemSchema = z.object({
   id: z.string().min(1),
   text: z.string().min(1).max(2000),
   category: z.string().min(1).max(40),
+  kind: z.enum(["Task", "Note"]).optional(),
   createdAt: z.string().min(1),
   status: z.enum(["inbox", "processed"]),
 });

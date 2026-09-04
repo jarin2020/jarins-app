@@ -29,6 +29,7 @@ import {
 import { RecordsWorkspace, recordsInSection } from "./records-workspace";
 import { PREFERENCES_KEY, usePreferences } from "@/lib/preferences-store";
 import { EmailInbox } from "./email-inbox";
+import { CalendarHub } from "./calendar-hub";
 
 export function ModuleView({ slug }: { slug: string[] }) {
   // Unknown roots are rejected with a real 404 by app/[...slug]/page.tsx.
@@ -336,7 +337,7 @@ function InboxView() {
     if (!destination) return;
     void add({
       module: destination,
-      kind: "Task",
+      kind: item.kind ?? "Task",
       title: item.text,
       detail: `Captured ${new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(item.createdAt))}`,
       status: "open",
@@ -361,7 +362,7 @@ function InboxView() {
                 <div>
                   <strong>{item.text}</strong>
                   <p>
-                    {item.category} ·{" "}
+                    {item.kind ?? item.category} ·{" "}
                     {new Intl.DateTimeFormat("en", {
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -481,6 +482,7 @@ function SearchView() {
 
 function CalendarView() {
   const { records } = useLifeRecords();
+  const { user } = useAuth();
   const localKey = (date: Date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const days = Array.from({ length: 14 }, (_, index) => {
@@ -506,55 +508,57 @@ function CalendarView() {
         title="Calendar"
         description="Family events, appointments, deadlines and protected time in one place."
       />
-      <div className="calendar-grid">
-        {days.map((date, index) => {
-          const key = localKey(date);
-          const matches = records.filter(
-            (record) => record.date === key && record.status !== "done",
-          );
-          return (
-            <div className={index === 0 ? "today" : ""} key={key}>
-              <span>
-                {new Intl.DateTimeFormat("en", { weekday: "short" }).format(
-                  date,
-                )}
-              </span>
-              <strong>{date.getDate()}</strong>
-              {matches.slice(0, 2).map((item) => (
-                <Link href={`/${item.module}`} key={item.id}>
-                  <small>{item.title}</small>
-                </Link>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-      <section className="list-surface">
-        <h2>Next 14 days</h2>
-        {upcoming.length ? (
-          upcoming.map((item) => (
-            <Link
-              href={`/${item.module}`}
-              className="search-result"
-              key={item.id}
-            >
-              <div>
-                <strong>{item.title}</strong>
-                <p>
-                  {new Intl.DateTimeFormat("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                  }).format(new Date(`${item.date}T12:00:00`))}{" "}
-                  · {item.kind}
-                </p>
+      <CalendarHub ownerId={user?.id ?? "local"} eventCount={upcoming.length}>
+        <div className="calendar-grid">
+          {days.map((date, index) => {
+            const key = localKey(date);
+            const matches = records.filter(
+              (record) => record.date === key && record.status !== "done",
+            );
+            return (
+              <div className={index === 0 ? "today" : ""} key={key}>
+                <span>
+                  {new Intl.DateTimeFormat("en", { weekday: "short" }).format(
+                    date,
+                  )}
+                </span>
+                <strong>{date.getDate()}</strong>
+                {matches.slice(0, 2).map((item) => (
+                  <Link href={`/${item.module}`} key={item.id}>
+                    <small>{item.title}</small>
+                  </Link>
+                ))}
               </div>
-              <ChevronRight size={16} />
-            </Link>
-          ))
-        ) : (
-          <p className="muted">Nothing dated in the next 14 days.</p>
-        )}
-      </section>
+            );
+          })}
+        </div>
+        <section className="list-surface">
+          <h2>Next 14 days</h2>
+          {upcoming.length ? (
+            upcoming.map((item) => (
+              <Link
+                href={`/${item.module}`}
+                className="search-result"
+                key={item.id}
+              >
+                <div>
+                  <strong>{item.title}</strong>
+                  <p>
+                    {new Intl.DateTimeFormat("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                    }).format(new Date(`${item.date}T12:00:00`))}{" "}
+                    · {item.kind}
+                  </p>
+                </div>
+                <ChevronRight size={16} />
+              </Link>
+            ))
+          ) : (
+            <p className="muted">Nothing dated in the next 14 days.</p>
+          )}
+        </section>
+      </CalendarHub>
     </>
   );
 }

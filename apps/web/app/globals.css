@@ -163,45 +163,58 @@ h3 {
 .nav-utility a {
   padding-block: 9px;
 }
-.family-mini {
+.sidebar-capture {
   margin-top: auto;
-  padding: 14px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--surface);
+  color: var(--text);
+  text-align: left;
 }
-.avatar-stack {
-  display: flex;
-  margin-bottom: 10px;
+.sidebar-capture:hover {
+  border-color: #c6dac9;
+  background: var(--primary-soft);
 }
-.avatar-stack span {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+.sidebar-capture-icon {
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
-  background: var(--family-soft);
-  color: var(--family);
-  font-size: 10px;
-  font-weight: 800;
-  border: 2px solid var(--surface);
-  margin-left: -5px;
+  border-radius: 11px;
+  color: white;
+  background: var(--primary);
 }
-.avatar-stack span:first-child {
-  margin-left: 0;
-  background: var(--primary-soft);
-  color: var(--primary);
+.sidebar-capture-copy {
+  min-width: 0;
 }
-.family-mini strong,
-.family-mini small {
+.sidebar-capture strong,
+.sidebar-capture small {
   display: block;
 }
-.family-mini strong {
+.sidebar-capture strong {
   font-size: 12px;
 }
-.family-mini small {
+.sidebar-capture small {
   color: var(--muted);
   font-size: 10px;
+}
+.sidebar-capture kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font: inherit;
+  font-size: 9px;
 }
 .main-column {
   min-width: 0;
@@ -239,8 +252,7 @@ h3 {
   min-width: 50px;
   color: var(--text);
 }
-.search-box kbd,
-.capture-fab kbd {
+.search-box kbd {
   font: inherit;
   font-size: 10px;
   border: 1px solid var(--border);
@@ -889,7 +901,7 @@ h3 {
   color: var(--muted);
   font-size: 11px;
 }
-.capture-fab {
+.message-fab {
   position: fixed;
   right: 26px;
   bottom: 24px;
@@ -902,14 +914,10 @@ h3 {
   border: 0;
   border-radius: 16px;
   color: white;
-  background: var(--family);
+  background: var(--primary);
   font-weight: 800;
   font-size: 12px;
-  box-shadow: 0 16px 36px rgba(185, 103, 77, 0.28);
-}
-.capture-fab kbd {
-  color: white;
-  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 16px 36px rgba(49, 95, 75, 0.28);
 }
 .modal-backdrop {
   position: fixed;
@@ -954,6 +962,80 @@ fieldset legend {
   border: 1px solid var(--border);
   border-radius: 14px;
   outline: 0;
+  background: white;
+}
+.capture-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+.capture-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 9px 0 17px;
+}
+.capture-type-grid button {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  text-align: left;
+}
+.capture-type-grid button:hover,
+.capture-type-grid button.selected {
+  border-color: #c6dac9;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.capture-type-grid span,
+.capture-type-grid strong,
+.capture-type-grid small {
+  display: block;
+  min-width: 0;
+}
+.capture-type-grid strong {
+  color: var(--text);
+  font-size: 11px;
+}
+.capture-type-grid small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reminder-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 17px;
+}
+.reminder-fields label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.reminder-fields label small {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.reminder-fields input {
+  width: 100%;
+  display: block;
+  margin-top: 7px;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--text);
   background: white;
 }
 .modal-card fieldset {
@@ -1509,6 +1591,285 @@ fieldset legend {
   color: var(--primary);
   font-size: 10px;
 }
+.calendar-master-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 13px;
+  padding: 17px 19px;
+  border: 1px solid #c6dac9;
+  border-radius: 19px;
+  background: linear-gradient(135deg, var(--primary-soft), #f5f9f6);
+}
+.calendar-master-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  color: white;
+  background: var(--primary);
+}
+.calendar-master-card .kicker {
+  margin: 0;
+}
+.calendar-master-card h2 {
+  margin: 2px 0;
+}
+.calendar-master-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.calendar-master-stats {
+  display: flex;
+  gap: 8px;
+}
+.calendar-master-stats span {
+  min-width: 76px;
+  padding: 8px 10px;
+  border: 1px solid rgba(49, 95, 75, 0.14);
+  border-radius: 11px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.65);
+  font-size: 9px;
+  text-align: center;
+}
+.calendar-master-stats strong {
+  display: block;
+  color: var(--text);
+  font-size: 16px;
+}
+.calendar-account-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 17px;
+}
+.calendar-account-tabs {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+.calendar-account-tabs button {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 10px;
+  font-weight: 700;
+}
+.calendar-account-tabs button:hover,
+.calendar-account-tabs button.active {
+  color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 5px 15px rgba(33, 48, 40, 0.05);
+}
+.calendar-account-tabs button.master {
+  border-right: 1px solid var(--border);
+  border-radius: 10px 4px 4px 10px;
+}
+.calendar-account-tabs button small {
+  padding: 1px 5px;
+  border-radius: 999px;
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-size: 8px;
+}
+.calendar-connect-button {
+  flex: 0 0 auto;
+}
+.calendar-connect {
+  margin-bottom: 17px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.calendar-connect-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.calendar-connect-heading .eyebrow {
+  margin-top: 0;
+}
+.calendar-connect-heading h2 {
+  margin: 4px 0;
+}
+.calendar-connect-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.calendar-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 17px 0;
+}
+.calendar-provider-grid > button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 3px 9px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--text);
+  background: var(--surface-soft);
+  text-align: left;
+}
+.calendar-provider-grid > button:hover,
+.calendar-provider-grid > button.active {
+  border-color: #c6dac9;
+  background: var(--primary-soft);
+}
+.calendar-provider-grid .calendar-provider-mark {
+  grid-row: 1 / 3;
+}
+.calendar-provider-grid strong,
+.calendar-provider-grid small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.calendar-provider-grid strong {
+  font-size: 10px;
+}
+.calendar-provider-grid small {
+  color: var(--muted);
+  font-size: 8px;
+}
+.calendar-provider-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: #246b43;
+  background: #e4f3e9;
+}
+.calendar-provider-mark.microsoft {
+  color: #386e9c;
+  background: #e5eff8;
+}
+.calendar-provider-mark.apple {
+  color: #4b5350;
+  background: #e8ebea;
+}
+.calendar-provider-mark.caldav {
+  color: #966f2e;
+  background: var(--warm-soft);
+}
+.calendar-connect-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) 170px auto;
+  align-items: end;
+  gap: 9px;
+}
+.calendar-connect-form label,
+.calendar-sync-controls label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.calendar-connect-form input,
+.calendar-connect-form select,
+.calendar-sync-controls select {
+  width: 100%;
+  display: block;
+  margin-top: 5px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 11px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.calendar-security-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+  text-align: right;
+}
+.calendar-connection-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(220px, 0.55fr) auto;
+  align-items: start;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.calendar-connection-copy .kicker {
+  margin: 0;
+}
+.calendar-connection-copy h2 {
+  margin: 3px 0 1px;
+}
+.calendar-connection-copy > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.calendar-auth-status {
+  display: inline-flex;
+  margin-top: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #8a6428;
+  background: var(--warm-soft);
+  font-size: 8px;
+  font-weight: 750;
+}
+.calendar-connection-copy .calendar-setup-note {
+  max-width: 560px;
+  margin-top: 8px;
+  font-size: 9px;
+}
+.calendar-sync-controls {
+  display: grid;
+  gap: 9px;
+}
+.calendar-inclusion-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+.calendar-inclusion-toggle input {
+  accent-color: var(--primary);
+}
+.calendar-remove {
+  width: 35px;
+  height: 35px;
+}
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -2063,8 +2424,8 @@ fieldset legend {
   }
   .brand > span:last-child,
   .nav-list a span,
-  .family-mini strong,
-  .family-mini small {
+  .sidebar-capture-copy,
+  .sidebar-capture kbd {
     display: none;
   }
   .brand {
@@ -2073,15 +2434,10 @@ fieldset legend {
   .nav-list a {
     justify-content: center;
   }
-  .family-mini {
+  .sidebar-capture {
+    display: flex;
+    justify-content: center;
     padding: 10px;
-  }
-  .avatar-stack {
-    flex-direction: column;
-    align-items: center;
-  }
-  .avatar-stack span {
-    margin: -5px 0 0;
   }
   .today-hero {
     grid-template-columns: 1fr;
@@ -2091,6 +2447,18 @@ fieldset legend {
   }
   .career-trail > div {
     grid-template-columns: repeat(3, 1fr);
+  }
+  .calendar-provider-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .calendar-connect-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .calendar-connection-panel {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .calendar-sync-controls {
+    grid-column: 2;
   }
 }
 @media (max-width: 760px) {
@@ -2113,22 +2481,18 @@ fieldset legend {
   }
   .sidebar .brand > span:last-child,
   .sidebar .nav-list a span,
-  .family-mini strong,
-  .family-mini small {
+  .sidebar .sidebar-capture-copy {
     display: block;
+  }
+  .sidebar .sidebar-capture kbd {
+    display: inline-flex;
   }
   .sidebar .nav-list a {
     justify-content: flex-start;
   }
-  .family-mini .avatar-stack {
-    flex-direction: row;
-    align-items: initial;
-  }
-  .family-mini .avatar-stack span {
-    margin: 0 0 0 -5px;
-  }
-  .family-mini .avatar-stack span:first-child {
-    margin-left: 0;
+  .sidebar .sidebar-capture {
+    display: grid;
+    justify-content: initial;
   }
   .nav-scrim {
     display: block;
@@ -2189,8 +2553,22 @@ fieldset legend {
   .reset-banner .button {
     grid-column: 1 / -1;
   }
-  .capture-fab {
-    display: none;
+  .message-fab {
+    right: 14px;
+    bottom: 84px;
+    width: 48px;
+    min-height: 48px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 15px;
+  }
+  .message-fab span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
   .mobile-nav {
     position: fixed;
@@ -2255,6 +2633,49 @@ fieldset legend {
   .privacy-notice .text-button {
     margin-left: 50px;
   }
+  .calendar-master-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding: 15px;
+  }
+  .calendar-master-stats {
+    grid-column: 1 / -1;
+  }
+  .calendar-master-stats span {
+    flex: 1;
+  }
+  .calendar-account-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .calendar-account-tabs {
+    width: 100%;
+  }
+  .calendar-connect-button {
+    width: 100%;
+  }
+  .calendar-connect {
+    padding: 15px;
+  }
+  .calendar-connect-heading {
+    flex-direction: column;
+  }
+  .calendar-provider-grid,
+  .calendar-connect-form {
+    grid-template-columns: 1fr;
+  }
+  .calendar-connect-form .button {
+    width: 100%;
+  }
+  .calendar-security-note {
+    text-align: left;
+  }
+  .calendar-connection-panel {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 16px;
+  }
+  .calendar-sync-controls {
+    grid-column: 1 / -1;
+  }
   .calendar-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -2287,6 +2708,12 @@ fieldset legend {
   }
   .modal-card {
     padding: 20px;
+  }
+  .capture-type-grid {
+    grid-template-columns: 1fr;
+  }
+  .reminder-fields {
+    grid-template-columns: 1fr;
   }
   .form-row {
     align-items: stretch;
@@ -2557,6 +2984,316 @@ fieldset legend {
   width: min(600px, 100%);
 }
 
+.message-center {
+  width: min(980px, 100%);
+  height: min(720px, calc(100vh - 36px));
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 27px;
+  background: var(--surface);
+  box-shadow: 0 30px 80px rgba(20, 20, 20, 0.18);
+  animation: modal-in 0.18s ease-out;
+}
+.message-center-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.message-center-header h2 {
+  margin: 4px 0 0;
+  font-size: 24px;
+}
+.message-center-header .eyebrow {
+  margin-top: 0;
+}
+.message-center-body {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: 310px minmax(0, 1fr);
+}
+.thread-sidebar {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  border-right: 1px solid var(--border);
+  background: var(--surface-soft);
+}
+.thread-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.thread-filters button {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 7px 4px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 9px;
+  font-weight: 700;
+}
+.thread-filters button:hover,
+.thread-filters button.active {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.new-thread-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 11px 0;
+  padding: 9px 10px;
+  border: 1px dashed #bdd1c2;
+  border-radius: 11px;
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  font-weight: 750;
+}
+.new-thread-button:hover {
+  border-style: solid;
+  background: var(--primary-soft);
+}
+.new-thread-form {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 11px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface);
+}
+.new-thread-form label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.new-thread-form input,
+.new-thread-form select {
+  width: 100%;
+  display: block;
+  margin-top: 4px;
+  padding: 8px 9px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.thread-list {
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  overflow-y: auto;
+}
+.thread-list > button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 0;
+  border-radius: 11px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+}
+.thread-list > button:hover,
+.thread-list > button.active {
+  background: var(--surface);
+  box-shadow: 0 6px 18px rgba(33, 48, 40, 0.05);
+}
+.thread-list > button > span {
+  width: 31px;
+  height: 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.thread-list > button div {
+  min-width: 0;
+}
+.thread-list strong,
+.thread-list small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.thread-list strong {
+  font-size: 11px;
+}
+.thread-list small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.thread-view {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.thread-view > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.thread-view > header .kicker {
+  margin: 0;
+}
+.thread-view > header h3 {
+  margin: 2px 0 0;
+}
+.thread-view > header > small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.thread-messages {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding: 20px;
+  background: linear-gradient(180deg, var(--surface) 0%, #fafbfa 100%);
+}
+.thread-messages article {
+  max-width: min(78%, 480px);
+  margin-left: auto;
+  text-align: right;
+}
+.thread-messages article > div {
+  padding: 10px 13px;
+  border-radius: 15px 15px 4px 15px;
+  color: white;
+  background: var(--primary);
+  font-size: 12px;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.thread-messages article small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 8px;
+}
+.thread-empty,
+.message-empty {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--muted);
+  text-align: center;
+}
+.thread-empty strong {
+  margin-top: 9px;
+  color: var(--text);
+  font-size: 12px;
+}
+.thread-empty p,
+.message-empty p {
+  margin: 3px 0 0;
+  font-size: 10px;
+}
+.message-empty {
+  min-height: 100%;
+  padding: 28px;
+}
+.message-empty h3 {
+  margin: 10px 0 0;
+}
+.message-empty .button {
+  margin-top: 14px;
+}
+.message-compose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 9px;
+  padding: 14px 17px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.message-compose input {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  background: var(--surface-soft);
+}
+.message-compose .button {
+  width: 42px;
+  padding: 0;
+}
+.message-compose .button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+@media (max-width: 760px) {
+  .message-dialog {
+    padding: 10px;
+  }
+  .message-center {
+    height: calc(100vh - 20px);
+    min-height: 0;
+    border-radius: 20px;
+  }
+  .message-center-header {
+    padding: 15px;
+  }
+  .message-center-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(190px, 38%) minmax(0, 1fr);
+  }
+  .thread-sidebar {
+    padding: 11px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .thread-view > header,
+  .thread-messages {
+    padding: 12px 14px;
+  }
+  .thread-view > header > small {
+    display: none;
+  }
+  .message-compose {
+    padding: 10px;
+  }
+}
+
 .data-warning {
   margin-bottom: 18px;
   padding: 15px 17px;
@@ -2589,12 +3326,4 @@ fieldset legend {
   min-height: 55vh;
   color: var(--muted);
   font-size: 12px;
-}
-.family-mini .account-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 8px;
-  padding: 4px 0;
-  font-size: 10px;
 }

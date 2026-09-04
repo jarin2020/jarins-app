@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, X } from "lucide-react";
+import { Bell, Check, FileText, ListTodo, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { capturedItemSchema, type CapturedItem } from "@/lib/records/schema";
 import { type LifeRecord, useLifeRecords } from "@/lib/jarins-store";
@@ -17,6 +17,37 @@ const categories = [
   "Future",
 ];
 const INBOX_KEY = "jarins-inbox";
+type CaptureType = "task" | "note" | "reminder";
+
+const captureTypes: Array<{
+  key: CaptureType;
+  label: string;
+  description: string;
+  icon: typeof ListTodo;
+}> = [
+  {
+    key: "task",
+    label: "Task",
+    description: "Something to do",
+    icon: ListTodo,
+  },
+  {
+    key: "note",
+    label: "Note",
+    description: "Something to keep",
+    icon: FileText,
+  },
+  {
+    key: "reminder",
+    label: "Reminder",
+    description: "Add it to Calendar",
+    icon: Bell,
+  },
+];
+
+function localDateKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
 
 export type { CapturedItem };
 
@@ -46,8 +77,11 @@ export function QuickCapture({
 }) {
   const [text, setText] = useState("");
   const [category, setCategory] = useState("Inbox");
+  const [captureType, setCaptureType] = useState<CaptureType>("task");
+  const [reminderDate, setReminderDate] = useState(() => localDateKey());
+  const [reminderTime, setReminderTime] = useState("");
   const [saved, setSaved] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const { add } = useLifeRecords();
 
@@ -82,11 +116,12 @@ export function QuickCapture({
   const save = (event: React.FormEvent) => {
     event.preventDefault();
     if (!text.trim()) return input.current?.focus();
-    if (category === "Inbox") {
+    if (category === "Inbox" && captureType !== "reminder") {
       const item: CapturedItem = {
         id: crypto.randomUUID(),
         text: text.trim(),
         category,
+        kind: captureType === "note" ? "Note" : "Task",
         createdAt: new Date().toISOString(),
         status: "inbox",
       };
@@ -94,9 +129,22 @@ export function QuickCapture({
     } else {
       void add({
         module: category.toLowerCase() as LifeRecord["module"],
-        kind: "Task",
+        kind:
+          captureType === "reminder"
+            ? "Reminder"
+            : captureType === "note"
+              ? "Note"
+              : "Task",
         title: text.trim(),
-        detail: "Captured quickly. Add details when useful.",
+        detail:
+          captureType === "reminder"
+            ? reminderTime
+              ? `Reminder at ${reminderTime}. Captured quickly.`
+              : "Reminder captured quickly."
+            : captureType === "note"
+              ? "Quick note. Add details when useful."
+              : "Captured quickly. Add details when useful.",
+        ...(captureType === "reminder" ? { date: reminderDate } : {}),
         status: "open",
       });
     }
@@ -133,36 +181,100 @@ export function QuickCapture({
         </div>
         <form onSubmit={save}>
           <label className="field-label" htmlFor="capture-text">
-            What do you want to remember?
+            {captureType === "note"
+              ? "What do you want to note?"
+              : captureType === "reminder"
+                ? "What should we remind you about?"
+                : "What do you want to remember?"}
           </label>
-          <input
+          <textarea
             ref={input}
             id="capture-text"
-            className="capture-input"
+            className="capture-input capture-textarea"
             value={text}
             onChange={(event) => setText(event.target.value)}
-            placeholder="Buy rain trousers next week…"
+            placeholder={
+              captureType === "note"
+                ? "Write a thought, detail or idea…"
+                : captureType === "reminder"
+                  ? "Renew the insurance…"
+                  : "Buy rain trousers next week…"
+            }
           />
+          <fieldset>
+            <legend>Capture as</legend>
+            <div className="capture-type-grid">
+              {captureTypes.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    type="button"
+                    key={item.key}
+                    className={captureType === item.key ? "selected" : ""}
+                    onClick={() => {
+                      setCaptureType(item.key);
+                      if (item.key === "reminder" && category === "Inbox")
+                        setCategory("Family");
+                    }}
+                  >
+                    <Icon size={17} />
+                    <span>
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+          {captureType === "reminder" && (
+            <div className="reminder-fields">
+              <label>
+                Date
+                <input
+                  type="date"
+                  required
+                  min={localDateKey()}
+                  value={reminderDate}
+                  onChange={(event) => setReminderDate(event.target.value)}
+                />
+              </label>
+              <label>
+                Time <small>Optional</small>
+                <input
+                  type="time"
+                  value={reminderTime}
+                  onChange={(event) => setReminderTime(event.target.value)}
+                />
+              </label>
+            </div>
+          )}
           <fieldset>
             <legend>Where does it belong?</legend>
             <div className="chips">
-              {categories.map((item) => (
-                <button
-                  type="button"
-                  key={item}
-                  onClick={() => setCategory(item)}
-                  className={category === item ? "selected" : ""}
-                >
-                  {item}
-                </button>
-              ))}
+              {categories
+                .filter(
+                  (item) => captureType !== "reminder" || item !== "Inbox",
+                )
+                .map((item) => (
+                  <button
+                    type="button"
+                    key={item}
+                    onClick={() => setCategory(item)}
+                    className={category === item ? "selected" : ""}
+                  >
+                    {item}
+                  </button>
+                ))}
             </div>
           </fieldset>
           <div className="form-row">
             <p>
-              {category === "Inbox"
-                ? "Keep it in Inbox until you choose where it belongs."
-                : `Save it directly to ${category}.`}
+              {captureType === "reminder"
+                ? `Save a reminder in ${category} and show it on Calendar.`
+                : category === "Inbox"
+                  ? "Keep it in Inbox until you choose where it belongs."
+                  : `Save this ${captureType} directly to ${category}.`}
             </p>
             <button className="button primary" type="submit">
               {saved ? (
@@ -170,7 +282,7 @@ export function QuickCapture({
                   <Check size={17} /> Saved
                 </>
               ) : (
-                `Save to ${category}`
+                `Save ${captureType}`
               )}
             </button>
           </div>

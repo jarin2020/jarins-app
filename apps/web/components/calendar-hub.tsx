@@ -10,6 +10,7 @@ import {
   Server,
   Smartphone,
   Trash2,
+  UsersRound,
 } from "lucide-react";
 import { type FormEvent, type ReactNode, useState } from "react";
 import {
@@ -126,10 +127,12 @@ function CalendarConnection({
 export function CalendarHub({
   ownerId,
   eventCount,
+  familyCalendar,
   children,
 }: {
   ownerId: string;
   eventCount: number;
+  familyCalendar: ReactNode;
   children: ReactNode;
 }) {
   const { accounts, add, update, remove } = useCalendarAccounts(ownerId);
@@ -141,7 +144,8 @@ export function CalendarHub({
   const [syncMode, setSyncMode] = useState<CalendarSyncMode>("two-way");
 
   const selected = accounts.find((account) => account.id === active);
-  const visibleActive = active === "master" || selected ? active : "master";
+  const visibleActive =
+    active === "master" || active === "family" || selected ? active : "master";
   const includedCount = accounts.filter((account) => account.included).length;
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -193,6 +197,15 @@ export function CalendarHub({
             <CalendarDays size={16} />
             <span>Jarins Calendar</span>
             <small>All</small>
+          </button>
+          <button
+            type="button"
+            className={visibleActive === "family" ? "active family" : "family"}
+            onClick={() => setActive("family")}
+          >
+            <UsersRound size={16} />
+            <span>Family calendar</span>
+            <small>People</small>
           </button>
           {accounts.map((account) => (
             <button
@@ -299,6 +312,8 @@ export function CalendarHub({
 
       {visibleActive === "master" ? (
         children
+      ) : visibleActive === "family" ? (
+        familyCalendar
       ) : selected ? (
         <CalendarConnection
           account={selected}

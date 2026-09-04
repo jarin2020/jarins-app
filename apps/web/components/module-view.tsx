@@ -30,6 +30,8 @@ import { RecordsWorkspace, recordsInSection } from "./records-workspace";
 import { PREFERENCES_KEY, usePreferences } from "@/lib/preferences-store";
 import { EmailInbox } from "./email-inbox";
 import { CalendarHub } from "./calendar-hub";
+import { FamilyCalendar } from "./family-calendar";
+import { VaultHub } from "./vault-hub";
 
 export function ModuleView({ slug }: { slug: string[] }) {
   // Unknown roots are rejected with a real 404 by app/[...slug]/page.tsx.
@@ -41,6 +43,7 @@ export function ModuleView({ slug }: { slug: string[] }) {
   if (root === "inbox") return <InboxView />;
   if (root === "search") return <SearchView />;
   if (root === "calendar") return <CalendarView />;
+  if (root === "vault") return <VaultView />;
   if (root === "settings") return <SettingsView section={slug[1]} />;
   return <LifeModule root={root} subsection={slug[1]} />;
 }
@@ -482,7 +485,8 @@ function SearchView() {
 
 function CalendarView() {
   const { records } = useLifeRecords();
-  const { user } = useAuth();
+  const { user, profile, householdId } = useAuth();
+  const { preferences } = usePreferences();
   const localKey = (date: Date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
   const days = Array.from({ length: 14 }, (_, index) => {
@@ -508,7 +512,30 @@ function CalendarView() {
         title="Calendar"
         description="Family events, appointments, deadlines and protected time in one place."
       />
-      <CalendarHub ownerId={user?.id ?? "local"} eventCount={upcoming.length}>
+      <CalendarHub
+        ownerId={user?.id ?? "local"}
+        eventCount={upcoming.length}
+        familyCalendar={
+          <FamilyCalendar
+            ownerId={householdId ?? user?.id ?? "local"}
+            ownerName={profile?.displayName ?? preferences.name}
+            systemEvents={records
+              .filter(
+                (record) =>
+                  record.date &&
+                  record.module === "family" &&
+                  record.status !== "done",
+              )
+              .map((record) => ({
+                id: record.id,
+                title: record.title,
+                date: record.date!,
+                kind: record.kind,
+                href: "/family",
+              }))}
+          />
+        }
+      >
         <div className="calendar-grid">
           {days.map((date, index) => {
             const key = localKey(date);
@@ -559,6 +586,20 @@ function CalendarView() {
           )}
         </section>
       </CalendarHub>
+    </>
+  );
+}
+
+function VaultView() {
+  const { user } = useAuth();
+  return (
+    <>
+      <PageIntro
+        eyebrow="External files, within reach"
+        title="VAULT"
+        description="Connect the storage you already use, then find and reference files without filling Jarins with copies."
+      />
+      <VaultHub ownerId={user?.id ?? "local"} />
     </>
   );
 }

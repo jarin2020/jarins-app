@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         event.preventDefault();
         openCapture();
       }
-      if ((event.metaKey || event.ctrlKey) && event.key === "/") {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         document.getElementById("global-search")?.focus();
       }
@@ -127,7 +127,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="nav-divider" />
         <nav className="nav-list nav-utility">
-          {utilityModules.slice(0, 2).map(({ href, icon: Icon, label }) => (
+          {utilityModules.slice(0, 3).map(({ href, icon: Icon, label }) => (
             <Link
               key={href}
               href={href}
@@ -184,7 +184,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               placeholder="Search tasks, people, documents…"
               aria-label="Search jarins"
             />
-            <kbd>⌘ /</kbd>
+            <kbd>⌘ S</kbd>
           </form>
           <div className="top-actions">
             <Link

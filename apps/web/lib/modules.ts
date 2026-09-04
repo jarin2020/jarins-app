@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Archive,
   Baby,
   BookOpen,
   BriefcaseBusiness,
@@ -27,6 +28,7 @@ export type ModuleKey =
   | "future"
   | "inbox"
   | "calendar"
+  | "vault"
   | "search"
   | "settings";
 
@@ -134,6 +136,15 @@ export const utilityModules: ModuleDefinition[] = [
     icon: CalendarDays,
     eyebrow: "The shape of your week",
     description: "Family events, appointments and protected time in one place.",
+  },
+  {
+    key: "vault",
+    label: "VAULT",
+    href: "/vault",
+    icon: Archive,
+    eyebrow: "External files, within reach",
+    description:
+      "Find and use files across connected drives without storing them twice.",
   },
   {
     key: "search",

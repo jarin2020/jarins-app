@@ -424,6 +424,7 @@ declare
   invitation_token text;
   created_team_id uuid;
   created_thread_id uuid;
+  family_thread_id uuid;
   first_message uuid;
   file_message uuid;
   unverified_token text;
@@ -447,10 +448,30 @@ begin
   end if;
   raise notice 'PASS     verified invitation joins and activates the shared household';
 
+  select id into family_thread_id
+  from public.message_threads
+  where household_id = faria_household and is_family_thread;
+  select count(*) into n
+  from public.message_thread_members
+  where thread_id = family_thread_id;
+  if family_thread_id is null or n <> 3 then
+    raise exception 'FAIL: Family thread did not include all three household members (saw %)', n;
+  end if;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  blocked := false;
+  begin
+    delete from public.message_threads where id = family_thread_id;
+  exception when others then
+    blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: fixed Family thread could be deleted'; end if;
+  raise notice 'PASS     Family thread is fixed and automatically includes new members';
+
   perform set_config('request.jwt.claim.sub', faria::text, true);
   select created.invitation_token into unverified_token
   from public.create_household_invitation('unverified@example.test', 'adult') created;
   perform set_config('request.jwt.claim.sub', unverified::text, true);
+  blocked := false;
   begin
     perform public.accept_household_invitation(unverified_token);
   exception when others then
@@ -532,6 +553,17 @@ begin
   if n <> 0 then raise exception 'FAIL: removed team member retained indirect thread access'; end if;
   raise notice 'PASS     team membership changes update thread access';
 
+  insert into public.message_team_members (team_id, user_id, added_by)
+  values (created_team_id, invitee, faria);
+  delete from public.message_teams where id = created_team_id;
+  select count(*) into n from public.message_thread_members
+  where thread_id = created_thread_id and user_id = invitee;
+  if n <> 0 then raise exception 'FAIL: deleted team retained indirect thread access'; end if;
+  select count(*) into n from public.message_thread_teams
+  where thread_id = created_thread_id and team_id = created_team_id;
+  if n <> 0 then raise exception 'FAIL: deleted team remained linked to its thread'; end if;
+  raise notice 'PASS     deleting a team revokes its indirect thread access';
+
   reset role;
 end $$;
 
@@ -583,6 +615,13 @@ begin
   select count(*) into n from public.message_thread_members
   where thread_id = removal_thread and user_id = invitee;
   if n <> 0 then raise exception 'FAIL: removed member retained direct message access'; end if;
+  select count(*) into n
+  from public.message_thread_members as member
+  join public.message_threads as thread on thread.id = member.thread_id
+  where thread.household_id = faria_household
+    and thread.is_family_thread
+    and member.user_id = invitee;
+  if n <> 0 then raise exception 'FAIL: removed member retained Family thread access'; end if;
   raise notice 'PASS     family directory role and removal controls are owner-only';
 
   reset role;

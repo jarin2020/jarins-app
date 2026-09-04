@@ -33,6 +33,7 @@ const messageThreadSchema = z.object({
   participantIds: z.array(z.string().min(1)).max(50).optional(),
   teamIds: z.array(z.string().min(1)).max(20).optional(),
   messages: z.array(messageSchema).max(1000),
+  isFamily: z.boolean().optional(),
   memberRole: z.enum(["owner", "member"]).optional(),
   unreadCount: z.number().nonnegative().optional(),
   createdAt: z.string().min(1),

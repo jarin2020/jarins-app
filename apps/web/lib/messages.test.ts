@@ -12,6 +12,7 @@ import {
   readMessageThreads,
   removeMessagePerson,
   updateMessageTeam,
+  writeMessageThreads,
 } from "./messages";
 
 describe("message thread persistence", () => {
@@ -44,6 +45,20 @@ describe("message thread persistence", () => {
     expect(readMessageThreads("user-a")[0]?.messages).toMatchObject([
       { text: "Can you pick up the parcel?", author: "Faria" },
     ]);
+  });
+
+  it("preserves the fixed Family thread marker", () => {
+    const thread = createMessageThread("user-a", {
+      title: "Family",
+      kind: "team",
+    });
+
+    writeMessageThreads("user-a", [{ ...thread, isFamily: true }]);
+
+    expect(readMessageThreads("user-a")[0]).toMatchObject({
+      title: "Family",
+      isFamily: true,
+    });
   });
 
   it("ignores malformed local data", () => {

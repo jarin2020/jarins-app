@@ -60,6 +60,7 @@ type MessageRow = {
 type ThreadRow = {
   id: string;
   title: string;
+  is_family_thread: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -121,13 +122,19 @@ export function useCloudMessages({
   const load = useCallback(async () => {
     if (!supabase || !userId || !householdId) return;
     setLoading(true);
-    const [peopleResult, threadResult, teamResult, inviteResult, unreadResult] =
-      await Promise.all([
+    try {
+      const [
+        peopleResult,
+        threadResult,
+        teamResult,
+        inviteResult,
+        unreadResult,
+      ] = await Promise.all([
         supabase.rpc("list_household_users"),
         supabase
           .from("message_threads")
           .select(
-            "id,title,created_by,created_at,updated_at,message_thread_members(user_id,member_role,direct_member,last_read_at),message_thread_teams(team_id),messages(id,sender_user_id,body,created_at,message_attachments(id,file_name,mime_type,size_bytes,storage_path))",
+            "id,title,is_family_thread,created_by,created_at,updated_at,message_thread_members(user_id,member_role,direct_member,last_read_at),message_thread_teams(team_id),messages(id,sender_user_id,body,created_at,message_attachments(id,file_name,mime_type,size_bytes,storage_path))",
           )
           .order("updated_at", { ascending: false }),
         supabase
@@ -148,117 +155,140 @@ export function useCloudMessages({
           .is("read_at", null),
       ]);
 
-    const firstError =
-      peopleResult.error ??
-      threadResult.error ??
-      teamResult.error ??
-      inviteResult.error ??
-      unreadResult.error;
-    if (firstError) {
-      setError(errorMessage(firstError, "Messages could not be loaded."));
-      setLoading(false);
-      return;
-    }
+      const coreError =
+        peopleResult.error ?? threadResult.error ?? teamResult.error;
+      if (coreError) {
+        setError(errorMessage(coreError, "Messages could not be loaded."));
+        return;
+      }
 
-    const personRows = (peopleResult.data ?? []) as PersonRow[];
-    const nextPeople: MessagePerson[] = personRows.map((person) => ({
-      id: person.user_id,
-      name: person.display_name,
-      detail: person.email,
-      verified: true,
-      role: person.role,
-      createdAt: "",
-      updatedAt: "",
-    }));
-    const peopleById = new Map(nextPeople.map((person) => [person.id, person]));
-    const currentUserOwnsHousehold = personRows.some(
-      (person) => person.user_id === userId && person.role === "owner",
-    );
-
-    const nextThreads = (
-      (threadResult.data ?? []) as unknown as ThreadRow[]
-    ).map((thread): MessageThread => {
-      const members = thread.message_thread_members ?? [];
-      const currentMember = members.find((member) => member.user_id === userId);
-      const messages = [...(thread.messages ?? [])].sort((a, b) =>
-        a.created_at.localeCompare(b.created_at),
+      const personRows = (peopleResult.data ?? []) as PersonRow[];
+      const nextPeople: MessagePerson[] = personRows.map((person) => ({
+        id: person.user_id,
+        name: person.display_name,
+        detail: person.email,
+        verified: true,
+        role: person.role,
+        createdAt: "",
+        updatedAt: "",
+      }));
+      const peopleById = new Map(
+        nextPeople.map((person) => [person.id, person]),
       );
-      const lastRead = currentMember?.last_read_at;
-      return {
-        id: thread.id,
-        title: thread.title,
-        kind: (thread.message_thread_teams?.length
-          ? "team"
-          : "person") as ConversationKind,
-        participantIds: members
-          .filter(
-            (member) =>
-              member.direct_member && member.user_id !== thread.created_by,
-          )
-          .map((member) => member.user_id),
-        teamIds: (thread.message_thread_teams ?? []).map(
-          (team) => team.team_id,
-        ),
-        memberRole: currentMember?.member_role,
-        unreadCount: messages.filter(
-          (message) =>
-            message.sender_user_id !== userId &&
-            (!lastRead || message.created_at > lastRead),
-        ).length,
-        messages: messages.map((message) => ({
-          id: message.id,
-          text: message.body,
-          senderId: message.sender_user_id,
-          author:
-            peopleById.get(message.sender_user_id)?.name ?? "Household member",
-          readBy: members
-            .filter(
-              (member) =>
-                member.user_id !== message.sender_user_id &&
-                Boolean(member.last_read_at) &&
-                member.last_read_at! >= message.created_at,
-            )
-            .map(
-              (member) =>
-                peopleById.get(member.user_id)?.name ?? "Household member",
-            ),
-          attachments: (message.message_attachments ?? []).map(
-            attachmentFromRow,
-          ),
-          createdAt: message.created_at,
-        })),
-        createdAt: thread.created_at,
-        updatedAt: thread.updated_at,
-      };
-    });
+      const currentUserOwnsHousehold = personRows.some(
+        (person) => person.user_id === userId && person.role === "owner",
+      );
 
-    setPeople(nextPeople);
-    setThreads(nextThreads);
-    setTeams(
-      ((teamResult.data ?? []) as unknown as TeamRow[]).map((team) => ({
-        id: team.id,
-        name: team.name,
-        memberIds: (team.message_team_members ?? []).map(
-          (member) => member.user_id,
-        ),
-        canManage: team.created_by === userId || currentUserOwnsHousehold,
-        createdAt: team.created_at,
-        updatedAt: team.updated_at,
-      })),
-    );
-    setInvitations(
-      ((inviteResult.data ?? []) as InvitationRow[]).map((invitation) => ({
-        id: invitation.id,
-        email: invitation.email,
-        role: invitation.role,
-        expiresAt: invitation.expires_at,
-        acceptedAt: invitation.accepted_at ?? undefined,
-        revokedAt: invitation.revoked_at ?? undefined,
-      })),
-    );
-    setUnreadCount(unreadResult.count ?? 0);
-    setError("");
-    setLoading(false);
+      const nextThreads = ((threadResult.data ?? []) as unknown as ThreadRow[])
+        .map((thread): MessageThread => {
+          const members = thread.message_thread_members ?? [];
+          const currentMember = members.find(
+            (member) => member.user_id === userId,
+          );
+          const messages = [...(thread.messages ?? [])].sort((a, b) =>
+            a.created_at.localeCompare(b.created_at),
+          );
+          const lastRead = currentMember?.last_read_at;
+          return {
+            id: thread.id,
+            title: thread.title,
+            isFamily: thread.is_family_thread,
+            kind: (thread.message_thread_teams?.length
+              ? "team"
+              : "person") as ConversationKind,
+            participantIds: members
+              .filter(
+                (member) => member.direct_member && member.user_id !== userId,
+              )
+              .map((member) => member.user_id),
+            teamIds: (thread.message_thread_teams ?? []).map(
+              (team) => team.team_id,
+            ),
+            memberRole: currentMember?.member_role,
+            unreadCount: messages.filter(
+              (message) =>
+                message.sender_user_id !== userId &&
+                (!lastRead || message.created_at > lastRead),
+            ).length,
+            messages: messages.map((message) => ({
+              id: message.id,
+              text: message.body,
+              senderId: message.sender_user_id,
+              author:
+                peopleById.get(message.sender_user_id)?.name ??
+                "Household member",
+              readBy: members
+                .filter(
+                  (member) =>
+                    member.user_id !== message.sender_user_id &&
+                    Boolean(member.last_read_at) &&
+                    member.last_read_at! >= message.created_at,
+                )
+                .map(
+                  (member) =>
+                    peopleById.get(member.user_id)?.name ?? "Household member",
+                ),
+              attachments: (message.message_attachments ?? []).map(
+                attachmentFromRow,
+              ),
+              createdAt: message.created_at,
+            })),
+            createdAt: thread.created_at,
+            updatedAt: thread.updated_at,
+          };
+        })
+        .sort(
+          (a, b) =>
+            Number(Boolean(b.isFamily)) - Number(Boolean(a.isFamily)) ||
+            b.updatedAt.localeCompare(a.updatedAt),
+        );
+
+      setPeople(nextPeople);
+      setThreads(nextThreads);
+      setTeams(
+        ((teamResult.data ?? []) as unknown as TeamRow[]).map((team) => ({
+          id: team.id,
+          name: team.name,
+          memberIds: (team.message_team_members ?? []).map(
+            (member) => member.user_id,
+          ),
+          canManage: team.created_by === userId || currentUserOwnsHousehold,
+          createdAt: team.created_at,
+          updatedAt: team.updated_at,
+        })),
+      );
+      if (!inviteResult.error) {
+        setInvitations(
+          ((inviteResult.data ?? []) as InvitationRow[]).map((invitation) => ({
+            id: invitation.id,
+            email: invitation.email,
+            role: invitation.role,
+            expiresAt: invitation.expires_at,
+            acceptedAt: invitation.accepted_at ?? undefined,
+            revokedAt: invitation.revoked_at ?? undefined,
+          })),
+        );
+      }
+      if (!unreadResult.error) setUnreadCount(unreadResult.count ?? 0);
+
+      const secondaryError = inviteResult.error ?? unreadResult.error;
+      setError(
+        secondaryError
+          ? errorMessage(
+              secondaryError,
+              "Some message details could not be loaded.",
+            )
+          : "",
+      );
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Messages could not be loaded.",
+      );
+    } finally {
+      setLoading(false);
+    }
   }, [householdId, supabase, userId]);
 
   useEffect(() => {
@@ -499,7 +529,8 @@ export function useCloudMessages({
         "mark_message_thread_read",
         { target_thread: threadId },
       );
-      if (!rpcError) await load();
+      if (rpcError) throw new Error(rpcError.message);
+      await load();
     },
     [load, supabase],
   );

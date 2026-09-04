@@ -4873,12 +4873,49 @@ fieldset legend {
   text-transform: none;
   letter-spacing: normal;
 }
+.composer-member-invite {
+  display: grid;
+  gap: 7px;
+  padding: 9px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.composer-member-invite > .text-button {
+  justify-self: start;
+  font-size: 9px;
+}
+.composer-member-invite > div {
+  display: grid;
+  gap: 7px;
+}
+.composer-member-invite .button {
+  justify-self: stretch;
+}
+.composer-member-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  color: var(--primary-strong);
+  font-size: 8px;
+  line-height: 1.4;
+}
+.composer-member-notice svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
 .thread-list {
   min-height: 0;
   display: grid;
   align-content: start;
   gap: 5px;
   overflow-y: auto;
+}
+.thread-list-status {
+  margin: 12px 8px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
 }
 .thread-list > button {
   min-width: 0;
@@ -4897,6 +4934,18 @@ fieldset legend {
 .thread-list > button.active {
   background: var(--surface);
   box-shadow: 0 6px 18px rgba(33, 48, 40, 0.05);
+}
+.thread-list > button.family-thread {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+  background: var(--primary-soft);
+  box-shadow: 0 7px 20px rgba(33, 48, 40, 0.08);
+}
+.thread-list > button.family-thread.active {
+  border-color: color-mix(in srgb, var(--primary) 48%, var(--border));
+  background: var(--surface);
 }
 .thread-list > button > span {
   width: 31px;
@@ -4919,6 +4968,21 @@ fieldset legend {
 }
 .thread-list strong {
   font-size: 11px;
+}
+.thread-fixed {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  color: var(--primary-strong);
+  background: color-mix(in srgb, var(--primary) 12%, white);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  vertical-align: middle;
 }
 .thread-list small {
   color: var(--muted);

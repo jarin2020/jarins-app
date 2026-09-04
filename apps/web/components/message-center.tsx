@@ -10,6 +10,7 @@ import {
   MessagesSquare,
   Paperclip,
   Pencil,
+  Pin,
   Plus,
   Save,
   Trash2,
@@ -17,7 +18,13 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useAuth } from "./auth-provider";
 import { useCloudMessages } from "@/lib/message-cloud";
 import {
@@ -38,11 +45,15 @@ function MemberPicker({
   people,
   selected,
   onChange,
+  emptyText = "Add people first, then assign them here.",
+  disabled = false,
 }: {
   label: string;
   people: MessagePerson[];
   selected: string[];
   onChange: (ids: string[]) => void;
+  emptyText?: string;
+  disabled?: boolean;
 }) {
   return (
     <fieldset className="member-picker">
@@ -55,6 +66,7 @@ function MemberPicker({
                 type="checkbox"
                 checked={selected.includes(person.id)}
                 onChange={() => onChange(toggleId(selected, person.id))}
+                disabled={disabled}
               />
               <span>{person.name}</span>
               {selected.includes(person.id) && <Check size={13} />}
@@ -62,7 +74,7 @@ function MemberPicker({
           ))}
         </div>
       ) : (
-        <small>Add people first, then assign them here.</small>
+        <small>{emptyText}</small>
       )}
     </fieldset>
   );
@@ -72,14 +84,16 @@ function TeamPicker({
   teams,
   selected,
   onChange,
+  disabled = false,
 }: {
   teams: MessageTeam[];
   selected: string[];
   onChange: (ids: string[]) => void;
+  disabled?: boolean;
 }) {
   return (
     <fieldset className="member-picker">
-      <legend>Teams</legend>
+      <legend>Teams · {selected.length} selected</legend>
       {teams.length ? (
         <div>
           {teams.map((team) => (
@@ -88,6 +102,7 @@ function TeamPicker({
                 type="checkbox"
                 checked={selected.includes(team.id)}
                 onChange={() => onChange(toggleId(selected, team.id))}
+                disabled={disabled}
               />
               <span>{team.name}</span>
               <small>{team.memberIds.length}</small>
@@ -170,11 +185,13 @@ function PersonEditor({
 function TeamEditor({
   team,
   people,
+  busy,
   onSave,
   onRemove,
 }: {
   team: MessageTeam;
   people: MessagePerson[];
+  busy: boolean;
   onSave: (changes: { name: string; memberIds: string[] }) => void;
   onRemove: () => void;
 }) {
@@ -204,6 +221,7 @@ function TeamEditor({
             onChange={(event) => setName(event.target.value)}
             maxLength={100}
             required
+            disabled={busy}
           />
         </label>
         <MemberPicker
@@ -211,15 +229,21 @@ function TeamEditor({
           people={people}
           selected={memberIds}
           onChange={setMemberIds}
+          disabled={busy}
         />
       </div>
       <div className="directory-actions">
-        <button className="button primary small" type="submit">
+        <button
+          className="button primary small"
+          type="submit"
+          disabled={busy || memberIds.length === 0}
+        >
           <Save size={15} /> Save team
         </button>
         <button
           className="button secondary small danger"
           type="button"
+          disabled={busy}
           onClick={() => {
             if (window.confirm(`Remove the ${team.name} team?`)) onRemove();
           }}
@@ -235,6 +259,7 @@ function ThreadEditor({
   thread,
   people,
   teams,
+  busy,
   onSave,
   onRemove,
   onCancel,
@@ -242,6 +267,7 @@ function ThreadEditor({
   thread: MessageThread;
   people: MessagePerson[];
   teams: MessageTeam[];
+  busy: boolean;
   onSave: (changes: {
     title: string;
     participantIds: string[];
@@ -269,7 +295,12 @@ function ThreadEditor({
           <span className="kicker">Thread settings</span>
           <h3>Edit conversation</h3>
         </div>
-        <button className="text-button" type="button" onClick={onCancel}>
+        <button
+          className="text-button"
+          type="button"
+          disabled={busy}
+          onClick={onCancel}
+        >
           Done
         </button>
       </div>
@@ -280,6 +311,7 @@ function ThreadEditor({
           onChange={(event) => setTitle(event.target.value)}
           maxLength={100}
           required
+          disabled={busy}
         />
       </label>
       <div className="thread-member-grid">
@@ -288,16 +320,29 @@ function ThreadEditor({
           people={people}
           selected={participantIds}
           onChange={setParticipantIds}
+          disabled={busy}
         />
-        <TeamPicker teams={teams} selected={teamIds} onChange={setTeamIds} />
+        <TeamPicker
+          teams={teams}
+          selected={teamIds}
+          onChange={setTeamIds}
+          disabled={busy}
+        />
       </div>
       <div className="directory-actions">
-        <button className="button primary small" type="submit">
+        <button
+          className="button primary small"
+          type="submit"
+          disabled={
+            busy || (participantIds.length === 0 && teamIds.length === 0)
+          }
+        >
           <Save size={15} /> Save thread
         </button>
         <button
           className="button secondary small danger"
           type="button"
+          disabled={busy}
           onClick={() => {
             if (window.confirm(`Remove the ${thread.title} thread?`))
               onRemove();
@@ -350,9 +395,20 @@ export function MessageCenter({
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [inviteRole, setInviteRole] = useState<"adult" | "viewer">("adult");
+  const [showMemberInvite, setShowMemberInvite] = useState(false);
+  const [memberInviteEmail, setMemberInviteEmail] = useState("");
+  const [memberInviteNotice, setMemberInviteNotice] = useState("");
   const [invitationLink, setInvitationLink] = useState("");
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
+
+  const showError = useCallback((caught: unknown) => {
+    setActionError(
+      caught instanceof Error
+        ? caught.message
+        : "That change could not be saved.",
+    );
+  }, []);
 
   useEffect(() => {
     onUnreadCountChange?.(cloudEnabled ? cloud.unreadCount : 0);
@@ -390,20 +446,50 @@ export function MessageCenter({
     setSelectedPeople([]);
     setSelectedTeams([]);
     setInvitationLink("");
+    setShowMemberInvite(false);
+    setMemberInviteEmail("");
+    setMemberInviteNotice("");
     setComposing(false);
   };
 
-  const showError = (caught: unknown) => {
-    setActionError(
-      caught instanceof Error
-        ? caught.message
-        : "That change could not be saved.",
-    );
+  const addPersonFromComposer = async () => {
+    if (!memberInviteEmail.trim()) return;
+    setBusy(true);
+    setActionError("");
+    setMemberInviteNotice("");
+    try {
+      if (cloudEnabled) {
+        const link = await cloud.invite(memberInviteEmail, inviteRole);
+        setInvitationLink(link);
+        setMemberInviteNotice(
+          "Invitation created. They can be selected here after accepting it.",
+        );
+      } else {
+        const person = local.createPerson({
+          name: memberInviteEmail,
+          detail: "",
+        });
+        setSelectedPeople((current) => [...current, person.id]);
+        setMemberInviteNotice(`${person.name} was added and selected.`);
+      }
+      setMemberInviteEmail("");
+    } catch (caught) {
+      showError(caught);
+    } finally {
+      setBusy(false);
+    }
   };
 
   const createItem = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!newTitle.trim()) return;
+    if (
+      (section === "threads" &&
+        selectedPeople.length === 0 &&
+        selectedTeams.length === 0) ||
+      (section === "teams" && selectedPeople.length === 0)
+    )
+      return;
     setBusy(true);
     setActionError("");
     try {
@@ -469,9 +555,10 @@ export function MessageCenter({
   };
 
   const switchSection = (next: MessageSection) => {
+    resetComposer();
     setSection(next);
-    setComposing(false);
     setEditingThread(false);
+    setActionError("");
   };
 
   const actionLabel =
@@ -482,19 +569,26 @@ export function MessageCenter({
           ? "Invite person"
           : "Add person"
         : "New team";
+  const canCreateItem =
+    Boolean(newTitle.trim()) &&
+    (section === "people" ||
+      (section === "threads"
+        ? selectedPeople.length > 0 || selectedTeams.length > 0
+        : selectedPeople.length > 0));
 
   const markCloudThreadRead = cloud.markRead;
   const latestActiveMessageId = activeThread?.messages.at(-1)?.id;
 
   useEffect(() => {
     if (!cloudEnabled || !open || !activeThread?.id) return;
-    void markCloudThreadRead(activeThread.id);
+    void markCloudThreadRead(activeThread.id).catch(showError);
   }, [
     activeThread?.id,
     latestActiveMessageId,
     markCloudThreadRead,
     cloudEnabled,
     open,
+    showError,
   ]);
 
   const threadParticipants = activeThread
@@ -562,7 +656,12 @@ export function MessageCenter({
             <button
               type="button"
               className="new-thread-button"
-              onClick={() => setComposing((current) => !current)}
+              disabled={busy}
+              onClick={() => {
+                setActionError("");
+                setInvitationLink("");
+                setComposing((current) => !current);
+              }}
               aria-expanded={composing}
             >
               <Plus size={15} /> {actionLabel}
@@ -598,6 +697,7 @@ export function MessageCenter({
                     }
                     maxLength={100}
                     required
+                    disabled={busy}
                   />
                 </label>
                 {section === "people" && cloudEnabled && (
@@ -605,6 +705,7 @@ export function MessageCenter({
                     Access
                     <select
                       value={inviteRole}
+                      disabled={busy}
                       onChange={(event) =>
                         setInviteRole(event.target.value as "adult" | "viewer")
                       }
@@ -624,27 +725,115 @@ export function MessageCenter({
                       onChange={(event) => setNewDetail(event.target.value)}
                       placeholder="Optional"
                       maxLength={160}
+                      disabled={busy}
                     />
                   </label>
                 )}
                 {(section === "threads" || section === "teams") && (
-                  <MemberPicker
-                    label={
-                      section === "teams" ? "Team members" : "Individual people"
-                    }
-                    people={people}
-                    selected={selectedPeople}
-                    onChange={setSelectedPeople}
-                  />
+                  <>
+                    <MemberPicker
+                      label={`${section === "teams" ? "Team members" : "Individual people"} · ${selectedPeople.length} selected`}
+                      people={people}
+                      selected={selectedPeople}
+                      onChange={setSelectedPeople}
+                      disabled={busy}
+                      emptyText={
+                        cloudEnabled
+                          ? "No verified family members are available yet. Invite someone below."
+                          : "No people yet. Add someone below."
+                      }
+                    />
+                    <section className="composer-member-invite">
+                      <button
+                        className="text-button"
+                        type="button"
+                        onClick={() =>
+                          setShowMemberInvite((current) => !current)
+                        }
+                        aria-expanded={showMemberInvite}
+                      >
+                        <UserRound size={13} />
+                        {cloudEnabled
+                          ? "Invite another person"
+                          : "Add another person"}
+                      </button>
+                      {showMemberInvite && (
+                        <div>
+                          <label>
+                            {cloudEnabled ? "Email address" : "Person’s name"}
+                            <input
+                              type={cloudEnabled ? "email" : "text"}
+                              value={memberInviteEmail}
+                              disabled={busy}
+                              onChange={(event) =>
+                                setMemberInviteEmail(event.target.value)
+                              }
+                              placeholder={
+                                cloudEnabled
+                                  ? "person@example.com"
+                                  : "Person’s name"
+                              }
+                              maxLength={cloudEnabled ? 320 : 100}
+                            />
+                          </label>
+                          {cloudEnabled && (
+                            <label>
+                              Household access
+                              <select
+                                value={inviteRole}
+                                disabled={busy}
+                                onChange={(event) =>
+                                  setInviteRole(
+                                    event.target.value as "adult" | "viewer",
+                                  )
+                                }
+                              >
+                                <option value="adult">
+                                  Adult · collaborate
+                                </option>
+                                <option value="viewer">Viewer · limited</option>
+                              </select>
+                            </label>
+                          )}
+                          <button
+                            className="button secondary small"
+                            type="button"
+                            disabled={busy || !memberInviteEmail.trim()}
+                            onClick={() => void addPersonFromComposer()}
+                          >
+                            <Plus size={13} />
+                            {cloudEnabled ? "Create invite" : "Add and select"}
+                          </button>
+                        </div>
+                      )}
+                      {memberInviteNotice && (
+                        <small className="composer-member-notice">
+                          <Check size={12} /> {memberInviteNotice}
+                        </small>
+                      )}
+                    </section>
+                  </>
                 )}
                 {section === "threads" && (
                   <TeamPicker
                     teams={teams}
                     selected={selectedTeams}
                     onChange={setSelectedTeams}
+                    disabled={busy}
                   />
                 )}
-                <button className="button primary small" type="submit">
+                {(section === "threads" || section === "teams") &&
+                  !canCreateItem && (
+                    <small>
+                      Choose at least one verified person
+                      {section === "threads" ? " or team" : ""}.
+                    </small>
+                  )}
+                <button
+                  className="button primary small"
+                  type="submit"
+                  disabled={busy || !canCreateItem}
+                >
                   {section === "people"
                     ? cloudEnabled
                       ? "Create invite link"
@@ -687,6 +876,15 @@ export function MessageCenter({
             )}
 
             <div className="thread-list">
+              {cloudEnabled &&
+                cloud.loading &&
+                ((section === "threads" && threads.length === 0) ||
+                  (section === "people" && people.length === 0) ||
+                  (section === "teams" && teams.length === 0)) && (
+                  <p className="thread-list-status" role="status">
+                    Loading messages…
+                  </p>
+                )}
               {section === "threads" &&
                 threads.map((thread) => {
                   const last = thread.messages.at(-1);
@@ -694,25 +892,39 @@ export function MessageCenter({
                     <button
                       type="button"
                       key={thread.id}
-                      className={activeThread?.id === thread.id ? "active" : ""}
+                      className={`${activeThread?.id === thread.id ? "active" : ""} ${thread.isFamily ? "family-thread" : ""}`.trim()}
                       onClick={() => {
                         setSelectedId(thread.id);
                         setEditingThread(false);
                       }}
                     >
                       <span>
-                        <MessageCircle size={16} />
+                        {thread.isFamily ? (
+                          <UsersRound size={16} />
+                        ) : (
+                          <MessageCircle size={16} />
+                        )}
                       </span>
                       <div>
                         <strong>
                           {thread.title}
+                          {thread.isFamily && (
+                            <span className="thread-fixed">
+                              <Pin size={9} /> Fixed
+                            </span>
+                          )}
                           {(thread.unreadCount ?? 0) > 0 && (
                             <span className="thread-unread">
                               {thread.unreadCount}
                             </span>
                           )}
                         </strong>
-                        <small>{last?.text ?? "New conversation"}</small>
+                        <small>
+                          {last?.text ??
+                            (thread.isFamily
+                              ? "Everyone in your household"
+                              : "New conversation")}
+                        </small>
                       </div>
                     </button>
                   );
@@ -756,10 +968,14 @@ export function MessageCenter({
                     <button
                       type="button"
                       className="text-button"
+                      disabled={busy}
                       onClick={() => {
+                        setBusy(true);
+                        setActionError("");
                         void cloud
                           .revokeInvitation(invitation.id)
-                          .catch(showError);
+                          .catch(showError)
+                          .finally(() => setBusy(false));
                       }}
                     >
                       Revoke
@@ -798,7 +1014,10 @@ export function MessageCenter({
                     thread={activeThread}
                     people={people}
                     teams={teams}
+                    busy={busy}
                     onSave={(changes) => {
+                      setBusy(true);
+                      setActionError("");
                       const operation = cloudEnabled
                         ? cloud.updateThread(activeThread.id, changes)
                         : Promise.resolve(
@@ -806,9 +1025,12 @@ export function MessageCenter({
                           );
                       void operation
                         .then(() => setEditingThread(false))
-                        .catch(showError);
+                        .catch(showError)
+                        .finally(() => setBusy(false));
                     }}
                     onRemove={() => {
+                      setBusy(true);
+                      setActionError("");
                       const operation = cloudEnabled
                         ? cloud.removeThread(activeThread.id)
                         : Promise.resolve(local.removeThread(activeThread.id));
@@ -817,7 +1039,8 @@ export function MessageCenter({
                           setSelectedId(undefined);
                           setEditingThread(false);
                         })
-                        .catch(showError);
+                        .catch(showError)
+                        .finally(() => setBusy(false));
                     }}
                     onCancel={() => setEditingThread(false)}
                   />
@@ -825,24 +1048,30 @@ export function MessageCenter({
                   <>
                     <header>
                       <div>
-                        <span className="kicker">Thread</span>
+                        <span className="kicker">
+                          {activeThread.isFamily ? "Family thread" : "Thread"}
+                        </span>
                         <h3>{activeThread.title}</h3>
                         <small className="thread-participants">
-                          {threadParticipants.length
-                            ? threadParticipants.join(", ")
-                            : "Only you so far"}
+                          {activeThread.isFamily
+                            ? `${people.length} verified member${people.length === 1 ? "" : "s"} · membership updates automatically`
+                            : threadParticipants.length
+                              ? threadParticipants.join(", ")
+                              : "Only you so far"}
                         </small>
                       </div>
-                      {(!cloudEnabled ||
-                        activeThread.memberRole === "owner") && (
-                        <button
-                          className="button secondary small"
-                          type="button"
-                          onClick={() => setEditingThread(true)}
-                        >
-                          <Pencil size={14} /> Manage
-                        </button>
-                      )}
+                      {!activeThread.isFamily &&
+                        (!cloudEnabled ||
+                          activeThread.memberRole === "owner") && (
+                          <button
+                            className="button secondary small"
+                            type="button"
+                            disabled={busy}
+                            onClick={() => setEditingThread(true)}
+                          >
+                            <Pencil size={14} /> Manage
+                          </button>
+                        )}
                     </header>
                     <div className="thread-messages" aria-live="polite">
                       {activeThread.messages.length ? (
@@ -939,6 +1168,7 @@ export function MessageCenter({
                           <button
                             type="button"
                             className="icon-button attachment-button"
+                            disabled={busy}
                             onClick={() => attachmentInput.current?.click()}
                             aria-label="Attach files"
                           >
@@ -948,6 +1178,7 @@ export function MessageCenter({
                       )}
                       <input
                         ref={messageInput}
+                        disabled={busy}
                         value={text}
                         onChange={(event) => setText(event.target.value)}
                         placeholder={`Message ${activeThread.title}`}
@@ -1039,19 +1270,25 @@ export function MessageCenter({
                 key={activeTeam.id}
                 team={activeTeam}
                 people={people}
+                busy={busy}
                 onSave={(changes) => {
+                  setBusy(true);
+                  setActionError("");
                   const operation = cloudEnabled
                     ? cloud.updateTeam(activeTeam.id, changes)
                     : Promise.resolve(local.updateTeam(activeTeam.id, changes));
-                  void operation.catch(showError);
+                  void operation.catch(showError).finally(() => setBusy(false));
                 }}
                 onRemove={() => {
+                  setBusy(true);
+                  setActionError("");
                   const operation = cloudEnabled
                     ? cloud.removeTeam(activeTeam.id)
                     : Promise.resolve(local.removeTeam(activeTeam.id));
                   void operation
                     .then(() => setSelectedTeamId(undefined))
-                    .catch(showError);
+                    .catch(showError)
+                    .finally(() => setBusy(false));
                 }}
               />
             ) : activeTeam ? (

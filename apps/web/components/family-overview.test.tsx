@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FamilyCalendarRoute, FamilyOverview } from "./family-overview";
 
 const mocks = vi.hoisted(() => ({
+  canManage: true,
   invite: vi.fn(),
   revokeInvitation: vi.fn(),
   updateRole: vi.fn(),
@@ -71,7 +72,7 @@ vi.mock("@/lib/household-members", () => ({
     ],
     loading: false,
     error: "",
-    canManage: true,
+    canManage: mocks.canManage,
     invite: mocks.invite,
     revokeInvitation: mocks.revokeInvitation,
     updateRole: mocks.updateRole,
@@ -150,6 +151,7 @@ vi.mock("@/lib/storage-accounts", async (importOriginal) => {
 describe("Family overview", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.canManage = true;
     mocks.invite.mockResolvedValue("https://jarins.com/invite/token");
     mocks.fetch.mockResolvedValue(
       new Response(JSON.stringify({ sent: true }), {
@@ -210,5 +212,14 @@ describe("Family overview", () => {
     expect(
       await screen.findByText("Invitation emailed to newmember@example.com."),
     ).toBeTruthy();
+  });
+
+  it("keeps the invitation entry point visible while owner access is unresolved", () => {
+    mocks.canManage = false;
+
+    render(<FamilyOverview records={[]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add family member" }));
+    expect(screen.getByLabelText("Email address")).toBeTruthy();
   });
 });

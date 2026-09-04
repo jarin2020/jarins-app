@@ -257,16 +257,14 @@ export function FamilyOverview({ records }: { records: LifeRecord[] }) {
             >
               <MessageCircle size={15} /> Message family
             </button>
-            {directory.canManage && (
-              <button
-                className="button primary small"
-                type="button"
-                onClick={() => setShowInvite((shown) => !shown)}
-                aria-expanded={showInvite}
-              >
-                <UserPlus size={15} /> Add family member
-              </button>
-            )}
+            <button
+              className="button primary small"
+              type="button"
+              onClick={() => setShowInvite((shown) => !shown)}
+              aria-expanded={showInvite}
+            >
+              <UserPlus size={15} /> Add family member
+            </button>
           </div>
         </header>
 
@@ -281,7 +279,7 @@ export function FamilyOverview({ records }: { records: LifeRecord[] }) {
           </p>
         )}
 
-        {showInvite && directory.canManage && (
+        {showInvite && (
           <form className="family-invite-form" onSubmit={submitInvitation}>
             <div>
               <Mail size={19} />

@@ -28,6 +28,7 @@ import {
 } from "@/lib/jarins-store";
 import { RecordsWorkspace, recordsInSection } from "./records-workspace";
 import { PREFERENCES_KEY, usePreferences } from "@/lib/preferences-store";
+import { EmailInbox } from "./email-inbox";
 
 export function ModuleView({ slug }: { slug: string[] }) {
   // Unknown roots are rejected with a real 404 by app/[...slug]/page.tsx.
@@ -317,6 +318,7 @@ function InboxView() {
   const [destinations, setDestinations] = useState<
     Record<string, LifeRecord["module"] | "">
   >({});
+  const { user } = useAuth();
   const { add } = useLifeRecords();
   useEffect(() => {
     const load = () => setItems(readInbox());
@@ -344,69 +346,71 @@ function InboxView() {
   return (
     <>
       <PageIntro
-        eyebrow="Captured, not forgotten"
+        eyebrow="Everything in one place"
         title="Inbox"
-        description="Choose a life area once, then the item becomes part of that workspace."
+        description="Switch between quick captures and every email address without losing your place."
       />
-      {items.length ? (
-        <section className="list-surface">
-          {items.map((item) => (
-            <article className="inbox-row" key={item.id}>
-              <span className="feature-icon green">
-                <Check size={17} />
-              </span>
-              <div>
-                <strong>{item.text}</strong>
-                <p>
-                  {item.category} ·{" "}
-                  {new Intl.DateTimeFormat("en", {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  }).format(new Date(item.createdAt))}
-                </p>
-              </div>
-              <div>
-                <select
-                  aria-label={`Life area for ${item.text}`}
-                  value={destinations[item.id] ?? ""}
-                  onChange={(event) =>
-                    setDestinations((current) => ({
-                      ...current,
-                      [item.id]: event.target.value as LifeRecord["module"],
-                    }))
-                  }
-                >
-                  <option value="">Choose area</option>
-                  {Object.entries(moduleLabels).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="button secondary small"
-                  disabled={!destinations[item.id]}
-                  onClick={() => process(item)}
-                >
-                  Process
-                </button>
-                <button
-                  className="icon-button"
-                  onClick={() => remove(item.id)}
-                  aria-label={`Remove ${item.text}`}
-                >
-                  <Trash2 size={17} />
-                </button>
-              </div>
-            </article>
-          ))}
-        </section>
-      ) : (
-        <Empty
-          title="Your inbox is clear"
-          body="Nothing urgent here. That is allowed. Use Quick capture whenever something enters your head."
-        />
-      )}
+      <EmailInbox ownerId={user?.id ?? "local"} captureCount={items.length}>
+        {items.length ? (
+          <section className="list-surface">
+            {items.map((item) => (
+              <article className="inbox-row" key={item.id}>
+                <span className="feature-icon green">
+                  <Check size={17} />
+                </span>
+                <div>
+                  <strong>{item.text}</strong>
+                  <p>
+                    {item.category} ·{" "}
+                    {new Intl.DateTimeFormat("en", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(new Date(item.createdAt))}
+                  </p>
+                </div>
+                <div>
+                  <select
+                    aria-label={`Life area for ${item.text}`}
+                    value={destinations[item.id] ?? ""}
+                    onChange={(event) =>
+                      setDestinations((current) => ({
+                        ...current,
+                        [item.id]: event.target.value as LifeRecord["module"],
+                      }))
+                    }
+                  >
+                    <option value="">Choose area</option>
+                    {Object.entries(moduleLabels).map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="button secondary small"
+                    disabled={!destinations[item.id]}
+                    onClick={() => process(item)}
+                  >
+                    Process
+                  </button>
+                  <button
+                    className="icon-button"
+                    onClick={() => remove(item.id)}
+                    aria-label={`Remove ${item.text}`}
+                  >
+                    <Trash2 size={17} />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </section>
+        ) : (
+          <Empty
+            title="Your capture inbox is clear"
+            body="Nothing urgent here. Use Quick capture whenever something enters your head, or connect an email inbox above."
+          />
+        )}
+      </EmailInbox>
     </>
   );
 }

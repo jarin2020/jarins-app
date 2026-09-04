@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Get life out of your head and know what matters now.",
     start_url: "/today",
     display: "standalone",
-    background_color: "#f4f1ea",
-    theme_color: "#315f4b",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
   };
 }

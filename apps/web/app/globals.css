@@ -255,6 +255,9 @@ h3 {
   align-items: center;
   gap: 8px;
 }
+.account-menu {
+  position: relative;
+}
 .icon-button {
   width: 41px;
   height: 41px;
@@ -270,9 +273,19 @@ h3 {
   align-items: center;
   gap: 8px;
   padding: 5px 10px 5px 6px;
+  border: 0;
   border-radius: 14px;
   background: var(--surface);
+  color: var(--text);
   font-size: 12px;
+}
+.profile-chip:hover,
+.profile-chip[aria-expanded="true"] {
+  background: var(--surface-soft);
+}
+.profile-chip:disabled {
+  cursor: wait;
+  color: var(--muted);
 }
 .profile-chip > span {
   width: 31px;
@@ -284,6 +297,82 @@ h3 {
   background: var(--primary);
   font-size: 10px;
   font-weight: 800;
+}
+.account-menu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 17px;
+  background: var(--surface);
+  box-shadow: 0 18px 48px rgba(33, 39, 36, 0.16);
+}
+.account-menu-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.account-menu-identity > span {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+}
+.account-menu-identity div {
+  min-width: 0;
+}
+.account-menu-identity strong,
+.account-menu-identity small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-menu-identity strong {
+  font-size: 13px;
+}
+.account-menu-identity small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.account-menu-links {
+  display: grid;
+  padding: 6px 0;
+}
+.account-menu-links a,
+.account-menu-signout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+.account-menu-links a:hover,
+.account-menu-signout:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+.account-menu-signout {
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 10px 10px;
+  color: #a0443e;
 }
 .page-content {
   max-width: 1480px;

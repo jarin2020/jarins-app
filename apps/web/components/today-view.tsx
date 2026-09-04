@@ -14,10 +14,20 @@ import {
 import { useMemo } from "react";
 import { useLifeRecords } from "@/lib/jarins-store";
 import { usePreferences } from "@/lib/preferences-store";
+import { useAuth } from "./auth-provider";
 
 export function TodayView() {
   const { records, loading, error, update } = useLifeRecords();
   const { preferences } = usePreferences();
+  const { profile, status: authStatus } = useAuth();
+  const accountPreferences =
+    authStatus === "signed-in" && profile
+      ? {
+          name: profile.displayName,
+          locale: profile.locale,
+          timezone: profile.timezone,
+        }
+      : preferences;
   const essentials = useMemo(
     () => records.filter((item) => item.essential).slice(0, 7),
     [records],
@@ -88,12 +98,12 @@ export function TodayView() {
   const date = (() => {
     try {
       return new Intl.DateTimeFormat(
-        preferences.locale === "de" ? "de-DE" : "en-GB",
+        accountPreferences.locale === "de" ? "de-DE" : "en-GB",
         {
           weekday: "long",
           day: "numeric",
           month: "long",
-          timeZone: preferences.timezone,
+          timeZone: accountPreferences.timezone,
         },
       ).format(new Date());
     } catch {
@@ -115,7 +125,7 @@ export function TodayView() {
         <div className="hero-message">
           <span className="eyebrow light">{date}</span>
           <h1>
-            {greeting}, {preferences.name}.<br />
+            {greeting}, {accountPreferences.name}.<br />
             Let’s protect the essentials.
           </h1>
           <p>

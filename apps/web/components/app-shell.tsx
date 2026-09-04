@@ -4,36 +4,49 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
+  BellRing,
+  ChevronDown,
   Command,
+  Database,
   LogIn,
   LogOut,
   Menu,
   Plus,
   Search,
+  ShieldCheck,
+  UserRound,
+  UsersRound,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { primaryModules, utilityModules } from "@/lib/modules";
 import { QuickCapture } from "./quick-capture";
 import { usePreferences } from "@/lib/preferences-store";
 import { useAuth } from "./auth-provider";
+import { getInitials } from "@/lib/account-profile";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [captureOpen, setCaptureOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const { preferences } = usePreferences();
-  const { status, signOut } = useAuth();
+  const { profile, status, signOut } = useAuth();
+  const displayName =
+    status === "signed-in" && profile
+      ? profile.displayName
+      : status === "demo"
+        ? preferences.name
+        : status === "signed-out"
+          ? "Sign in"
+          : "Account";
   const initials =
-    preferences.name
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "J";
+    status === "signed-in" && profile
+      ? profile.initials
+      : getInitials(displayName);
 
   const openCapture = useCallback(() => setCaptureOpen(true), []);
   useEffect(() => {
@@ -50,6 +63,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [openCapture]);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node))
+        setAccountMenuOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [accountMenuOpen]);
 
   const navigateSearch = (event: React.FormEvent) => {
     event.preventDefault();
@@ -171,10 +201,95 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Bell size={18} />
             </Link>
-            <Link href="/settings/profile" className="profile-chip">
-              <span>{initials}</span>
-              <b>{preferences.name}</b>
-            </Link>
+            {status === "signed-out" ? (
+              <Link className="profile-chip" href="/login">
+                <span>
+                  <LogIn size={14} />
+                </span>
+                <b>Sign in</b>
+              </Link>
+            ) : (
+              <div className="account-menu" ref={accountMenuRef}>
+                <button
+                  className="profile-chip"
+                  type="button"
+                  disabled={status === "loading"}
+                  aria-haspopup="menu"
+                  aria-expanded={accountMenuOpen}
+                  aria-label={`Open account menu for ${displayName}`}
+                  onClick={() => setAccountMenuOpen((open) => !open)}
+                >
+                  <span>{initials}</span>
+                  <b>{displayName}</b>
+                  <ChevronDown size={14} aria-hidden="true" />
+                </button>
+                {accountMenuOpen && (
+                  <div className="account-menu-panel" role="menu">
+                    <div className="account-menu-identity">
+                      <span>{initials}</span>
+                      <div>
+                        <strong>{displayName}</strong>
+                        <small>
+                          {status === "signed-in"
+                            ? profile?.email || "Signed-in account"
+                            : "Saved on this device"}
+                        </small>
+                      </div>
+                    </div>
+                    <div className="account-menu-links">
+                      <Link
+                        href="/settings/profile"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        <UserRound size={16} /> Profile
+                      </Link>
+                      <Link
+                        href="/settings/household"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        <UsersRound size={16} /> Household
+                      </Link>
+                      <Link
+                        href="/settings/notifications"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        <BellRing size={16} /> Notifications
+                      </Link>
+                      <Link
+                        href="/settings/privacy"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        <ShieldCheck size={16} /> Privacy
+                      </Link>
+                      <Link
+                        href="/settings/data"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        <Database size={16} /> Data &amp; export
+                      </Link>
+                    </div>
+                    {status === "signed-in" && (
+                      <button
+                        className="account-menu-signout"
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setAccountMenuOpen(false);
+                          void signOut();
+                        }}
+                      >
+                        <LogOut size={16} /> Sign out
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </header>
         <div className="page-content">{children}</div>

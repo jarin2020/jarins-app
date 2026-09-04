@@ -697,18 +697,44 @@ function SettingsView({ section }: { section?: string }) {
   const active = section ?? "profile";
   const { preferences, save: savePreferences } = usePreferences();
   const { records, replaceAll, mode } = useLifeRecords();
-  const { status, signOut } = useAuth();
+  const { profile, status, signOut, updateProfile } = useAuth();
   const [draft, setDraft] = useState(preferences);
   const [saved, setSaved] = useState(false);
+  const [profileError, setProfileError] = useState("");
   const [dataMessage, setDataMessage] = useState("");
   const importInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    queueMicrotask(() => setDraft(preferences));
-  }, [preferences]);
-  const save = (next = draft) => {
-    savePreferences(next);
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 1600);
+    queueMicrotask(() =>
+      setDraft(
+        status === "signed-in" && profile
+          ? {
+              ...preferences,
+              name: profile.displayName,
+              timezone: profile.timezone,
+              locale: profile.locale,
+            }
+          : preferences,
+      ),
+    );
+  }, [preferences, profile, status]);
+  const save = async (next = draft) => {
+    setProfileError("");
+    try {
+      if (active === "profile" && status === "signed-in") {
+        await updateProfile({
+          displayName: next.name,
+          timezone: next.timezone,
+          locale: next.locale,
+        });
+      }
+      savePreferences(next);
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 1600);
+    } catch (error) {
+      setProfileError(
+        error instanceof Error ? error.message : "Profile could not be saved.",
+      );
+    }
   };
   const patchPreference = <K extends keyof typeof draft>(
     key: K,
@@ -716,7 +742,7 @@ function SettingsView({ section }: { section?: string }) {
   ) => {
     const next = { ...draft, [key]: value };
     setDraft(next);
-    if (typeof value === "boolean") save(next);
+    if (typeof value === "boolean") void save(next);
   };
   const exportData = () => {
     const payload = {
@@ -980,7 +1006,11 @@ function SettingsView({ section }: { section?: string }) {
                   <option value="de">Deutsch</option>
                 </select>
               </label>
-              <button className="button primary" onClick={() => save()}>
+              <button
+                className="button primary"
+                disabled={!draft.name.trim()}
+                onClick={() => void save()}
+              >
                 Save profile
               </button>
               {status === "signed-in" && (
@@ -994,7 +1024,7 @@ function SettingsView({ section }: { section?: string }) {
             </>
           )}
           <span className="save-state" role="status">
-            {saved ? "Saved" : ""}
+            {profileError || (saved ? "Saved" : "")}
           </span>
         </section>
       </div>
@@ -1253,6 +1283,7 @@ function LoginView() {
 
 function SignupView() {
   const { supabase, status } = useAuth();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [household, setHousehold] = useState("");
@@ -1282,7 +1313,10 @@ function SignupView() {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: { household_name: household.trim() || "My household" },
+        data: {
+          display_name: name.trim(),
+          household_name: household.trim() || "My household",
+        },
       },
     });
     if (error) {
@@ -1306,6 +1340,14 @@ function SignupView() {
         </p>
       ) : (
         <>
+          <label className="input-row">
+            Your name
+            <input
+              autoComplete="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
           <label className="input-row">
             Email
             <input
@@ -1340,7 +1382,7 @@ function SignupView() {
           )}
           <button
             className="button primary"
-            disabled={busy || !email || !password}
+            disabled={busy || !name.trim() || !email || !password}
             onClick={() => void submit()}
           >
             Create account

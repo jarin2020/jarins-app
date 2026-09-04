@@ -170,8 +170,13 @@ export function createCloudRepository(
     },
 
     subscribe(onChange: () => void) {
+      // Realtime 2.112+ reuses an existing channel with the same topic. React
+      // can start the replacement effect before the previous async
+      // removeChannel() finishes, so a fixed topic returns the already-joined
+      // channel and rejects adding this callback. A per-subscription topic
+      // keeps those two lifecycles independent.
       const channel = supabase
-        .channel("life-records")
+        .channel(`life-records:${crypto.randomUUID()}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "life_records" },

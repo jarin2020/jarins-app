@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { rowToRecord, recordToRow } from "./cloud-repository";
+import {
+  createCloudRepository,
+  rowToRecord,
+  recordToRow,
+} from "./cloud-repository";
 import {
   localRepository,
   parseBackup,
@@ -66,6 +70,33 @@ describe("money is stored as integer cents", () => {
       updated_at: record().updatedAt,
     } as never);
     expect(back.amount).toBe(42);
+  });
+});
+
+describe("cloud realtime subscriptions", () => {
+  it("uses a fresh channel while the previous async cleanup is pending", () => {
+    const topics: string[] = [];
+    const removeChannel = vi.fn().mockReturnValue(new Promise(() => {}));
+    const client = {
+      channel: vi.fn((topic: string) => {
+        topics.push(topic);
+        const channel = {
+          on: vi.fn(() => channel),
+          subscribe: vi.fn(() => channel),
+        };
+        return channel;
+      }),
+      removeChannel,
+    };
+    const repository = createCloudRepository(client as never, "household-1");
+
+    const unsubscribe = repository.subscribe(vi.fn());
+    unsubscribe();
+    repository.subscribe(vi.fn());
+
+    expect(removeChannel).toHaveBeenCalledOnce();
+    expect(topics).toHaveLength(2);
+    expect(topics[0]).not.toBe(topics[1]);
   });
 });
 

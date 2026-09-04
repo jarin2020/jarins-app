@@ -1,15 +1,23 @@
 -- Minimal stand-ins for the Supabase-managed schemas so the migrations can be
 -- executed against a plain Postgres for syntax and logic verification.
-create extension if not exists "pgcrypto";
-
 create schema if not exists auth;
 create schema if not exists storage;
+create schema if not exists extensions;
+create extension if not exists "pgcrypto" with schema extensions;
 
 create table auth.users (
   id uuid primary key default gen_random_uuid(),
   email text,
+  email_confirmed_at timestamptz,
   raw_user_meta_data jsonb not null default '{}'
 );
+
+do $$ begin
+  create role anon nologin;
+exception when duplicate_object then null;
+end $$;
+
+create publication supabase_realtime;
 
 create or replace function auth.uid() returns uuid
 language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;

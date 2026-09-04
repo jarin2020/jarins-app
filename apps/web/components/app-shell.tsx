@@ -32,6 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [captureOpen, setCaptureOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
+  const [messageUnreadCount, setMessageUnreadCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -304,6 +305,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       >
         <MessageCircle size={19} />
         <span>Messages</span>
+        {messageUnreadCount > 0 && (
+          <b className="message-fab-badge">
+            {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
+          </b>
+        )}
       </button>
       <nav className="mobile-nav" aria-label="Mobile navigation">
         {primaryModules
@@ -333,6 +339,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         onClose={() => setMessagesOpen(false)}
         ownerId={user?.id ?? "local"}
         author={displayName}
+        onUnreadCountChange={setMessageUnreadCount}
       />
     </div>
   );

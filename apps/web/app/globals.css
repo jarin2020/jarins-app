@@ -919,6 +919,17 @@ h3 {
   font-size: 12px;
   box-shadow: 0 16px 36px rgba(49, 95, 75, 0.28);
 }
+.message-fab-badge {
+  min-width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  color: var(--primary);
+  background: white;
+  font-size: 9px;
+}
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1518,6 +1529,346 @@ fieldset legend {
   height: 36px;
   color: var(--family);
 }
+.mailbox-connect-form.functional {
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+}
+.mailbox-connect-form.functional > .button,
+.mailbox-connect-form.functional > .mailbox-inline-error {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.mailbox-check-field {
+  min-height: 42px;
+  display: flex !important;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  align-self: end;
+  gap: 8px !important;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface-soft);
+}
+.mailbox-check-field input {
+  width: 15px;
+  height: 15px;
+  padding: 0;
+}
+.mailbox-inline-error,
+.mailbox-banner {
+  margin: 0 0 14px;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+}
+.mailbox-inline-error,
+.mailbox-banner.error {
+  border-color: color-mix(in srgb, var(--family) 30%, var(--border));
+  background: var(--family-soft);
+  color: var(--family);
+}
+.mailbox-total-unread {
+  align-self: center;
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.mailbox-tab-status.active {
+  background: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+.mailbox-tab-status.syncing {
+  background: var(--career);
+  box-shadow: 0 0 0 3px var(--career-soft);
+}
+.mailbox-tab-status.error {
+  background: var(--family);
+  box-shadow: 0 0 0 3px var(--family-soft);
+}
+.mailbox-workspace {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.mailbox-toolbar {
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: auto auto auto 1fr auto auto auto;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.mailbox-toolbar > div {
+  display: grid;
+  gap: 1px;
+}
+.mailbox-toolbar > div strong {
+  font-size: 12px;
+}
+.mailbox-toolbar > div small,
+.mailbox-sync-time {
+  color: var(--muted);
+  font-size: 9px;
+}
+.mailbox-toolbar .mailbox-status {
+  margin: 0;
+}
+.mailbox-toolbar .mailbox-status.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.mailbox-toolbar .mailbox-status.syncing {
+  background: var(--career-soft);
+  color: var(--career);
+}
+.mailbox-toolbar .mailbox-status.error {
+  background: var(--family-soft);
+  color: var(--family);
+}
+.mailbox-workspace > .mailbox-banner {
+  margin: 12px 16px 0;
+}
+.mailbox-sync-time {
+  margin: 8px 16px -2px;
+  text-align: right;
+}
+.mailbox-columns {
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+.mailbox-columns.reading {
+  grid-template-columns: minmax(260px, 0.38fr) minmax(0, 0.62fr);
+}
+.mail-message-list {
+  min-width: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+}
+.mail-message-list > button {
+  width: 100%;
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+}
+.mail-message-list > button:hover,
+.mail-message-list > button.active {
+  background: var(--surface-soft);
+}
+.mail-message-list > button.unread {
+  box-shadow: inset 3px 0 var(--primary);
+}
+.mail-message-list > button.unread strong,
+.mail-message-list > button.unread .mail-message-subject {
+  font-weight: 800;
+}
+.mail-message-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mail-message-heading strong {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mail-message-heading time {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 9px;
+}
+.mail-message-subject {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mail-message-subject svg {
+  flex: 0 0 auto;
+  color: var(--warm);
+}
+.mail-message-snippet {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mailbox-loading,
+.mailbox-empty {
+  min-height: 260px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 30px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+}
+.mailbox-empty strong {
+  color: var(--text);
+  font-size: 13px;
+}
+.mailbox-empty p {
+  margin: 0;
+}
+.mail-reader {
+  min-width: 0;
+  padding: 22px 24px;
+}
+.mail-reader > header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 11px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid var(--border);
+}
+.mail-reader h2 {
+  margin: 0 0 7px;
+  font-size: 17px;
+}
+.mail-reader header p,
+.mail-reader header small {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+.mail-reader-actions {
+  display: flex;
+  gap: 5px;
+}
+.mail-reader-actions .icon-button:first-child {
+  color: var(--warm);
+}
+.mail-reader-body {
+  min-height: 230px;
+  padding: 22px 0;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.72;
+  white-space: pre-wrap;
+}
+.mail-reader-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.mail-reader-attachments > strong {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+}
+.mail-reader-attachments a {
+  text-decoration: none;
+}
+.mail-compose {
+  margin: 14px 16px 4px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface-soft);
+}
+.mail-compose-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.mail-compose-title > div {
+  display: grid;
+  gap: 2px;
+}
+.mail-compose form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.mail-compose form label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+.mail-compose form label:nth-child(3),
+.mail-compose textarea,
+.mail-compose-footer,
+.mail-compose .mailbox-inline-error {
+  grid-column: 1 / -1;
+}
+.mail-compose input,
+.mail-compose textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  outline: 0;
+  background: var(--surface);
+  color: var(--text);
+}
+.mail-compose textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+.mail-compose input:focus,
+.mail-compose textarea:focus {
+  border-color: var(--primary);
+}
+.mail-compose-footer {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 9px;
+}
+.mail-compose-footer small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.mail-attachment-picker {
+  cursor: pointer;
+}
+.mail-attachment-picker input {
+  display: none;
+}
+.spin {
+  animation: mailbox-spin 0.85s linear infinite;
+}
+@keyframes mailbox-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .list-surface {
   padding: 22px;
   border: 1px solid var(--border);
@@ -1692,6 +2043,13 @@ fieldset legend {
 .calendar-connect-button {
   flex: 0 0 auto;
 }
+.calendar-bar-actions,
+.calendar-connection-actions,
+.calendar-event-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
 .calendar-connect {
   margin-bottom: 17px;
   padding: 20px;
@@ -1741,6 +2099,10 @@ fieldset legend {
   border-color: #c6dac9;
   background: var(--primary-soft);
 }
+.calendar-provider-grid > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
 .calendar-provider-grid .calendar-provider-mark {
   grid-row: 1 / 3;
 }
@@ -1781,7 +2143,7 @@ fieldset legend {
 }
 .calendar-connect-form {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) 170px auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: end;
   gap: 9px;
 }
@@ -1795,7 +2157,10 @@ fieldset legend {
 }
 .calendar-connect-form input,
 .calendar-connect-form select,
-.calendar-sync-controls select {
+.calendar-sync-controls select,
+.calendar-event-form input,
+.calendar-event-form select,
+.calendar-event-form textarea {
   width: 100%;
   display: block;
   margin-top: 5px;
@@ -1807,6 +2172,11 @@ fieldset legend {
   font-size: 11px;
   letter-spacing: normal;
   text-transform: none;
+}
+.calendar-connect-form > .button,
+.calendar-connect-form > .form-error,
+.calendar-connect-form > .calendar-inclusion-toggle {
+  grid-column: 1 / -1;
 }
 .calendar-security-note {
   margin: 10px 0 0;
@@ -1847,6 +2217,14 @@ fieldset legend {
   font-size: 8px;
   font-weight: 750;
 }
+.calendar-auth-status.active {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.calendar-auth-status.error {
+  color: #a34d45;
+  background: #f9e9e6;
+}
 .calendar-connection-copy .calendar-setup-note {
   max-width: 560px;
   margin-top: 8px;
@@ -1864,11 +2242,155 @@ fieldset legend {
   text-transform: none !important;
 }
 .calendar-inclusion-toggle input {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  display: inline-block;
+  margin: 0;
+  padding: 0;
   accent-color: var(--primary);
 }
 .calendar-remove {
   width: 35px;
   height: 35px;
+}
+.calendar-global-error {
+  margin: -8px 0 15px;
+}
+.calendar-source-picker,
+.calendar-event-editor {
+  margin: 12px 0 17px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+}
+.calendar-source-picker h2,
+.calendar-event-editor h2 {
+  margin: 3px 0 0;
+}
+.calendar-source-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 13px;
+}
+.calendar-source-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  font-size: 10px;
+}
+.calendar-source-list input {
+  accent-color: var(--primary);
+}
+.calendar-source-list label > span:last-child {
+  min-width: 0;
+  display: grid;
+}
+.calendar-source-list small {
+  color: var(--muted);
+  font-size: 8px;
+}
+.calendar-source-dot,
+.calendar-event-color {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 99px;
+  background: var(--primary);
+}
+.calendar-editor-heading,
+.calendar-list-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.calendar-list-heading > span {
+  color: var(--muted);
+  font-size: 9px;
+}
+.calendar-event-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.calendar-event-form label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.calendar-event-form textarea {
+  resize: vertical;
+}
+.calendar-event-title,
+.calendar-event-description,
+.calendar-event-form > .button,
+.calendar-event-form > .form-error {
+  grid-column: 1 / -1;
+}
+.calendar-all-day-toggle {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+.calendar-all-day-toggle input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--primary);
+}
+.calendar-provider-events {
+  margin-top: 17px;
+}
+.calendar-event-row {
+  display: grid;
+  grid-template-columns: 58px auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+.calendar-event-row time {
+  display: grid;
+}
+.calendar-event-row time strong {
+  font-size: 11px;
+}
+.calendar-event-row time span,
+.calendar-event-row p {
+  color: var(--muted);
+  font-size: 9px;
+}
+.calendar-event-row p {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 3px 0 0;
+}
+.calendar-shared-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border-radius: 99px;
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-size: 8px;
+  font-weight: 700;
+}
+.family-schedule-event.external {
+  cursor: default;
 }
 .calendar-grid {
   display: grid;
@@ -2536,6 +3058,12 @@ fieldset legend {
   align-items: end;
   gap: 9px;
 }
+.vault-connect-form.webdav {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.vault-connect-form.webdav .button {
+  min-height: 37px;
+}
 .vault-connect-form > label,
 .vault-connection-controls > label {
   color: var(--muted);
@@ -2546,6 +3074,7 @@ fieldset legend {
 }
 .vault-connect-form input,
 .vault-connect-form select,
+.vault-connection-controls input,
 .vault-connection-controls select {
   width: 100%;
   display: block;
@@ -2617,6 +3146,21 @@ fieldset legend {
   font-size: 8px;
   font-weight: 750;
 }
+.vault-auth-status.active {
+  gap: 4px;
+  color: #246b43;
+  background: #e4f3e9;
+}
+.vault-auth-status.syncing,
+.vault-auth-status.connecting {
+  color: #27659b;
+  background: #e2eff9;
+}
+.vault-auth-status.error {
+  gap: 4px;
+  color: #a14036;
+  background: #fae9e6;
+}
 .vault-connection-copy .vault-setup-note {
   max-width: 560px;
   margin-top: 8px;
@@ -2665,6 +3209,99 @@ fieldset legend {
   color: var(--text);
   background: transparent;
   font-size: 10px;
+}
+.vault-browser-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vault-breadcrumbs {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 8px 15px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  white-space: nowrap;
+}
+.vault-breadcrumbs span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+.vault-breadcrumbs button {
+  padding: 3px 5px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 9px;
+  font-weight: 700;
+}
+.vault-breadcrumbs button:hover {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.vault-folder-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border);
+  color: var(--primary);
+  background: #f7faf8;
+}
+.vault-folder-form input {
+  min-width: 160px;
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 10px;
+}
+.vault-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  border: 1px solid #ebc9c4;
+  border-radius: 10px;
+  color: #943d33;
+  background: #fff5f3;
+  font-size: 10px;
+}
+.vault-browser .vault-error {
+  margin: 0;
+  border-width: 0 0 1px;
+  border-radius: 0;
+}
+.vault-error.compact {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+.vault-upload-progress {
+  display: grid;
+  grid-template-columns: auto minmax(100px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  background: #f7faf8;
+  font-size: 9px;
+}
+.vault-upload-progress progress {
+  width: 100%;
+  accent-color: var(--primary);
+}
+.vault-upload-progress strong {
+  color: var(--primary);
 }
 .vault-file-filters {
   display: flex;
@@ -2717,6 +3354,94 @@ fieldset legend {
 }
 .vault-empty .button {
   margin-top: 15px;
+}
+.vault-empty.compact {
+  min-height: 220px;
+}
+.vault-file-list {
+  width: 100%;
+}
+.vault-file-row {
+  min-height: 55px;
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1.7fr) minmax(120px, 0.8fr)
+    110px 75px 150px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 15px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 9px;
+}
+.vault-file-row.heading {
+  min-height: 35px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 8px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.vault-file-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+}
+.vault-file-name > span:last-child {
+  min-width: 0;
+}
+.vault-file-name strong,
+.vault-file-name small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vault-file-name strong {
+  font-size: 10px;
+}
+.vault-file-name small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 8px;
+}
+.vault-file-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: #426d5d;
+  background: #edf5f1;
+}
+.vault-file-icon.folder {
+  color: #8a6428;
+  background: var(--warm-soft);
+}
+.vault-file-provider,
+.vault-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vault-file-actions {
+  justify-content: flex-end;
+}
+.vault-file-actions .icon-button {
+  width: 29px;
+  height: 29px;
+}
+.vault-file-actions .danger:hover {
+  color: #a14036;
+  background: #fae9e6;
 }
 .vault-browser-footer {
   display: flex;
@@ -3481,6 +4206,12 @@ fieldset legend {
   .calendar-connect-button {
     width: 100%;
   }
+  .calendar-bar-actions {
+    width: 100%;
+  }
+  .calendar-bar-actions .button {
+    flex: 1;
+  }
   .calendar-connect {
     padding: 15px;
   }
@@ -3488,7 +4219,9 @@ fieldset legend {
     flex-direction: column;
   }
   .calendar-provider-grid,
-  .calendar-connect-form {
+  .calendar-connect-form,
+  .calendar-event-form,
+  .calendar-source-list {
     grid-template-columns: 1fr;
   }
   .calendar-connect-form .button {
@@ -3503,6 +4236,12 @@ fieldset legend {
   }
   .calendar-sync-controls {
     grid-column: 1 / -1;
+  }
+  .calendar-event-row {
+    grid-template-columns: 52px auto minmax(0, 1fr) auto;
+  }
+  .calendar-event-row .calendar-shared-badge {
+    display: none;
   }
   .calendar-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -3591,6 +4330,9 @@ fieldset legend {
   .vault-connect-form {
     grid-template-columns: 1fr;
   }
+  .vault-connect-form.webdav {
+    grid-template-columns: 1fr;
+  }
   .vault-connect-form .button {
     width: 100%;
   }
@@ -3615,8 +4357,34 @@ fieldset legend {
   .vault-browser-toolbar > label {
     min-width: 100%;
   }
+  .vault-browser-actions {
+    width: 100%;
+  }
+  .vault-browser-actions .button {
+    flex: 1;
+  }
   .vault-file-filters {
     overflow-x: auto;
+  }
+  .vault-folder-form {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .vault-folder-form input {
+    min-width: calc(100% - 30px);
+  }
+  .vault-upload-progress {
+    grid-template-columns: 1fr auto;
+  }
+  .vault-upload-progress progress {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .vault-file-list {
+    overflow-x: auto;
+  }
+  .vault-file-row {
+    min-width: 760px;
   }
   .vault-empty {
     min-height: 300px;
@@ -3706,6 +4474,13 @@ fieldset legend {
   .mailbox-connect-form {
     grid-template-columns: 1fr;
   }
+  .mailbox-connect-form.functional {
+    grid-template-columns: 1fr;
+  }
+  .mailbox-connect-form.functional > .button,
+  .mailbox-connect-form.functional > .mailbox-inline-error {
+    grid-column: auto;
+  }
   .mailbox-connect-form label:nth-child(2):last-of-type {
     grid-column: auto;
   }
@@ -3723,6 +4498,58 @@ fieldset legend {
   .mailbox-remove {
     grid-column: 3;
     grid-row: 1;
+  }
+  .mailbox-toolbar {
+    grid-template-columns: auto 1fr auto;
+  }
+  .mailbox-toolbar > span:nth-of-type(2) {
+    display: none;
+  }
+  .mailbox-toolbar > .mailbox-status {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .mailbox-toolbar > .button {
+    justify-content: center;
+  }
+  .mailbox-toolbar > .button:nth-of-type(1) {
+    grid-column: 1 / 3;
+  }
+  .mailbox-toolbar > .button:nth-of-type(2) {
+    grid-column: 3;
+  }
+  .mailbox-columns.reading {
+    grid-template-columns: 1fr;
+  }
+  .mailbox-columns.reading .mail-message-list {
+    display: none;
+  }
+  .mail-reader {
+    padding: 18px;
+  }
+  .mail-reader > header {
+    grid-template-columns: auto 1fr;
+  }
+  .mail-reader-actions {
+    grid-column: 2;
+  }
+  .mail-compose form {
+    grid-template-columns: 1fr;
+  }
+  .mail-compose form label:nth-child(3),
+  .mail-compose textarea,
+  .mail-compose-footer,
+  .mail-compose .mailbox-inline-error {
+    grid-column: auto;
+  }
+  .mail-compose-footer {
+    grid-template-columns: auto 1fr;
+  }
+  .mail-compose-footer > span {
+    display: none;
+  }
+  .mail-compose-footer > .button:last-child {
+    grid-column: 1 / -1;
   }
   .inbox-row > div:last-child {
     flex-wrap: wrap;
@@ -4189,6 +5016,14 @@ fieldset legend {
   border-top: 1px solid var(--border);
   background: var(--surface);
 }
+.message-compose.with-attachment {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+.message-compose .attachment-button {
+  align-self: stretch;
+  border-color: var(--border);
+  background: var(--surface-soft);
+}
 .message-compose input {
   min-width: 0;
   padding: 10px 12px;
@@ -4196,6 +5031,179 @@ fieldset legend {
   border-radius: 12px;
   color: var(--text);
   background: var(--surface-soft);
+}
+.thread-list strong {
+  position: relative;
+}
+.thread-unread {
+  min-width: 16px;
+  height: 16px;
+  margin-left: 5px;
+  padding: 0 4px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  color: white;
+  background: var(--primary);
+  font-size: 8px;
+}
+.pending-invitation {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px dashed var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+}
+.pending-invitation > span {
+  color: var(--primary);
+}
+.pending-invitation div,
+.pending-invitation strong,
+.pending-invitation small {
+  min-width: 0;
+}
+.pending-invitation strong,
+.pending-invitation small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pending-invitation strong {
+  font-size: 10px;
+}
+.pending-invitation small {
+  color: var(--muted);
+  font-size: 8px;
+}
+.pending-invitation .text-button {
+  font-size: 8px;
+}
+.invitation-link {
+  display: grid;
+  gap: 5px;
+  padding: 9px;
+  border-radius: 10px;
+  background: var(--primary-soft);
+}
+.invitation-link > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px;
+}
+.invitation-link input {
+  margin: 0;
+  font-size: 8px;
+}
+.message-error {
+  margin: 0 0 10px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: #8a2f2b;
+  background: #fceceb;
+  font-size: 9px;
+}
+.thread-messages article.message-received {
+  margin-right: auto;
+  margin-left: 0;
+  text-align: left;
+}
+.thread-messages article.message-received > div {
+  border-radius: 15px 15px 15px 4px;
+  color: var(--text);
+  background: var(--primary-soft);
+}
+.message-attachment {
+  max-width: 100%;
+  margin-top: 4px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--text);
+  background: var(--surface);
+  text-align: left;
+}
+.message-attachment span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+}
+.message-attachment small {
+  margin: 0 !important;
+}
+.message-file-queue {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 17px 0;
+  border-top: 1px solid var(--border);
+}
+.message-file-queue > span {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-size: 9px;
+}
+.message-file-queue button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+}
+.participant-verification {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+  border-radius: 12px;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.participant-verification strong,
+.participant-verification small {
+  display: block;
+}
+.participant-verification small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.invitation-summary {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.invitation-summary strong,
+.invitation-summary small {
+  display: block;
+}
+.invitation-summary small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
 }
 .message-compose .button {
   width: 42px;

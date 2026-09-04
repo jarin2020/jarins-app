@@ -7,7 +7,7 @@ import {
 } from "@/lib/supabase/config";
 
 /** Routes reachable without a session. Everything else requires one. */
-const PUBLIC_PATHS = ["/login", "/signup", "/auth", "/onboarding"];
+const PUBLIC_PATHS = ["/login", "/signup", "/invite", "/auth", "/onboarding"];
 
 function buildCsp(nonce: string) {
   const isDev = process.env.NODE_ENV === "development";

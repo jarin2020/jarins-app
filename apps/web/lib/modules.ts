@@ -173,6 +173,7 @@ export const findModule = (slug?: string) =>
 export const standaloneRoutes = [
   "login",
   "signup",
+  "invite",
   "onboarding",
   "reset",
 ] as const;

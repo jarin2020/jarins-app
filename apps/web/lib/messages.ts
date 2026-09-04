@@ -8,8 +8,21 @@ export type ConversationKind = (typeof conversationKinds)[number];
 
 const messageSchema = z.object({
   id: z.string().min(1),
-  text: z.string().min(1).max(4000),
+  text: z.string().max(4000),
   author: z.string().min(1).max(100),
+  senderId: z.string().min(1).optional(),
+  readBy: z.array(z.string().min(1)).optional(),
+  attachments: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        fileName: z.string().min(1).max(255),
+        mimeType: z.string().min(1).max(160),
+        sizeBytes: z.number().positive(),
+        storagePath: z.string().min(1),
+      }),
+    )
+    .optional(),
   createdAt: z.string().min(1),
 });
 
@@ -20,6 +33,8 @@ const messageThreadSchema = z.object({
   participantIds: z.array(z.string().min(1)).max(50).optional(),
   teamIds: z.array(z.string().min(1)).max(20).optional(),
   messages: z.array(messageSchema).max(1000),
+  memberRole: z.enum(["owner", "member"]).optional(),
+  unreadCount: z.number().nonnegative().optional(),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
 });
@@ -30,6 +45,8 @@ const messagePersonSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(100),
   detail: z.string().max(160),
+  verified: z.boolean().optional(),
+  role: z.string().optional(),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
 });
@@ -38,6 +55,7 @@ const messageTeamSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1).max(100),
   memberIds: z.array(z.string().min(1)).max(50),
+  canManage: z.boolean().optional(),
   createdAt: z.string().min(1),
   updatedAt: z.string().min(1),
 });
@@ -49,6 +67,18 @@ export type MessageThread = z.infer<typeof messageThreadSchema>;
 export type ThreadMessage = z.infer<typeof messageSchema>;
 export type MessagePerson = z.infer<typeof messagePersonSchema>;
 export type MessageTeam = z.infer<typeof messageTeamSchema>;
+export type MessageAttachment = NonNullable<
+  ThreadMessage["attachments"]
+>[number];
+
+export type HouseholdInvitation = {
+  id: string;
+  email: string;
+  role: "adult" | "viewer";
+  expiresAt: string;
+  acceptedAt?: string;
+  revokedAt?: string;
+};
 
 const STORAGE_PREFIX = "jarins-message-threads-v1";
 const PEOPLE_STORAGE_PREFIX = "jarins-message-people-v1";

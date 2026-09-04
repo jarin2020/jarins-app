@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   CalendarPlus,
+  Cloud,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -25,6 +26,7 @@ import {
   type FamilyMemberColor,
   useFamilyCalendar,
 } from "@/lib/family-calendar";
+import type { CalendarEvent } from "@/lib/calendar";
 
 type SystemCalendarEvent = {
   id: string;
@@ -174,12 +176,16 @@ function MemberEditor({
 
 export function FamilyCalendar({
   ownerId,
+  currentUserId,
   ownerName,
   systemEvents,
+  externalEvents,
 }: {
   ownerId: string;
+  currentUserId: string;
   ownerName: string;
   systemEvents: SystemCalendarEvent[];
+  externalEvents: CalendarEvent[];
 }) {
   const {
     members,
@@ -209,13 +215,38 @@ export function FamilyCalendar({
   const [newMemberColor, setNewMemberColor] =
     useState<FamilyMemberColor>("coral");
 
-  const visibleMembers = members.filter((member) => member.visible);
+  const ownerMember = members.find((member) => member.isOwner);
+  const externalMembers = useMemo<FamilyMember[]>(() => {
+    const people = new Map<string, string>();
+    externalEvents.forEach((event) => {
+      if (event.ownerUserId !== currentUserId)
+        people.set(event.ownerUserId, event.ownerName);
+    });
+    return [...people].map(([id, name], index) => ({
+      id: `external:${id}`,
+      name,
+      relationship: "Connected family account",
+      color: familyMemberColors[(index + 2) % familyMemberColors.length],
+      visible: true,
+      isOwner: false,
+      createdAt: "",
+      updatedAt: "",
+    }));
+  }, [currentUserId, externalEvents]);
+  const allMembers = [...members, ...externalMembers];
+  const visibleMembers = allMembers.filter((member) => member.visible);
   const dayEvents = useMemo(
     () => events.filter((event) => event.date === selectedDate),
     [events, selectedDate],
   );
   const daySystemEvents = systemEvents.filter(
     (event) => event.date === selectedDate,
+  );
+  const dayExternalEvents = externalEvents.filter(
+    (event) =>
+      (event.allDay
+        ? event.startsAt.slice(0, 10)
+        : dateKey(new Date(event.startsAt))) === selectedDate,
   );
   const formattedDate = new Intl.DateTimeFormat("en", {
     weekday: "long",
@@ -562,15 +593,17 @@ export function FamilyCalendar({
           <strong>{formattedDate}</strong>
         </div>
         <div className="family-visibility" aria-label="Visible family members">
-          {members.map((member) => (
+          {allMembers.map((member) => (
             <button
               type="button"
               className={member.visible ? "active" : ""}
               key={member.id}
-              onClick={() =>
-                updateMember(member.id, { visible: !member.visible })
-              }
+              onClick={() => {
+                if (!member.id.startsWith("external:"))
+                  updateMember(member.id, { visible: !member.visible });
+              }}
               aria-pressed={member.visible}
+              disabled={member.id.startsWith("external:")}
             >
               <span className={`family-dot ${member.color}`} /> {member.name}
             </button>
@@ -661,6 +694,45 @@ export function FamilyCalendar({
                       <small>{event.kind} · Jarins</small>
                     </Link>
                   ))}
+                {dayExternalEvents
+                  .filter((event) =>
+                    event.ownerUserId === currentUserId
+                      ? member.id === ownerMember?.id
+                      : member.id === `external:${event.ownerUserId}`,
+                  )
+                  .map((event, index) => {
+                    const start = new Date(event.startsAt);
+                    const end = new Date(event.endsAt);
+                    const startTime = `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`;
+                    const endTime = `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`;
+                    const position = event.allDay
+                      ? {
+                          top: 5 + (daySystemEvents.length + index) * 48,
+                          height: 42,
+                        }
+                      : eventPosition(startTime, endTime);
+                    return (
+                      <div
+                        className={`family-schedule-event external ${member.color}`}
+                        style={position}
+                        key={`external-${event.id}-${member.id}`}
+                        title={`${event.sourceName} · ${event.ownerName}`}
+                      >
+                        <strong>{event.title}</strong>
+                        <span>
+                          {event.allDay ? "All day" : `${startTime}–${endTime}`}
+                        </span>
+                        <small>
+                          <Cloud size={10} /> {event.sourceName}
+                        </small>
+                        {event.location && (
+                          <small>
+                            <MapPin size={10} /> {event.location}
+                          </small>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             ))}
           </div>
@@ -677,7 +749,10 @@ export function FamilyCalendar({
         <span>
           <UsersRound size={13} /> Shared events appear in every assigned column
         </span>
-        <span>{dayEvents.length} family events on this day</span>
+        <span>
+          {dayEvents.length + dayExternalEvents.length} family events on this
+          day
+        </span>
       </footer>
     </section>
   );

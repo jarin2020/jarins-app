@@ -1,128 +1,351 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { z } from "zod";
+import type { SupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  calendarProviderLabels,
+  calendarProviders,
+  type CalendarAccount,
+  type CalendarEvent,
+  type CalendarEventInput,
+  type CalendarProvider,
+  type CalendarSyncMode,
+} from "@/lib/calendar";
 
-export const calendarProviders = [
-  "google",
-  "microsoft",
-  "apple",
-  "caldav",
-] as const;
-export type CalendarProvider = (typeof calendarProviders)[number];
-export type CalendarSyncMode = "two-way" | "read-only";
-
-const calendarAccountSchema = z.object({
-  id: z.string().min(1),
-  provider: z.enum(calendarProviders),
-  address: z.string().min(1).max(255),
-  label: z.string().min(1).max(80),
-  syncMode: z.enum(["two-way", "read-only"]),
-  included: z.boolean(),
-  createdAt: z.string().min(1),
-});
-
-const calendarAccountsSchema = z.array(calendarAccountSchema).max(20);
-export type CalendarAccount = z.infer<typeof calendarAccountSchema>;
-export type NewCalendarAccount = Omit<
+export { calendarProviderLabels, calendarProviders };
+export type {
   CalendarAccount,
-  "id" | "included" | "createdAt"
->;
+  CalendarEvent,
+  CalendarEventInput,
+  CalendarProvider,
+  CalendarSyncMode,
+};
 
-const STORAGE_PREFIX = "jarins-calendar-accounts-v1";
-export const CALENDAR_ACCOUNTS_EVENT = "jarins-calendar-accounts-changed";
+export type CalendarConfiguration = {
+  encryption: boolean;
+  google: boolean;
+  microsoft: boolean;
+  apple: boolean;
+  caldav: boolean;
+};
 
-export function calendarAccountsKey(ownerId: string) {
-  return `${STORAGE_PREFIX}:${ownerId}`;
+export type CalDavConnectionInput = {
+  provider: "apple" | "caldav";
+  address: string;
+  label: string;
+  username: string;
+  password: string;
+  serverUrl: string;
+  syncMode: CalendarSyncMode;
+  included: boolean;
+  shareWithHousehold: boolean;
+};
+
+async function api<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
+  });
+  const payload = (await response.json().catch(() => ({}))) as {
+    error?: string;
+  } & T;
+  if (!response.ok)
+    throw new Error(payload.error || "Calendar request failed.");
+  return payload;
 }
 
-export function readCalendarAccounts(ownerId: string): CalendarAccount[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const parsed = calendarAccountsSchema.safeParse(
-      JSON.parse(localStorage.getItem(calendarAccountsKey(ownerId)) ?? "[]"),
-    );
-    return parsed.success ? parsed.data : [];
-  } catch {
-    return [];
-  }
-}
-
-export function writeCalendarAccounts(
+export function useCalendarAccounts(
   ownerId: string,
-  accounts: CalendarAccount[],
+  supabase: SupabaseBrowserClient,
 ) {
-  const parsed = calendarAccountsSchema.parse(accounts);
-  localStorage.setItem(calendarAccountsKey(ownerId), JSON.stringify(parsed));
-  window.dispatchEvent(new Event(CALENDAR_ACCOUNTS_EVENT));
-}
-
-export function useCalendarAccounts(ownerId: string) {
   const [accounts, setAccounts] = useState<CalendarAccount[]>([]);
+  const [configuration, setConfiguration] =
+    useState<CalendarConfiguration | null>(null);
+  const [loading, setLoading] = useState(Boolean(supabase));
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const data = await api<{
+        accounts: CalendarAccount[];
+        configuration: CalendarConfiguration;
+      }>("/api/calendar/accounts");
+      setAccounts(data.accounts);
+      setConfiguration(data.configuration);
+      setError("");
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : "Calendars could not load.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
 
   useEffect(() => {
-    const load = () => setAccounts(readCalendarAccounts(ownerId));
-    queueMicrotask(load);
-    window.addEventListener(CALENDAR_ACCOUNTS_EVENT, load);
-    window.addEventListener("storage", load);
+    queueMicrotask(() => void load());
+  }, [load]);
+
+  useEffect(() => {
+    if (!supabase || ownerId === "local") return;
+    const channel = supabase
+      .channel(`calendar-accounts:${ownerId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "calendar_accounts",
+          filter: `user_id=eq.${ownerId}`,
+        },
+        () => void load(),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "calendar_sources",
+          filter: `user_id=eq.${ownerId}`,
+        },
+        () => void load(),
+      )
+      .subscribe();
     return () => {
-      window.removeEventListener(CALENDAR_ACCOUNTS_EVENT, load);
-      window.removeEventListener("storage", load);
+      void supabase.removeChannel(channel);
     };
-  }, [ownerId]);
+  }, [load, ownerId, supabase]);
 
-  const add = useCallback(
-    (input: NewCalendarAccount) => {
-      const current = readCalendarAccounts(ownerId);
-      const existing = current.find(
-        (account) =>
-          account.provider === input.provider &&
-          account.address.toLowerCase() === input.address.toLowerCase(),
+  const replaceAccount = useCallback((account: CalendarAccount) => {
+    setAccounts((current) => [
+      account,
+      ...current.filter((item) => item.id !== account.id),
+    ]);
+    return account;
+  }, []);
+
+  const startOAuth = useCallback(
+    async (
+      provider: "google" | "microsoft",
+      input: {
+        label: string;
+        expectedAddress: string;
+        syncMode: CalendarSyncMode;
+        included: boolean;
+        shareWithHousehold: boolean;
+      },
+    ) => {
+      const data = await api<{ url: string }>(
+        `/api/calendar/oauth/${provider}/start`,
+        { method: "POST", body: JSON.stringify(input) },
       );
-      if (existing) return existing;
-
-      const account: CalendarAccount = {
-        ...input,
-        address: input.address.trim(),
-        label: input.label.trim(),
-        included: true,
-        id: crypto.randomUUID(),
-        createdAt: new Date().toISOString(),
-      };
-      writeCalendarAccounts(ownerId, [...current, account]);
-      return account;
+      window.location.assign(data.url);
     },
-    [ownerId],
+    [],
+  );
+
+  const connectCalDav = useCallback(
+    async (input: CalDavConnectionInput) => {
+      const data = await api<{ account: CalendarAccount }>(
+        "/api/calendar/caldav",
+        { method: "POST", body: JSON.stringify(input) },
+      );
+      return replaceAccount(data.account);
+    },
+    [replaceAccount],
   );
 
   const update = useCallback(
-    (id: string, changes: Pick<CalendarAccount, "included" | "syncMode">) => {
-      writeCalendarAccounts(
-        ownerId,
-        readCalendarAccounts(ownerId).map((account) =>
-          account.id === id ? { ...account, ...changes } : account,
+    async (
+      accountId: string,
+      changes: Partial<
+        Pick<
+          CalendarAccount,
+          "label" | "included" | "syncMode" | "shareWithHousehold"
+        >
+      >,
+    ) => {
+      const data = await api<{ account: CalendarAccount }>(
+        `/api/calendar/accounts/${accountId}`,
+        { method: "PATCH", body: JSON.stringify(changes) },
+      );
+      return replaceAccount(data.account);
+    },
+    [replaceAccount],
+  );
+
+  const updateSource = useCallback(
+    async (accountId: string, sourceId: string, selected: boolean) => {
+      const data = await api<{ account: CalendarAccount }>(
+        `/api/calendar/accounts/${accountId}/sources/${sourceId}`,
+        { method: "PATCH", body: JSON.stringify({ selected }) },
+      );
+      return replaceAccount(data.account);
+    },
+    [replaceAccount],
+  );
+
+  const sync = useCallback(
+    async (accountId: string) => {
+      setAccounts((current) =>
+        current.map((account) =>
+          account.id === accountId
+            ? { ...account, status: "syncing" as const }
+            : account,
         ),
       );
+      try {
+        const data = await api<{ account: CalendarAccount }>(
+          `/api/calendar/accounts/${accountId}/sync`,
+          { method: "POST" },
+        );
+        setError("");
+        return replaceAccount(data.account);
+      } catch (nextError) {
+        const message =
+          nextError instanceof Error
+            ? nextError.message
+            : "Calendar sync failed.";
+        setError(message);
+        await load();
+        throw nextError;
+      }
     },
-    [ownerId],
+    [load, replaceAccount],
   );
 
-  const remove = useCallback(
-    (id: string) => {
-      writeCalendarAccounts(
-        ownerId,
-        readCalendarAccounts(ownerId).filter((account) => account.id !== id),
-      );
-    },
-    [ownerId],
-  );
+  const remove = useCallback(async (accountId: string) => {
+    const response = await fetch(`/api/calendar/accounts/${accountId}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      throw new Error(payload.error || "Calendar could not be disconnected.");
+    }
+    setAccounts((current) =>
+      current.filter((account) => account.id !== accountId),
+    );
+  }, []);
 
-  return { accounts, add, update, remove };
+  return {
+    accounts,
+    configuration,
+    loading,
+    error,
+    load,
+    startOAuth,
+    connectCalDav,
+    update,
+    updateSource,
+    sync,
+    remove,
+  };
 }
 
-export const calendarProviderLabels: Record<CalendarProvider, string> = {
-  google: "Google Calendar",
-  microsoft: "Microsoft Calendar",
-  apple: "Apple Calendar",
-  caldav: "CalDAV / custom",
-};
+export function useCalendarEvents(
+  ownerId: string,
+  supabase: SupabaseBrowserClient,
+) {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(Boolean(supabase));
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const data = await api<{ events: CalendarEvent[] }>(
+        "/api/calendar/events",
+      );
+      setEvents(data.events);
+      setError("");
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : "Events could not load.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    queueMicrotask(() => void load());
+  }, [load]);
+
+  useEffect(() => {
+    if (!supabase || ownerId === "local") return;
+    const channel = supabase
+      .channel(`calendar-events:${ownerId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "calendar_events" },
+        () => void load(),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [load, ownerId, supabase]);
+
+  const create = useCallback(async (input: CalendarEventInput) => {
+    const data = await api<{ event: CalendarEvent }>("/api/calendar/events", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    setEvents((current) =>
+      [...current.filter((item) => item.id !== data.event.id), data.event].sort(
+        (a, b) => a.startsAt.localeCompare(b.startsAt),
+      ),
+    );
+    return data.event;
+  }, []);
+
+  const updateEvent = useCallback(
+    async (eventId: string, input: CalendarEventInput) => {
+      const data = await api<{ event: CalendarEvent }>(
+        `/api/calendar/events/${eventId}`,
+        { method: "PATCH", body: JSON.stringify(input) },
+      );
+      setEvents((current) =>
+        current.map((item) => (item.id === eventId ? data.event : item)),
+      );
+      return data.event;
+    },
+    [],
+  );
+
+  const remove = useCallback(async (eventId: string) => {
+    const response = await fetch(`/api/calendar/events/${eventId}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      throw new Error(payload.error || "Event could not be deleted.");
+    }
+    setEvents((current) => current.filter((event) => event.id !== eventId));
+  }, []);
+
+  return {
+    events,
+    loading,
+    error,
+    load,
+    create,
+    update: updateEvent,
+    remove,
+  };
+}

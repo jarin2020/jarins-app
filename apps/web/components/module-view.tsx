@@ -9,6 +9,7 @@ import {
   Download,
   FileUp,
   LogOut,
+  Mail,
   Search,
   ShieldCheck,
   TimerReset,
@@ -32,12 +33,14 @@ import { EmailInbox } from "./email-inbox";
 import { CalendarHub } from "./calendar-hub";
 import { FamilyCalendar } from "./family-calendar";
 import { VaultHub } from "./vault-hub";
+import { useStorageItems } from "@/lib/storage-accounts";
 
 export function ModuleView({ slug }: { slug: string[] }) {
   // Unknown roots are rejected with a real 404 by app/[...slug]/page.tsx.
   const root = slug[0] ?? "today";
   if (root === "login") return <LoginView />;
   if (root === "signup") return <SignupView />;
+  if (root === "invite") return <InvitationView token={slug[1]} />;
   if (root === "onboarding") return <Onboarding />;
   if (root === "reset") return <WeeklyReset />;
   if (root === "inbox") return <InboxView />;
@@ -422,7 +425,13 @@ function InboxView() {
 function SearchView() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
+  const { supabase, user } = useAuth();
   const { records } = useLifeRecords();
+  const vault = useStorageItems(user?.id ?? "local", supabase, {
+    query,
+    kind: "all",
+    enabled: Boolean(query.trim()),
+  });
   const matches = useMemo(
     () =>
       query
@@ -453,28 +462,54 @@ function SearchView() {
       </div>
       {query && (
         <section className="list-surface">
-          <span className="kicker">{matches.length} results</span>
-          {matches.length ? (
-            matches.map((item) => (
-              <Link
-                href={`/${item.module}`}
-                className="search-result"
-                key={item.id}
-              >
-                <div>
-                  <strong>{item.title}</strong>
-                  <p>
-                    {item.kind} · {item.module}
-                  </p>
-                </div>
-                <span>
-                  Open <ArrowRight size={14} />
-                </span>
-              </Link>
-            ))
+          <span className="kicker">
+            {matches.length + vault.items.length} results
+          </span>
+          {matches.length || vault.items.length ? (
+            <>
+              {matches.map((item) => (
+                <Link
+                  href={`/${item.module}`}
+                  className="search-result"
+                  key={item.id}
+                >
+                  <div>
+                    <strong>{item.title}</strong>
+                    <p>
+                      {item.kind} · {item.module}
+                    </p>
+                  </div>
+                  <span>
+                    Open <ArrowRight size={14} />
+                  </span>
+                </Link>
+              ))}
+              {vault.items.map((item) => (
+                <a
+                  href={
+                    item.kind === "file"
+                      ? `/api/storage/items/${item.id}/download`
+                      : "/vault"
+                  }
+                  className="search-result"
+                  key={`vault-${item.id}`}
+                >
+                  <div>
+                    <strong>{item.name}</strong>
+                    <p>{item.kind} · VAULT</p>
+                  </div>
+                  <span>
+                    {item.kind === "file" ? "Download" : "Open VAULT"}{" "}
+                    <ArrowRight size={14} />
+                  </span>
+                </a>
+              ))}
+            </>
           ) : (
             <p className="muted search-empty">
-              No saved item matches “{query}”.
+              {vault.loading
+                ? "Searching connected storage…"
+                : `No saved item matches “${query}”.`}
             </p>
           )}
         </section>
@@ -515,10 +550,12 @@ function CalendarView() {
       <CalendarHub
         ownerId={user?.id ?? "local"}
         eventCount={upcoming.length}
-        familyCalendar={
+        familyCalendar={(externalEvents) => (
           <FamilyCalendar
             ownerId={householdId ?? user?.id ?? "local"}
+            currentUserId={user?.id ?? "local"}
             ownerName={profile?.displayName ?? preferences.name}
+            externalEvents={externalEvents}
             systemEvents={records
               .filter(
                 (record) =>
@@ -534,7 +571,7 @@ function CalendarView() {
                 href: "/family",
               }))}
           />
-        }
+        )}
       >
         <div className="calendar-grid">
           {days.map((date, index) => {
@@ -1331,14 +1368,23 @@ function LoginView() {
 }
 
 function SignupView() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { supabase, status } = useAuth();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [household, setHousehold] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const invitationToken = searchParams.get("invite");
+  const requestedNext = searchParams.get("next");
+  const next = invitationToken
+    ? `/invite/${invitationToken}`
+    : requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
+      ? requestedNext
+      : "/today";
 
   const submit = async () => {
     setBusy(true);
@@ -1357,11 +1403,11 @@ function SignupView() {
       setBusy(false);
       return;
     }
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
         data: {
           display_name: name.trim(),
           household_name: household.trim() || "My household",
@@ -1371,6 +1417,10 @@ function SignupView() {
     if (error) {
       setMessage(error.message);
       setBusy(false);
+      return;
+    }
+    if (data.session) {
+      router.push(next);
       return;
     }
     setDone(true);
@@ -1383,7 +1433,7 @@ function SignupView() {
       <h2>Create your space</h2>
       {done ? (
         <p className="login-status" role="status">
-          Check your email to confirm the address, then sign in. Anything you
+          Check your email to confirm the address, then continue. Anything you
           have already saved on this device moves into your account
           automatically.
         </p>
@@ -1415,15 +1465,17 @@ function SignupView() {
               onChange={(event) => setPassword(event.target.value)}
             />
           </label>
-          <label className="input-row">
-            Household name
-            <input
-              autoComplete="off"
-              placeholder="Jarin household"
-              value={household}
-              onChange={(event) => setHousehold(event.target.value)}
-            />
-          </label>
+          {!invitationToken && (
+            <label className="input-row">
+              Household name
+              <input
+                autoComplete="off"
+                placeholder="Jarin household"
+                value={household}
+                onChange={(event) => setHousehold(event.target.value)}
+              />
+            </label>
+          )}
           {message && (
             <p className="login-status" role="status">
               {message}
@@ -1443,10 +1495,136 @@ function SignupView() {
           "This deployment has no accounts yet — everything stays on your device."
         ) : (
           <>
-            Already have one? <Link href="/login">Sign in</Link>.
+            Already have one?{" "}
+            <Link href={`/login?next=${encodeURIComponent(next)}`}>
+              Sign in
+            </Link>
+            .
           </>
         )}
       </p>
+    </AuthShell>
+  );
+}
+
+type InvitationDetails = {
+  household_name: string;
+  email: string;
+  role: "adult" | "viewer";
+  expires_at: string;
+  is_available: boolean;
+};
+
+function InvitationView({ token }: { token?: string }) {
+  const router = useRouter();
+  const { supabase, user, status, refreshHousehold } = useAuth();
+  const [details, setDetails] = useState<InvitationDetails>();
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!supabase || !token) {
+      queueMicrotask(() => setLoading(false));
+      return;
+    }
+    let active = true;
+    void supabase
+      .rpc("get_household_invitation", { invitation_token: token })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) setMessage(error.message);
+        else setDetails((data as InvitationDetails[] | null)?.[0]);
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [supabase, token]);
+
+  const accept = async () => {
+    if (!supabase || !token) return;
+    setBusy(true);
+    setMessage("");
+    const { error } = await supabase.rpc("accept_household_invitation", {
+      invitation_token: token,
+    });
+    if (error) {
+      setMessage(error.message);
+      setBusy(false);
+      return;
+    }
+    await refreshHousehold();
+    router.push("/today");
+    router.refresh();
+  };
+
+  const next = token ? `/invite/${token}` : "/today";
+  const signupHref = details
+    ? `/signup?invite=${encodeURIComponent(token ?? "")}&email=${encodeURIComponent(details.email)}`
+    : `/signup?next=${encodeURIComponent(next)}`;
+
+  return (
+    <AuthShell>
+      <span className="eyebrow">Household invitation</span>
+      <h2>{details ? `Join ${details.household_name}` : "Open invitation"}</h2>
+      {loading ? (
+        <p className="login-status">Checking this invitation…</p>
+      ) : !details || !details.is_available ? (
+        <p className="login-status" role="alert">
+          {message ||
+            "This invitation is invalid, expired, accepted, or revoked."}
+        </p>
+      ) : (
+        <>
+          <div className="invitation-summary">
+            <Mail size={20} />
+            <div>
+              <strong>{details.email}</strong>
+              <small>
+                {details.role === "adult" ? "Adult collaborator" : "Viewer"} ·
+                verified account required
+              </small>
+            </div>
+          </div>
+          {status === "signed-in" && user ? (
+            <>
+              <p className="login-status">
+                Signed in as {user.email}. The invited address must match.
+              </p>
+              {message && (
+                <p className="login-status" role="alert">
+                  {message}
+                </p>
+              )}
+              <button
+                className="button primary"
+                disabled={busy || !user.email_confirmed_at}
+                onClick={() => void accept()}
+              >
+                <Check size={16} /> Accept and join
+              </button>
+              {!user.email_confirmed_at && (
+                <p className="login-footnote">
+                  Confirm your email before accepting.
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <Link
+                className="button primary"
+                href={`/login?next=${encodeURIComponent(next)}`}
+              >
+                Sign in to accept
+              </Link>
+              <Link className="button secondary" href={signupHref}>
+                Create the invited account
+              </Link>
+            </>
+          )}
+        </>
+      )}
     </AuthShell>
   );
 }

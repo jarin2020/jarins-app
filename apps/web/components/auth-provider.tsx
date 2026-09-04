@@ -34,6 +34,7 @@ type AuthValue = {
   householdId: string | null;
   status: AuthStatus;
   signOut: () => Promise<void>;
+  refreshHousehold: () => Promise<string | null>;
   updateProfile: (profile: {
     displayName: string;
     timezone: string;
@@ -143,6 +144,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.refresh();
   }, [router, supabase]);
 
+  const refreshHousehold = useCallback(async () => {
+    if (!supabase || !user) return null;
+    const { data, error } = await supabase.rpc("current_household");
+    if (error) throw new Error(error.message);
+    const nextHousehold = (data as string | null) ?? null;
+    setResolvedHousehold(nextHousehold);
+    return nextHousehold;
+  }, [supabase, user]);
+
   const updateProfile = useCallback(
     async (next: {
       displayName: string;
@@ -185,9 +195,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       householdId,
       status,
       signOut,
+      refreshHousehold,
       updateProfile,
     }),
-    [supabase, user, profile, householdId, status, signOut, updateProfile],
+    [
+      supabase,
+      user,
+      profile,
+      householdId,
+      status,
+      signOut,
+      refreshHousehold,
+      updateProfile,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

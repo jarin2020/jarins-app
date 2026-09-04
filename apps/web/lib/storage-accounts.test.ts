@@ -1,42 +1,33 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-  readStorageAccounts,
-  STORAGE_ACCOUNTS_EVENT,
-  storageAccountsKey,
-  type StorageAccount,
-  writeStorageAccounts,
+  formatStorageSize,
+  storageProviderLabels,
+  storageProviders,
 } from "./storage-accounts";
 
-const account: StorageAccount = {
-  id: "storage-1",
-  provider: "google-drive",
-  address: "faria@example.com",
-  label: "Family Drive",
-  accessMode: "manage",
-  includeInSearch: true,
-  createdAt: "2026-09-04T12:00:00.000Z",
-};
-
-describe("storage account persistence", () => {
-  beforeEach(() => localStorage.clear());
-
-  it("keeps connected storage scoped to the current account", () => {
-    writeStorageAccounts("user-a", [account]);
-    expect(readStorageAccounts("user-a")).toEqual([account]);
-    expect(readStorageAccounts("user-b")).toEqual([]);
-    expect(storageAccountsKey("user-a")).not.toBe(storageAccountsKey("user-b"));
+describe("VAULT storage metadata", () => {
+  it("offers each implemented storage provider", () => {
+    expect(storageProviders).toEqual([
+      "google-drive",
+      "onedrive",
+      "dropbox",
+      "webdav",
+    ]);
+    expect(
+      storageProviders.map((provider) => storageProviderLabels[provider]),
+    ).toEqual([
+      "Google Drive",
+      "Microsoft OneDrive",
+      "Dropbox",
+      "WebDAV / custom",
+    ]);
   });
 
-  it("rejects malformed saved connection data", () => {
-    localStorage.setItem(storageAccountsKey("user-a"), JSON.stringify([{}]));
-    expect(readStorageAccounts("user-a")).toEqual([]);
-  });
-
-  it("announces storage connection changes", () => {
-    const listener = vi.fn();
-    window.addEventListener(STORAGE_ACCOUNTS_EVENT, listener);
-    writeStorageAccounts("user-a", [account]);
-    expect(listener).toHaveBeenCalledOnce();
-    window.removeEventListener(STORAGE_ACCOUNTS_EVENT, listener);
+  it("formats provider sizes without claiming folders use local storage", () => {
+    expect(formatStorageSize(null)).toBe("—");
+    expect(formatStorageSize(0)).toBe("0 B");
+    expect(formatStorageSize(1536)).toBe("1.5 KB");
+    expect(formatStorageSize(5 * 1024 * 1024)).toBe("5.0 MB");
+    expect(formatStorageSize(3 * 1024 * 1024 * 1024)).toBe("3.0 GB");
   });
 });

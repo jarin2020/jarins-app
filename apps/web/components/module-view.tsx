@@ -34,6 +34,10 @@ import { CalendarHub } from "./calendar-hub";
 import { FamilyCalendar } from "./family-calendar";
 import { VaultHub } from "./vault-hub";
 import { useStorageItems } from "@/lib/storage-accounts";
+import { FamilyCalendarRoute, FamilyOverview } from "./family-overview";
+import { HomeDashboard } from "./home-dashboard";
+import { SelfDashboard } from "./self-dashboard";
+import { DocumentsDashboard } from "./documents-dashboard";
 
 export function ModuleView({ slug }: { slug: string[] }) {
   // Unknown roots are rejected with a real 404 by app/[...slug]/page.tsx.
@@ -98,7 +102,8 @@ function LifeModule({
   subsection?: string;
 }) {
   const currentModule = findModule(root);
-  const { records, loading } = useLifeRecords();
+  const { user } = useAuth();
+  const { records, loading, update } = useLifeRecords();
   const sectionRecords = recordsInSection(
     records,
     root as LifeRecord["module"],
@@ -120,6 +125,7 @@ function LifeModule({
     family: [
       "Overview",
       "Calendar",
+      "Vault",
       "Routines",
       "Clothing",
       "Documents",
@@ -146,7 +152,11 @@ function LifeModule({
       <PageIntro
         eyebrow={currentModule.eyebrow}
         title={
-          subsection ? subsection.replaceAll("-", " ") : currentModule.label
+          subsection === "vault"
+            ? "VAULT"
+            : subsection
+              ? subsection.replaceAll("-", " ")
+              : currentModule.label
         }
         description={currentModule.description}
       />
@@ -165,27 +175,57 @@ function LifeModule({
           );
         })}
       </nav>
-      <div className="stat-grid">
-        <div className="stat-card">
-          <strong>{stat(sectionRecords.length)}</strong>
-          <span>Total items</span>
-        </div>
-        <div className="stat-card">
-          <strong>{stat(openCount)}</strong>
-          <span>Need attention</span>
-        </div>
-        <div className="stat-card">
-          <strong>{stat(upcomingCount)}</strong>
-          <span>Upcoming · {stat(doneCount)} done</span>
-        </div>
-      </div>
-      {root === "self" && <CheckinPanel />}
-      {root === "career" && <CareerTrail />}
-      {root === "documents" && <PrivacyNotice />}
-      <RecordsWorkspace
-        module={root as LifeRecord["module"]}
-        subsection={subsection}
-      />
+      {root === "family" && !subsection && (
+        <FamilyOverview records={sectionRecords} />
+      )}
+      {root === "family" && subsection === "calendar" && (
+        <FamilyCalendarRoute records={records} />
+      )}
+      {root === "family" && subsection === "vault" && (
+        <VaultHub ownerId={user?.id ?? "local"} />
+      )}
+      {root === "home" && !subsection && (
+        <HomeDashboard records={records} loading={loading} update={update} />
+      )}
+      {root === "self" && !subsection && (
+        <SelfDashboard records={records} loading={loading} update={update} />
+      )}
+      {root === "documents" && !subsection && (
+        <DocumentsDashboard
+          records={records}
+          loading={loading}
+          update={update}
+        />
+      )}
+      {!(
+        (root === "family" &&
+          ["calendar", "vault"].includes(subsection ?? "")) ||
+        (["home", "self", "documents"].includes(root) && !subsection)
+      ) && (
+        <>
+          <div className="stat-grid">
+            <div className="stat-card">
+              <strong>{stat(sectionRecords.length)}</strong>
+              <span>Total items</span>
+            </div>
+            <div className="stat-card">
+              <strong>{stat(openCount)}</strong>
+              <span>Need attention</span>
+            </div>
+            <div className="stat-card">
+              <strong>{stat(upcomingCount)}</strong>
+              <span>Upcoming · {stat(doneCount)} done</span>
+            </div>
+          </div>
+          {root === "self" && <CheckinPanel />}
+          {root === "career" && <CareerTrail />}
+          {root === "documents" && <PrivacyNotice />}
+          <RecordsWorkspace
+            module={root as LifeRecord["module"]}
+            subsection={subsection}
+          />
+        </>
+      )}
     </>
   );
 }

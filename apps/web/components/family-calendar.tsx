@@ -180,12 +180,14 @@ export function FamilyCalendar({
   ownerName,
   systemEvents,
   externalEvents,
+  householdMembers = [],
 }: {
   ownerId: string;
   currentUserId: string;
   ownerName: string;
   systemEvents: SystemCalendarEvent[];
   externalEvents: CalendarEvent[];
+  householdMembers?: { id: string; name: string }[];
 }) {
   const {
     members,
@@ -217,7 +219,11 @@ export function FamilyCalendar({
 
   const ownerMember = members.find((member) => member.isOwner);
   const externalMembers = useMemo<FamilyMember[]>(() => {
-    const people = new Map<string, string>();
+    const people = new Map(
+      householdMembers
+        .filter((member) => member.id !== currentUserId)
+        .map((member) => [member.id, member.name]),
+    );
     externalEvents.forEach((event) => {
       if (event.ownerUserId !== currentUserId)
         people.set(event.ownerUserId, event.ownerName);
@@ -232,7 +238,7 @@ export function FamilyCalendar({
       createdAt: "",
       updatedAt: "",
     }));
-  }, [currentUserId, externalEvents]);
+  }, [currentUserId, externalEvents, householdMembers]);
   const allMembers = [...members, ...externalMembers];
   const visibleMembers = allMembers.filter((member) => member.visible);
   const dayEvents = useMemo(
@@ -298,7 +304,7 @@ export function FamilyCalendar({
       startTime,
       endTime,
       memberIds: sharedWithEveryone
-        ? members.map((member) => member.id)
+        ? allMembers.map((member) => member.id)
         : selectedMemberIds,
       location,
       notes,
@@ -524,7 +530,7 @@ export function FamilyCalendar({
               />
               <UsersRound size={15} /> Everyone
             </label>
-            {members.map((member) => (
+            {allMembers.map((member) => (
               <label key={member.id}>
                 <input
                   type="checkbox"

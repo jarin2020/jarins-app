@@ -534,3 +534,56 @@ begin
 
   reset role;
 end $$;
+
+-- ============ household directory management ============
+do $$
+declare
+  faria uuid := '11111111-1111-1111-1111-111111111111';
+  partner uuid := '33333333-3333-3333-3333-333333333333';
+  invitee uuid := '44444444-4444-4444-4444-444444444444';
+  faria_household uuid;
+  removal_thread uuid;
+  blocked boolean := false;
+  n int;
+begin
+  select id into faria_household from public.households where owner_user_id = faria;
+  set local role authenticated;
+
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  perform public.update_household_member_role(partner, 'viewer');
+  select count(*) into n from public.household_members
+  where household_id = faria_household and user_id = partner and role = 'viewer';
+  if n <> 1 then raise exception 'FAIL: owner could not update a household member role'; end if;
+
+  blocked := false;
+  begin
+    perform public.remove_household_member(faria);
+  exception when others then
+    blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: household owner removed their own membership'; end if;
+
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  blocked := false;
+  begin
+    perform public.update_household_member_role(invitee, 'viewer');
+  exception when others then
+    blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: non-owner changed household member access'; end if;
+
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  removal_thread := public.create_message_thread(
+    'Removal boundary', array[invitee], array[]::uuid[]
+  );
+  perform public.remove_household_member(invitee);
+  select count(*) into n from public.household_members
+  where household_id = faria_household and user_id = invitee;
+  if n <> 0 then raise exception 'FAIL: owner could not remove a household member'; end if;
+  select count(*) into n from public.message_thread_members
+  where thread_id = removal_thread and user_id = invitee;
+  if n <> 0 then raise exception 'FAIL: removed member retained direct message access'; end if;
+  raise notice 'PASS     family directory role and removal controls are owner-only';
+
+  reset role;
+end $$;

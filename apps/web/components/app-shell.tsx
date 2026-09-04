@@ -53,6 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       : getInitials(displayName);
 
   const openCapture = useCallback(() => setCaptureOpen(true), []);
+  const openMessages = useCallback(() => setMessagesOpen(true), []);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -67,6 +68,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [openCapture]);
+
+  useEffect(() => {
+    window.addEventListener("jarins-open-capture", openCapture);
+    window.addEventListener("jarins-open-messages", openMessages);
+    return () => {
+      window.removeEventListener("jarins-open-capture", openCapture);
+      window.removeEventListener("jarins-open-messages", openMessages);
+    };
+  }, [openCapture, openMessages]);
 
   useEffect(() => {
     if (!accountMenuOpen) return;
@@ -300,7 +310,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <button
         className="message-fab"
-        onClick={() => setMessagesOpen(true)}
+        onClick={openMessages}
         aria-label="Open messages"
       >
         <MessageCircle size={19} />

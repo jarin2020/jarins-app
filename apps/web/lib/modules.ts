@@ -43,6 +43,14 @@ export type ModuleDefinition = {
 
 export const primaryModules: ModuleDefinition[] = [
   {
+    key: "home",
+    label: "Home",
+    href: "/home",
+    icon: Home,
+    eyebrow: "Less mental load",
+    description: "Meals, groceries, gentle routines and household maintenance.",
+  },
+  {
     key: "today",
     label: "Today",
     href: "/today",
@@ -58,14 +66,6 @@ export const primaryModules: ModuleDefinition[] = [
     eyebrow: "People before tasks",
     description:
       "Schedules, routines, clothing, documents and memories — together.",
-  },
-  {
-    key: "home",
-    label: "Home",
-    href: "/home",
-    icon: Home,
-    eyebrow: "Less mental load",
-    description: "Meals, groceries, gentle routines and household maintenance.",
   },
   {
     key: "self",
@@ -167,7 +167,8 @@ export const utilityModules: ModuleDefinition[] = [
 
 export const allModules = [...primaryModules, ...utilityModules];
 export const findModule = (slug?: string) =>
-  allModules.find((item) => item.key === slug) ?? primaryModules[0];
+  allModules.find((item) => item.key === slug) ??
+  primaryModules.find((item) => item.key === "today")!;
 
 /** Routes that exist but are not life-area modules. */
 export const standaloneRoutes = [

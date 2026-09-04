@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label="Primary navigation"
       >
         <div className="brand-row">
-          <Link href="/today" className="brand" aria-label="jarins home">
+          <Link href="/home" className="brand" aria-label="jarins home">
             <span className="brand-mark">j.</span>
             <span>
               <strong>jarins</strong>
@@ -323,7 +323,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </button>
       <nav className="mobile-nav" aria-label="Mobile navigation">
         {primaryModules
-          .filter((item) => ["today", "family", "future"].includes(item.key))
+          .filter((item) => ["home", "today", "family"].includes(item.key))
           .map(({ href, icon: Icon, label }) => (
             <Link
               key={href}

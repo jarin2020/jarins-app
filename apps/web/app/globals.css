@@ -7438,3 +7438,9 @@ fieldset legend {
     margin-bottom: 8px;
   }
 }
+
+/* Holds the height of a screen that is still loading, so the page does not
+   collapse and reflow when its chunk arrives. */
+.screen-loading {
+  min-height: 60vh;
+}

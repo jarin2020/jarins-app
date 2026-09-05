@@ -21,7 +21,17 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { primaryModules, utilityModules } from "@/lib/modules";
-import { MessageCenter } from "./message-center";
+import dynamic from "next/dynamic";
+
+/**
+ * The largest component in the shell, and closed on arrival. It still mounts —
+ * it is what reports the unread count to the badge — but it no longer sits in
+ * the chunk that has to arrive before the page is interactive.
+ */
+const MessageCenter = dynamic(
+  () => import("./message-center").then((m) => m.MessageCenter),
+  { ssr: false },
+);
 import { QuickCapture } from "./quick-capture";
 import { usePreferences } from "@/lib/preferences-store";
 import { useAuth } from "./auth-provider";

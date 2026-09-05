@@ -9,24 +9,17 @@ import {
   Download,
   FileUp,
   LogOut,
-  Mail,
   Search,
   ShieldCheck,
   TimerReset,
   Trash2,
   Upload,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { findModule } from "@/lib/modules";
 import { type CapturedItem, readInbox, writeInbox } from "./quick-capture";
 import { useAuth } from "./auth-provider";
-import {
-  AuthShell,
-  ForgotPasswordView,
-  LoginView,
-  ResetPasswordView,
-  SignupView,
-} from "./auth-views";
 import {
   moduleLabels,
   parseBackup,
@@ -34,23 +27,65 @@ import {
   type LifeRecord,
   useLifeRecords,
 } from "@/lib/jarins-store";
-import { RecordsWorkspace, recordsInSection } from "./records-workspace";
 import { PREFERENCES_KEY, usePreferences } from "@/lib/preferences-store";
-import { EmailInbox } from "./email-inbox";
-import { CalendarHub } from "./calendar-hub";
-import { FamilyCalendar } from "./family-calendar";
-import { VaultHub } from "./vault-hub";
+import { recordsInSection } from "@/lib/records/sections";
 import { useStorageItems } from "@/lib/storage-accounts";
-import { FamilyCalendarRoute, FamilyOverview } from "./family-overview";
-import { HomeDashboard } from "./home-dashboard";
-import { SelfDashboard } from "./self-dashboard";
-import { DocumentsDashboard } from "./documents-dashboard";
+
+/**
+ * One route renders one of these screens, and together they are the bulk of the
+ * application. Importing them statically meant every route paid for all of them
+ * — a signed-out visitor downloaded the mail client, the calendar and the vault
+ * to look at a sign-in form. Loaded per route instead.
+ *
+ * Server rendering stays on, so the markup is unchanged; only the client chunk
+ * is split.
+ */
+const loading = () => <ScreenLoading />;
+const RecordsWorkspace = dynamic(
+  () => import("./records-workspace").then((m) => m.RecordsWorkspace),
+  { loading },
+);
+const EmailInbox = dynamic(
+  () => import("./email-inbox").then((m) => m.EmailInbox),
+  { loading },
+);
+const CalendarHub = dynamic(
+  () => import("./calendar-hub").then((m) => m.CalendarHub),
+  { loading },
+);
+const FamilyCalendar = dynamic(
+  () => import("./family-calendar").then((m) => m.FamilyCalendar),
+  { loading },
+);
+const VaultHub = dynamic(() => import("./vault-hub").then((m) => m.VaultHub), {
+  loading,
+});
+const FamilyOverview = dynamic(
+  () => import("./family-overview").then((m) => m.FamilyOverview),
+  { loading },
+);
+const FamilyCalendarRoute = dynamic(
+  () => import("./family-overview").then((m) => m.FamilyCalendarRoute),
+  { loading },
+);
+const HomeDashboard = dynamic(
+  () => import("./home-dashboard").then((m) => m.HomeDashboard),
+  { loading },
+);
+const SelfDashboard = dynamic(
+  () => import("./self-dashboard").then((m) => m.SelfDashboard),
+  { loading },
+);
+const DocumentsDashboard = dynamic(
+  () => import("./documents-dashboard").then((m) => m.DocumentsDashboard),
+  { loading },
+);
 
 export function ModuleView({ slug }: { slug: string[] }) {
   // Unknown roots are rejected with a real 404 by app/[...slug]/page.tsx.
+  // /auth/* never reaches here: app/[...slug]/page.tsx renders those screens
+  // directly, so a sign-in form does not load the module router.
   const root = slug[0] ?? "today";
-  if (root === "auth")
-    return <AuthRoute screen={slug[1]} rest={slug.slice(2)} />;
   if (root === "onboarding") return <Onboarding />;
   if (root === "reset") return <WeeklyReset />;
   if (root === "inbox") return <InboxView />;
@@ -61,14 +96,13 @@ export function ModuleView({ slug }: { slug: string[] }) {
   return <LifeModule root={root} subsection={slug[1]} />;
 }
 
-/** The signed-out screens. Unknown children are rejected by isKnownRoute. */
-function AuthRoute({ screen, rest }: { screen?: string; rest: string[] }) {
-  if (screen === "login") return <LoginView />;
-  if (screen === "signup") return <SignupView />;
-  if (screen === "forgot-password") return <ForgotPasswordView />;
-  if (screen === "reset-password") return <ResetPasswordView />;
-  if (screen === "invite") return <InvitationView token={rest[0]} />;
-  return null;
+/**
+ * Placeholder while a lazily-loaded screen arrives. Deliberately quiet: the
+ * chunk usually lands within a frame or two on a warm connection, and a spinner
+ * that flashes for 40ms reads as jank rather than progress.
+ */
+function ScreenLoading() {
+  return <div className="screen-loading" role="status" aria-label="Loading" />;
 }
 
 function PageIntro({
@@ -1341,128 +1375,6 @@ function Onboarding() {
         )}
       </div>
     </div>
-  );
-}
-
-type InvitationDetails = {
-  household_name: string;
-  email: string;
-  role: "adult" | "viewer";
-  expires_at: string;
-  is_available: boolean;
-};
-
-function InvitationView({ token }: { token?: string }) {
-  const router = useRouter();
-  const { supabase, user, status, refreshHousehold } = useAuth();
-  const [details, setDetails] = useState<InvitationDetails>();
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!supabase || !token) {
-      queueMicrotask(() => setLoading(false));
-      return;
-    }
-    let active = true;
-    void supabase
-      .rpc("get_household_invitation", { invitation_token: token })
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error) setMessage(error.message);
-        else setDetails((data as InvitationDetails[] | null)?.[0]);
-        setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [supabase, token]);
-
-  const accept = async () => {
-    if (!supabase || !token) return;
-    setBusy(true);
-    setMessage("");
-    const { error } = await supabase.rpc("accept_household_invitation", {
-      invitation_token: token,
-    });
-    if (error) {
-      setMessage(error.message);
-      setBusy(false);
-      return;
-    }
-    await refreshHousehold();
-    router.push("/home");
-    router.refresh();
-  };
-
-  const next = token ? `/auth/invite/${token}` : "/home";
-  const signupHref = details
-    ? `/auth/signup?invite=${encodeURIComponent(token ?? "")}&email=${encodeURIComponent(details.email)}`
-    : `/auth/signup?next=${encodeURIComponent(next)}`;
-
-  return (
-    <AuthShell>
-      <span className="eyebrow">Household invitation</span>
-      <h2>{details ? `Join ${details.household_name}` : "Open invitation"}</h2>
-      {loading ? (
-        <p className="login-status">Checking this invitation…</p>
-      ) : !details || !details.is_available ? (
-        <p className="login-status" role="alert">
-          {message ||
-            "This invitation is invalid, expired, accepted, or revoked."}
-        </p>
-      ) : (
-        <>
-          <div className="invitation-summary">
-            <Mail size={20} />
-            <div>
-              <strong>{details.email}</strong>
-              <small>
-                {details.role === "adult" ? "Adult collaborator" : "Viewer"} ·
-                verified account required
-              </small>
-            </div>
-          </div>
-          {status === "signed-in" && user ? (
-            <>
-              <p className="login-status">
-                Signed in as {user.email}. The invited address must match.
-              </p>
-              {message && (
-                <p className="login-status" role="alert">
-                  {message}
-                </p>
-              )}
-              <button
-                className="button primary"
-                disabled={busy || !user.email_confirmed_at}
-                onClick={() => void accept()}
-              >
-                <Check size={16} /> Accept and join
-              </button>
-              {!user.email_confirmed_at && (
-                <p className="login-footnote">
-                  Confirm your email before accepting.
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <Link
-                className="button primary"
-                href={`/auth/login?next=${encodeURIComponent(next)}`}
-              >
-                Sign in to accept
-              </Link>
-              <Link className="button secondary" href={signupHref}>
-                Create the invited account
-              </Link>
-            </>
-          )}
-        </>
-      )}
-    </AuthShell>
   );
 }
 

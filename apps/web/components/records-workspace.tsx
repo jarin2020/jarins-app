@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { recordsInSection, subsectionKinds } from "@/lib/records/sections";
 import {
   kindOptions,
   type LifeRecord,
@@ -39,70 +40,6 @@ const blank = (kind: string): Draft => ({
   progress: "",
   essential: false,
 });
-
-const subsectionKinds: Partial<
-  Record<LifeRecord["module"], Record<string, string[]>>
-> = {
-  family: {
-    calendar: ["Event"],
-    routines: ["Routine"],
-    clothing: ["Clothing"],
-    documents: ["Child note"],
-    memories: ["Memory"],
-  },
-  home: {
-    meals: ["Meal"],
-    groceries: ["Grocery"],
-    routines: ["Routine"],
-    maintenance: ["Maintenance", "Contract"],
-  },
-  self: {
-    "check-in": ["Check-in"],
-    routines: ["Routine"],
-    "protected-time": ["Protected time"],
-  },
-  learning: {
-    programs: ["Program"],
-    sessions: ["Study session"],
-    evidence: ["Certificate", "Evidence"],
-  },
-  career: {
-    transition: ["Transition"],
-    timeline: ["Timeline"],
-    evidence: ["Evidence"],
-    portfolio: ["Portfolio"],
-    "job-readiness": ["Job readiness"],
-  },
-  money: {
-    recurring: ["Monthly cost", "Annual cost", "Subscription"],
-    goals: ["Savings goal"],
-  },
-  future: {
-    goals: ["This month", "3 months", "12 months", "3 years", "Someday"],
-    projects: ["Project"],
-  },
-};
-
-export function recordsInSection(
-  records: LifeRecord[],
-  module: LifeRecord["module"],
-  subsection?: string,
-  today = new Date().toISOString().slice(0, 10),
-) {
-  const allowedKinds = subsection
-    ? subsectionKinds[module]?.[subsection]
-    : undefined;
-  return records
-    .filter((record) => record.module === module)
-    .filter((record) => !allowedKinds || allowedKinds.includes(record.kind))
-    .filter(
-      (record) =>
-        (subsection !== "upcoming" && subsection !== "expiring") ||
-        Boolean(
-          record.date && record.date >= today && record.status !== "done",
-        ),
-    );
-}
 
 export function RecordsWorkspace({
   module,

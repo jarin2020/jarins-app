@@ -36,7 +36,7 @@ function movedFrom(pathname: string): string | undefined {
   if (pathname.startsWith("/invite/")) return `/auth${pathname}`;
   return undefined;
 }
-function buildCsp(nonce: string) {
+function buildCsp(nonce: string, secure: boolean) {
   const isDev = process.env.NODE_ENV === "development";
   return [
     `default-src 'self'`,
@@ -54,7 +54,10 @@ function buildCsp(nonce: string) {
     `base-uri 'self'`,
     `form-action 'self'`,
     `object-src 'none'`,
-    `upgrade-insecure-requests`,
+    // Only meaningful over TLS. Sent on a plain-HTTP origin it rewrites every
+    // same-origin request to https://, which then fails to connect — locally
+    // that silently killed each route prefetch.
+    secure ? `upgrade-insecure-requests` : "",
   ]
     .filter(Boolean)
     .join("; ")
@@ -80,7 +83,14 @@ export async function middleware(request: NextRequest) {
   }
 
   const nonce = btoa(crypto.randomUUID());
-  const csp = buildCsp(nonce);
+  // Behind a TLS-terminating proxy the URL can still read as http, so trust the
+  // forwarded protocol when it is present. Defaulting to secure would be wrong
+  // locally; defaulting to insecure in production would drop the directive.
+  const forwarded = request.headers.get("x-forwarded-proto");
+  const secure = forwarded
+    ? forwarded.split(",")[0].trim() === "https"
+    : request.nextUrl.protocol === "https:";
+  const csp = buildCsp(nonce, secure);
 
   // Next reads the nonce back off the request's CSP header and stamps it onto
   // every script tag it renders.

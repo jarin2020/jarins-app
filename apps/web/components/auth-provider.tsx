@@ -14,7 +14,6 @@ import {
   createSupabaseBrowserClient,
   type SupabaseBrowserClient,
 } from "@/lib/supabase/client";
-import { migrateLocalRecords } from "@/lib/records/migrate";
 import {
   buildAccountProfile,
   type AccountProfile,
@@ -134,7 +133,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Anything captured before signing up follows the user into their account.
   useEffect(() => {
     if (!supabase || !user || !householdId) return;
-    void migrateLocalRecords(supabase, householdId);
+    // Loaded here rather than at the top of the file: the migration pulls the
+    // record schema, its repositories and the seed data behind it, none of
+    // which a signed-out visitor looking at the sign-in form has any use for.
+    void import("@/lib/records/migrate").then(({ migrateLocalRecords }) =>
+      migrateLocalRecords(supabase, householdId),
+    );
   }, [supabase, user, householdId]);
 
   const signOut = useCallback(async () => {

@@ -175,6 +175,8 @@ export const standaloneRoutes = [
   "login",
   "signup",
   "invite",
+  "forgot",
+  "reset-password",
   "onboarding",
   "reset",
 ] as const;

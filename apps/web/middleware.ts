@@ -6,8 +6,24 @@ import {
   supabaseUrl,
 } from "@/lib/supabase/config";
 
-/** Routes reachable without a session. Everything else requires one. */
-const PUBLIC_PATHS = ["/login", "/signup", "/invite", "/auth", "/onboarding"];
+/**
+ * Routes reachable without a session. Everything else requires one.
+ *
+ * `/reset-password` is here deliberately. A recovery link signs the person in
+ * before it lands, so it is normally reached with a session — but when the link
+ * has expired there is no session, and guarding the route would bounce them to
+ * /login with no explanation. The view itself renders the form only for a real
+ * session and otherwise says the link expired.
+ */
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/forgot",
+  "/reset-password",
+  "/invite",
+  "/auth",
+  "/onboarding",
+];
 
 function buildCsp(nonce: string) {
   const isDev = process.env.NODE_ENV === "development";
@@ -102,8 +118,10 @@ export async function middleware(request: NextRequest) {
   };
 
   if (!user && !isPublic) return redirectTo("/login", { next: pathname });
-  if (user && (pathname === "/login" || pathname === "/signup"))
-    return redirectTo("/home");
+  const isEntryScreen =
+    pathname === "/login" || pathname === "/signup" || pathname === "/forgot";
+  // Not /reset-password: a recovery link deliberately arrives there signed in.
+  if (user && isEntryScreen) return redirectTo("/home");
 
   return response;
 }

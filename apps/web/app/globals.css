@@ -3962,6 +3962,67 @@ fieldset legend {
   font-size: 12px;
   text-align: center;
 }
+
+/* The status line carries three different meanings and used to have one look,
+   so a rejected password and a sent email were visually identical. */
+.login-status.error {
+  color: #8f463d;
+  background: var(--family-soft);
+}
+.login-status.success {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.login-links {
+  margin: 14px 0 0;
+  font-size: 11px;
+  text-align: center;
+}
+.login-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  text-decoration: underline;
+}
+.login-links a:hover {
+  color: var(--primary);
+}
+/* Reveal sits inside the field rather than beside it, so the input keeps the
+   full width the rest of the form uses. */
+.password-field {
+  position: relative;
+  display: block;
+}
+.password-field input {
+  width: 100%;
+  padding-right: 40px;
+}
+.password-reveal {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  padding: 7px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.password-reveal:hover {
+  color: var(--primary);
+  background: var(--surface-soft);
+}
+.field-hint {
+  margin: -10px 0 16px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.field-hint.warn {
+  color: #8f463d;
+}
 @keyframes modal-in {
   from {
     opacity: 0;

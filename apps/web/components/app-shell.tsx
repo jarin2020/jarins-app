@@ -206,7 +206,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Bell size={18} />
             </Link>
             {status === "signed-out" ? (
-              <Link className="profile-chip" href="/login">
+              <Link className="profile-chip" href="/auth/login">
                 <span>
                   <LogIn size={14} />
                 </span>
@@ -278,7 +278,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       </Link>
                       {status === "demo" && (
                         <Link
-                          href="/login"
+                          href="/auth/login"
                           role="menuitem"
                           onClick={() => setAccountMenuOpen(false)}
                         >

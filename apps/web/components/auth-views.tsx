@@ -338,14 +338,14 @@ export function LoginView() {
       </form>
       <p className="login-links">
         <Link
-          href={`/forgot${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+          href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`}
         >
           Forgot your password?
         </Link>
       </p>
       <p className="login-footnote">
-        New to jarins? <Link href="/signup">Create an account</Link>. Verified
-        email required.
+        New to jarins? <Link href="/auth/signup">Create an account</Link>.
+        Verified email required.
       </p>
     </AuthShell>
   );
@@ -379,7 +379,7 @@ export function SignupView() {
   // or they finish sign-up with an account that never joined the household.
   const invitationToken = searchParams.get("invite");
   const next = invitationToken
-    ? `/invite/${invitationToken}`
+    ? `/auth/invite/${invitationToken}`
     : safeNext(searchParams.get("next"));
 
   const redirectTo =
@@ -482,7 +482,7 @@ export function SignupView() {
           {waiting ? `Resend in ${cooldown.remaining}s` : "Send it again"}
         </button>
         <p className="login-footnote">
-          Wrong address? <Link href="/signup">Start again</Link>.
+          Wrong address? <Link href="/auth/signup">Start again</Link>.
         </p>
       </AuthShell>
     );
@@ -563,7 +563,7 @@ export function SignupView() {
         </button>
       </form>
       <p className="login-footnote">
-        Already have one? <Link href="/login">Sign in</Link>.
+        Already have one? <Link href="/auth/login">Sign in</Link>.
       </p>
     </AuthShell>
   );
@@ -593,7 +593,7 @@ export function ForgotPasswordView() {
     setNote({ tone: "info", text: "" });
 
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/auth/reset-password")}`,
     });
     if (error) {
       const failure = describeAuthError(error);
@@ -649,7 +649,7 @@ export function ForgotPasswordView() {
         </button>
       </form>
       <p className="login-links">
-        <Link href="/login">
+        <Link href="/auth/login">
           <ArrowLeft size={13} /> Back to sign in
         </Link>
       </p>
@@ -726,7 +726,7 @@ export function ResetPasswordView() {
         <StatusNote tone="error">
           Reset links are valid for one hour and work once. Ask for a new one.
         </StatusNote>
-        <Link className="button primary" href="/forgot">
+        <Link className="button primary" href="/auth/forgot-password">
           Send a new reset link
         </Link>
       </AuthShell>

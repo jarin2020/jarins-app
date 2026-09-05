@@ -225,7 +225,7 @@ export function FamilyOverview({ records }: { records: LifeRecord[] }) {
             storage follow the household account across devices.
           </p>
         </div>
-        <Link href="/login" className="button primary small">
+        <Link href="/auth/login" className="button primary small">
           Sign in
         </Link>
       </section>

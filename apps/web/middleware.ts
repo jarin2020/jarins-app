@@ -9,22 +9,33 @@ import {
 /**
  * Routes reachable without a session. Everything else requires one.
  *
- * `/reset-password` is here deliberately. A recovery link signs the person in
- * before it lands, so it is normally reached with a session — but when the link
- * has expired there is no session, and guarding the route would bounce them to
- * /login with no explanation. The view itself renders the form only for a real
- * session and otherwise says the link expired.
+ * Every signed-out screen lives under /auth, so this is a prefix rather than a
+ * list that has to be extended each time one is added. /auth/reset-password is
+ * covered deliberately: a recovery link signs the person in before it lands, so
+ * it is normally reached with a session — but an expired link arrives without
+ * one, and guarding the route would bounce them to sign-in with no explanation.
  */
-const PUBLIC_PATHS = [
-  "/login",
-  "/signup",
-  "/forgot",
-  "/reset-password",
-  "/invite",
-  "/auth",
-  "/onboarding",
-];
+const PUBLIC_PATHS = ["/auth", "/onboarding"];
 
+/**
+ * Where the signed-out screens used to live. These stay as permanent redirects
+ * because the old paths outlive the rename: they are in already-mailed links,
+ * in bookmarks, and in the Supabase redirect allowlist.
+ */
+const MOVED: Record<string, string> = {
+  "/login": "/auth/login",
+  "/signup": "/auth/signup",
+  "/forgot": "/auth/forgot-password",
+  "/reset-password": "/auth/reset-password",
+};
+
+/** The old path a request is using, or undefined when it is already current. */
+function movedFrom(pathname: string): string | undefined {
+  if (MOVED[pathname]) return MOVED[pathname];
+  // /invite/<token> carried the token in the path, so it cannot be a table.
+  if (pathname.startsWith("/invite/")) return `/auth${pathname}`;
+  return undefined;
+}
 function buildCsp(nonce: string) {
   const isDev = process.env.NODE_ENV === "development";
   return [
@@ -60,6 +71,14 @@ function securityHeaders(response: NextResponse, csp: string) {
 }
 
 export async function middleware(request: NextRequest) {
+  const moved = movedFrom(request.nextUrl.pathname);
+  if (moved) {
+    const url = request.nextUrl.clone();
+    url.pathname = moved;
+    // 308 so the method and query survive, and so browsers stop re-asking.
+    return NextResponse.redirect(url, 308);
+  }
+
   const nonce = btoa(crypto.randomUUID());
   const csp = buildCsp(nonce);
 
@@ -117,10 +136,12 @@ export async function middleware(request: NextRequest) {
     return redirect;
   };
 
-  if (!user && !isPublic) return redirectTo("/login", { next: pathname });
+  if (!user && !isPublic) return redirectTo("/auth/login", { next: pathname });
   const isEntryScreen =
-    pathname === "/login" || pathname === "/signup" || pathname === "/forgot";
-  // Not /reset-password: a recovery link deliberately arrives there signed in.
+    pathname === "/auth/login" ||
+    pathname === "/auth/signup" ||
+    pathname === "/auth/forgot-password";
+  // Not /auth/reset-password: a recovery link deliberately arrives signed in.
   if (user && isEntryScreen) return redirectTo("/home");
 
   return response;

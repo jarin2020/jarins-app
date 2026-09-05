@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Eye, EyeOff, MailCheck } from "lucide-react";
+import { ArrowLeft, Check, Eye, EyeOff, Mail, MailCheck } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -776,4 +776,157 @@ export function ResetPasswordView() {
       </form>
     </AuthShell>
   );
+}
+
+/* -------------------------------------------------------------------------
+ * Household invitation
+ * ---------------------------------------------------------------------- */
+
+type InvitationDetails = {
+  household_name: string;
+  email: string;
+  role: "adult" | "viewer";
+  expires_at: string;
+  is_available: boolean;
+};
+
+function InvitationView({ token }: { token?: string }) {
+  const router = useRouter();
+  const { supabase, user, status, refreshHousehold } = useAuth();
+  const [details, setDetails] = useState<InvitationDetails>();
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!supabase || !token) {
+      queueMicrotask(() => setLoading(false));
+      return;
+    }
+    let active = true;
+    void supabase
+      .rpc("get_household_invitation", { invitation_token: token })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) setMessage(error.message);
+        else setDetails((data as InvitationDetails[] | null)?.[0]);
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [supabase, token]);
+
+  const accept = async () => {
+    if (!supabase || !token) return;
+    setBusy(true);
+    setMessage("");
+    const { error } = await supabase.rpc("accept_household_invitation", {
+      invitation_token: token,
+    });
+    if (error) {
+      setMessage(error.message);
+      setBusy(false);
+      return;
+    }
+    await refreshHousehold();
+    router.push("/home");
+    router.refresh();
+  };
+
+  const next = token ? `/auth/invite/${token}` : "/home";
+  const signupHref = details
+    ? `/auth/signup?invite=${encodeURIComponent(token ?? "")}&email=${encodeURIComponent(details.email)}`
+    : `/auth/signup?next=${encodeURIComponent(next)}`;
+
+  return (
+    <AuthShell>
+      <span className="eyebrow">Household invitation</span>
+      <h2>{details ? `Join ${details.household_name}` : "Open invitation"}</h2>
+      {loading ? (
+        <p className="login-status">Checking this invitation…</p>
+      ) : !details || !details.is_available ? (
+        <p className="login-status" role="alert">
+          {message ||
+            "This invitation is invalid, expired, accepted, or revoked."}
+        </p>
+      ) : (
+        <>
+          <div className="invitation-summary">
+            <Mail size={20} />
+            <div>
+              <strong>{details.email}</strong>
+              <small>
+                {details.role === "adult" ? "Adult collaborator" : "Viewer"} ·
+                verified account required
+              </small>
+            </div>
+          </div>
+          {status === "signed-in" && user ? (
+            <>
+              <p className="login-status">
+                Signed in as {user.email}. The invited address must match.
+              </p>
+              {message && (
+                <p className="login-status" role="alert">
+                  {message}
+                </p>
+              )}
+              <button
+                className="button primary"
+                disabled={busy || !user.email_confirmed_at}
+                onClick={() => void accept()}
+              >
+                <Check size={16} /> Accept and join
+              </button>
+              {!user.email_confirmed_at && (
+                <p className="login-footnote">
+                  Confirm your email before accepting.
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <Link
+                className="button primary"
+                href={`/auth/login?next=${encodeURIComponent(next)}`}
+              >
+                Sign in to accept
+              </Link>
+              <Link className="button secondary" href={signupHref}>
+                Create the invited account
+              </Link>
+            </>
+          )}
+        </>
+      )}
+    </AuthShell>
+  );
+}
+
+/* -------------------------------------------------------------------------
+ * Route entry
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Every /auth screen, dispatched here rather than through ModuleView.
+ *
+ * Routing them through the module router meant a sign-in form pulled the record
+ * schema, the storage client and zod into its bundle for types and helpers it
+ * never used. Unknown children never reach this — isKnownRoute rejects them on
+ * the server with a real 404.
+ */
+export function AuthScreen({
+  screen,
+  rest,
+}: {
+  screen?: string;
+  rest: string[];
+}) {
+  if (screen === "login") return <LoginView />;
+  if (screen === "signup") return <SignupView />;
+  if (screen === "forgot-password") return <ForgotPasswordView />;
+  if (screen === "reset-password") return <ResetPasswordView />;
+  if (screen === "invite") return <InvitationView token={rest[0]} />;
+  return null;
 }

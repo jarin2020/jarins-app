@@ -822,12 +822,13 @@ function SettingsView({ section }: { section?: string }) {
   const links = ["Profile", "Household", "Notifications", "Privacy", "Data"];
   const active = section ?? "profile";
   const { preferences, save: savePreferences } = usePreferences();
-  const { records, replaceAll, mode } = useLifeRecords();
-  const { profile, status, signOut, updateProfile } = useAuth();
+  const { replaceAll, mode } = useLifeRecords();
+  const { profile, status, signOut, updateProfile, updatePassword } = useAuth();
   const [draft, setDraft] = useState(preferences);
   const [saved, setSaved] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [dataMessage, setDataMessage] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const importInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     queueMicrotask(() =>
@@ -870,10 +871,42 @@ function SettingsView({ section }: { section?: string }) {
     setDraft(next);
     if (typeof value === "boolean") void save(next);
   };
-  const exportData = () => {
+  const exportData = async () => {
+    if (mode === "cloud") {
+      setDataMessage("");
+      try {
+        const response = await fetch("/api/account/export", {
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          throw new Error(
+            payload?.error || "Account export could not be created.",
+          );
+        }
+        const url = URL.createObjectURL(await response.blob());
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `jarins-account-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        setDataMessage(
+          "Account export downloaded. Provider secrets and remote file contents were excluded.",
+        );
+      } catch (error) {
+        setDataMessage(
+          error instanceof Error
+            ? error.message
+            : "Account export could not be created.",
+        );
+      }
+      return;
+    }
     const payload = {
       exportedAt: new Date().toISOString(),
-      lifeRecords: mode === "cloud" ? records : readLifeRecords(),
+      lifeRecords: readLifeRecords(),
       inbox: readInbox(),
       preferences: draft,
       weeklyReset: JSON.parse(
@@ -944,7 +977,7 @@ function SettingsView({ section }: { section?: string }) {
       "jarins-weekly-reset-v1",
       "jarins-migrated-v1",
     ].forEach((key) => localStorage.removeItem(key));
-    router.push("/today");
+    router.push("/home");
     router.refresh();
   };
   return (
@@ -1002,8 +1035,9 @@ function SettingsView({ section }: { section?: string }) {
                 </div>
               )}
               <p>
-                Download a readable backup, restore one on another browser, or
-                reset this device.
+                {mode === "cloud"
+                  ? "Download a readable copy of the account data Jarins stores. Provider secrets and remote email or file contents are never included."
+                  : "Download a readable backup, restore life records on another browser, or reset this device."}
               </p>
               <input
                 ref={importInput}
@@ -1013,14 +1047,17 @@ function SettingsView({ section }: { section?: string }) {
                 onChange={(event) => void importData(event)}
               />
               <div className="settings-actions">
-                <button className="button secondary" onClick={exportData}>
+                <button
+                  className="button secondary"
+                  onClick={() => void exportData()}
+                >
                   <Download size={16} /> Export JSON
                 </button>
                 <button
                   className="button secondary"
                   onClick={() => importInput.current?.click()}
                 >
-                  <Upload size={16} /> Import backup
+                  <Upload size={16} /> Import life records backup
                 </button>
                 <button className="button danger" onClick={resetData}>
                   <Trash2 size={16} /> Reset this device
@@ -1034,34 +1071,15 @@ function SettingsView({ section }: { section?: string }) {
             </>
           ) : active === "privacy" ? (
             <>
-              <label className="toggle-row">
-                <span>
-                  <strong>Minimal analytics</strong>
-                  <small>
-                    No document contents or sensitive form values are collected
-                  </small>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={draft.minimalAnalytics}
-                  onChange={(event) =>
-                    patchPreference("minimalAnalytics", event.target.checked)
-                  }
-                />
-              </label>
-              <label className="toggle-row">
-                <span>
-                  <strong>AI features</strong>
-                  <small>Off by default for family and document data</small>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={draft.aiFeatures}
-                  onChange={(event) =>
-                    patchPreference("aiFeatures", event.target.checked)
-                  }
-                />
-              </label>
+              <div className="data-warning" role="note">
+                <strong>No analytics or AI processing is active.</strong>
+                <p>
+                  Jarins does not currently send usage analytics or account
+                  content to an AI service. Provider credentials stay encrypted
+                  and email bodies and VAULT files remain at their providers
+                  until opened.
+                </p>
+              </div>
             </>
           ) : active === "notifications" ? (
             <>
@@ -1139,6 +1157,40 @@ function SettingsView({ section }: { section?: string }) {
               >
                 Save profile
               </button>
+              {status === "signed-in" && (
+                <>
+                  <label className="input-row">
+                    New password
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={10}
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    className="button secondary"
+                    disabled={newPassword.length < 10}
+                    onClick={async () => {
+                      setProfileError("");
+                      try {
+                        await updatePassword(newPassword);
+                        setNewPassword("");
+                        setSaved(true);
+                      } catch (error) {
+                        setProfileError(
+                          error instanceof Error
+                            ? error.message
+                            : "Password could not be changed.",
+                        );
+                      }
+                    }}
+                  >
+                    Change password
+                  </button>
+                </>
+              )}
               {status === "signed-in" && (
                 <button
                   className="button secondary"
@@ -1267,8 +1319,8 @@ function Onboarding() {
             Continue <ArrowRight size={16} />
           </button>
         ) : (
-          <Link className="button primary" href="/today" onClick={finish}>
-            Open Today <ArrowRight size={16} />
+          <Link className="button primary" href="/home" onClick={finish}>
+            Open Home <ArrowRight size={16} />
           </Link>
         )}
       </div>
@@ -1315,6 +1367,21 @@ function LoginView() {
   const [busy, setBusy] = useState(false);
   const next = searchParams.get("next");
 
+  const resetPassword = async () => {
+    if (!supabase || !email) return;
+    setBusy(true);
+    setMessage("");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/settings/profile")}`,
+    });
+    setMessage(
+      error
+        ? error.message
+        : "If this address has an account, a password-reset link is on its way.",
+    );
+    setBusy(false);
+  };
+
   const submit = async (mode: "password" | "magic") => {
     setBusy(true);
     setMessage("");
@@ -1341,13 +1408,11 @@ function LoginView() {
     setMessage(
       mode === "magic"
         ? "Check your email for a secure sign-in link."
-        : "Signed in. Opening Today…",
+        : "Signed in. Opening Home…",
     );
     if (mode === "password")
       router.push(
-        next && next.startsWith("/") && !next.startsWith("//")
-          ? next
-          : "/today",
+        next && next.startsWith("/") && !next.startsWith("//") ? next : "/home",
       );
     setBusy(false);
   };
@@ -1393,6 +1458,13 @@ function LoginView() {
       >
         Email me a magic link
       </button>
+      <button
+        className="text-button"
+        disabled={busy || !email}
+        onClick={() => void resetPassword()}
+      >
+        Forgot password?
+      </button>
       <p className="login-footnote">
         {status === "demo" ? (
           "No account needed here — this deployment keeps everything on your device."
@@ -1424,7 +1496,7 @@ function SignupView() {
     ? `/invite/${invitationToken}`
     : requestedNext?.startsWith("/") && !requestedNext.startsWith("//")
       ? requestedNext
-      : "/today";
+      : "/home";
 
   const submit = async () => {
     setBusy(true);
@@ -1595,11 +1667,11 @@ function InvitationView({ token }: { token?: string }) {
       return;
     }
     await refreshHousehold();
-    router.push("/today");
+    router.push("/home");
     router.refresh();
   };
 
-  const next = token ? `/invite/${token}` : "/today";
+  const next = token ? `/invite/${token}` : "/home";
   const signupHref = details
     ? `/signup?invite=${encodeURIComponent(token ?? "")}&email=${encodeURIComponent(details.email)}`
     : `/signup?next=${encodeURIComponent(next)}`;

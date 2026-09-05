@@ -7,6 +7,9 @@ import {
   requireEmailUser,
   saveCredentials,
 } from "@/lib/email-server";
+import { providerFetch, readLimitedJson } from "@/lib/provider-http";
+
+const fetch = providerFetch;
 
 type OAuthStateRow = {
   state_hash: string;
@@ -100,12 +103,12 @@ export async function GET(
     );
     if (!tokenResponse.ok)
       throw new EmailHttpError(502, "The provider rejected authorization.");
-    const token = (await tokenResponse.json()) as {
+    const token = await readLimitedJson<{
       access_token: string;
       refresh_token?: string;
       expires_in: number;
       scope: string;
-    };
+    }>(tokenResponse, 1024 * 1024);
     if (!token.refresh_token) {
       throw new EmailHttpError(
         409,
@@ -122,10 +125,10 @@ export async function GET(
       );
       if (!profileResponse.ok)
         throw new EmailHttpError(502, "Google mailbox profile failed.");
-      const profile = (await profileResponse.json()) as {
+      const profile = await readLimitedJson<{
         emailAddress: string;
         historyId: string;
-      };
+      }>(profileResponse, 1024 * 1024);
       address = profile.emailAddress.toLowerCase();
       providerAccountId = profile.emailAddress.toLowerCase();
     } else {
@@ -135,11 +138,11 @@ export async function GET(
       );
       if (!profileResponse.ok)
         throw new EmailHttpError(502, "Microsoft mailbox profile failed.");
-      const profile = (await profileResponse.json()) as {
+      const profile = await readLimitedJson<{
         id: string;
         mail?: string;
         userPrincipalName: string;
-      };
+      }>(profileResponse, 1024 * 1024);
       address = (profile.mail || profile.userPrincipalName).toLowerCase();
       providerAccountId = profile.id;
     }

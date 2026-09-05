@@ -103,7 +103,7 @@ export async function middleware(request: NextRequest) {
 
   if (!user && !isPublic) return redirectTo("/login", { next: pathname });
   if (user && (pathname === "/login" || pathname === "/signup"))
-    return redirectTo("/today");
+    return redirectTo("/home");
 
   return response;
 }

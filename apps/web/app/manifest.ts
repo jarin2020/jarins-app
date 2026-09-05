@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "jarins — Life OS",
     short_name: "jarins",
     description: "Get life out of your head and know what matters now.",
-    start_url: "/today",
+    start_url: "/home",
     display: "standalone",
     background_color: "#ffffff",
     theme_color: "#ffffff",

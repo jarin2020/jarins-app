@@ -382,6 +382,10 @@ export function MessageCenter({
   const threads = cloudEnabled ? cloud.threads : local.threads;
   const people = cloudEnabled ? cloud.people : local.people;
   const teams = cloudEnabled ? cloud.teams : local.teams;
+  const readOnly = Boolean(
+    cloudEnabled &&
+    people.find((person) => person.id === user?.id)?.role === "viewer",
+  );
   const [section, setSection] = useState<MessageSection>("threads");
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedPersonId, setSelectedPersonId] = useState<string>();
@@ -629,6 +633,13 @@ export function MessageCenter({
 
         <div className="message-center-body">
           <aside className="thread-sidebar">
+            {readOnly && (
+              <p className="composer-member-notice" role="note">
+                Viewer access is read only. You can follow household threads,
+                but only collaborators can send messages or change people and
+                teams.
+              </p>
+            )}
             <div className="thread-filters" aria-label="Message sections">
               <button
                 type="button"
@@ -656,7 +667,7 @@ export function MessageCenter({
             <button
               type="button"
               className="new-thread-button"
-              disabled={busy}
+              disabled={busy || readOnly}
               onClick={() => {
                 setActionError("");
                 setInvitationLink("");
@@ -1066,7 +1077,7 @@ export function MessageCenter({
                           <button
                             className="button secondary small"
                             type="button"
-                            disabled={busy}
+                            disabled={busy || readOnly}
                             onClick={() => setEditingThread(true)}
                           >
                             <Pencil size={14} /> Manage
@@ -1159,6 +1170,7 @@ export function MessageCenter({
                             ref={attachmentInput}
                             className="visually-hidden"
                             type="file"
+                            disabled={readOnly}
                             multiple
                             accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.txt,.csv,.doc,.docx,.xls,.xlsx"
                             onChange={(event) =>
@@ -1168,7 +1180,7 @@ export function MessageCenter({
                           <button
                             type="button"
                             className="icon-button attachment-button"
-                            disabled={busy}
+                            disabled={busy || readOnly}
                             onClick={() => attachmentInput.current?.click()}
                             aria-label="Attach files"
                           >
@@ -1178,7 +1190,7 @@ export function MessageCenter({
                       )}
                       <input
                         ref={messageInput}
-                        disabled={busy}
+                        disabled={busy || readOnly}
                         value={text}
                         onChange={(event) => setText(event.target.value)}
                         placeholder={`Message ${activeThread.title}`}
@@ -1188,7 +1200,9 @@ export function MessageCenter({
                       <button
                         type="submit"
                         className="button primary"
-                        disabled={busy || (!text.trim() && !files.length)}
+                        disabled={
+                          busy || readOnly || (!text.trim() && !files.length)
+                        }
                         aria-label="Send message"
                       >
                         <ArrowUp size={17} />

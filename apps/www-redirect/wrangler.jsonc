@@ -2,7 +2,7 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "jarins-www-redirect",
   "main": "src/index.ts",
-  "compatibility_date": "2026-08-27",
+  "compatibility_date": "2026-09-05",
   "routes": [{ "pattern": "www.jarins.com/*", "zone_name": "jarins.com" }],
   "observability": {
     "enabled": true,

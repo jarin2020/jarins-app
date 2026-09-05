@@ -129,7 +129,7 @@ h3 {
 .brand small {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -202,7 +202,7 @@ h3 {
 }
 .sidebar-capture small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .sidebar-capture kbd {
   display: inline-flex;
@@ -214,7 +214,7 @@ h3 {
   color: var(--muted);
   background: var(--surface-soft);
   font: inherit;
-  font-size: 9px;
+  font-size: 12px;
 }
 .main-column {
   min-width: 0;
@@ -254,7 +254,7 @@ h3 {
 }
 .search-box kbd {
   font: inherit;
-  font-size: 10px;
+  font-size: 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 2px 6px;
@@ -308,7 +308,7 @@ h3 {
   border-radius: 10px;
   color: white;
   background: var(--primary);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
 }
 .account-menu-panel {
@@ -338,7 +338,7 @@ h3 {
   border-radius: 11px;
   background: var(--primary);
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .account-menu-identity div {
@@ -356,7 +356,7 @@ h3 {
 }
 .account-menu-identity small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .account-menu-links {
   display: grid;
@@ -400,7 +400,7 @@ h3 {
 .kicker {
   display: block;
   color: var(--primary);
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.11em;
   font-weight: 800;
@@ -529,7 +529,7 @@ h3 {
   border-radius: 999px;
   background: var(--surface-soft);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .status.good {
@@ -551,7 +551,7 @@ h3 {
 }
 .snapshot-main p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   margin: 4px 0 0;
 }
 .count-ring {
@@ -571,7 +571,7 @@ h3 {
   letter-spacing: -0.06em;
 }
 .count-ring span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .soft-notice {
@@ -582,7 +582,7 @@ h3 {
   border-radius: 12px;
   background: var(--surface-soft);
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .section-heading {
   display: flex;
@@ -601,7 +601,7 @@ h3 {
   background: transparent;
   color: var(--primary);
   font-weight: 700;
-  font-size: 11px;
+  font-size: 12px;
   padding: 6px;
 }
 .outcome-grid {
@@ -630,7 +630,7 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -651,7 +651,7 @@ h3 {
 }
 .outcome-card p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   max-width: 90%;
 }
 .progress-track {
@@ -696,7 +696,7 @@ h3 {
 }
 .timeline-item time {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   padding-top: 2px;
 }
 .timeline-marker {
@@ -739,7 +739,7 @@ h3 {
 .timeline-item p {
   margin: 2px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .check-list {
   margin-top: 11px;
@@ -787,7 +787,7 @@ h3 {
 }
 .check-list small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 2px;
 }
 .feature-icon {
@@ -825,7 +825,7 @@ h3 {
 .bridge-action p {
   margin: 3px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .round-arrow {
   width: 36px;
@@ -860,13 +860,13 @@ h3 {
   place-items: center;
   border-radius: 7px;
   background: var(--surface);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 }
 .milestone-row strong {
   display: block;
   margin-top: 7px;
-  font-size: 9px;
+  font-size: 12px;
 }
 .risk-item {
   display: flex;
@@ -880,7 +880,7 @@ h3 {
 }
 .risk-item p {
   margin: 2px 0 0;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .reset-banner {
@@ -899,7 +899,7 @@ h3 {
 .reset-banner p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .message-fab {
   position: fixed;
@@ -928,7 +928,7 @@ h3 {
   border-radius: 999px;
   color: var(--primary);
   background: white;
-  font-size: 9px;
+  font-size: 12px;
 }
 .modal-backdrop {
   position: fixed;
@@ -961,7 +961,7 @@ h3 {
 fieldset legend {
   display: block;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1011,12 +1011,12 @@ fieldset legend {
 }
 .capture-type-grid strong {
   color: var(--text);
-  font-size: 11px;
+  font-size: 12px;
 }
 .capture-type-grid small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1028,13 +1028,13 @@ fieldset legend {
 }
 .reminder-fields label {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .reminder-fields label small {
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
@@ -1066,7 +1066,7 @@ fieldset legend {
   padding: 7px 10px;
   background: var(--surface-soft);
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .chips button.selected,
 .chips button:hover {
@@ -1085,7 +1085,7 @@ fieldset legend {
   max-width: 300px;
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .page-intro {
   display: flex;
@@ -1120,7 +1120,7 @@ fieldset legend {
   padding: 7px 10px;
   border-radius: 9px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .subnav a.active {
@@ -1149,7 +1149,7 @@ fieldset legend {
 }
 .stat-card span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .module-grid {
   display: grid;
@@ -1175,7 +1175,7 @@ fieldset legend {
   min-height: 36px;
   margin-bottom: 13px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .empty-state-inline {
   display: flex;
@@ -1193,7 +1193,7 @@ fieldset legend {
 .empty-state-inline p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .checkin-panel,
 .career-trail {
@@ -1206,7 +1206,7 @@ fieldset legend {
 .checkin-panel p,
 .career-trail p {
   color: #dbe5df;
-  font-size: 11px;
+  font-size: 12px;
 }
 .checkin-panel .kicker,
 .career-trail .kicker {
@@ -1237,7 +1237,7 @@ fieldset legend {
   font-size: 16px;
 }
 .energy-scale span {
-  font-size: 9px;
+  font-size: 12px;
 }
 .checkin-panel .soft-notice {
   background: rgba(255, 255, 255, 0.1);
@@ -1271,7 +1271,7 @@ fieldset legend {
   place-items: center;
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.13);
-  font-size: 9px;
+  font-size: 12px;
 }
 .career-trail strong,
 .career-trail small {
@@ -1279,11 +1279,11 @@ fieldset legend {
 }
 .career-trail strong {
   margin-top: 10px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .career-trail small {
   margin-top: 2px;
-  font-size: 8px;
+  font-size: 12px;
   opacity: 0.7;
 }
 .privacy-notice {
@@ -1304,7 +1304,7 @@ fieldset legend {
 }
 .privacy-notice p {
   margin: 2px 0 0;
-  font-size: 10px;
+  font-size: 12px;
   color: #527261;
 }
 .inbox-account-bar {
@@ -1336,7 +1336,7 @@ fieldset legend {
   border-radius: 12px;
   background: transparent;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
 }
 .inbox-account-tabs button:hover {
@@ -1354,7 +1354,7 @@ fieldset legend {
   border-radius: 999px;
   background: var(--primary-soft);
   color: var(--primary);
-  font-size: 9px;
+  font-size: 12px;
   text-align: center;
 }
 .mailbox-tab-status {
@@ -1389,7 +1389,7 @@ fieldset legend {
   max-width: 680px;
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .mailbox-provider-grid {
   display: grid;
@@ -1422,7 +1422,7 @@ fieldset legend {
 }
 .mailbox-provider-grid small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .mailbox-provider-mark {
   width: 40px;
@@ -1453,7 +1453,7 @@ fieldset legend {
   display: grid;
   gap: 6px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .mailbox-connect-form input {
@@ -1490,7 +1490,7 @@ fieldset legend {
 .mailbox-panel-copy > p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .mailbox-status {
   display: inline-flex;
@@ -1501,7 +1501,7 @@ fieldset legend {
   border-radius: 999px;
   background: var(--warm-soft);
   color: var(--warm);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1522,7 +1522,7 @@ fieldset legend {
   display: block;
   margin-top: 9px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .mailbox-remove {
   width: 36px;
@@ -1562,7 +1562,7 @@ fieldset legend {
   border-radius: 12px;
   background: var(--primary-soft);
   color: var(--primary);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .mailbox-inline-error,
@@ -1575,7 +1575,7 @@ fieldset legend {
   align-self: center;
   padding: 0 8px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -1617,7 +1617,7 @@ fieldset legend {
 .mailbox-toolbar > div small,
 .mailbox-sync-time {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .mailbox-toolbar .mailbox-status {
   margin: 0;
@@ -1685,7 +1685,7 @@ fieldset legend {
 }
 .mail-message-heading strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1693,14 +1693,14 @@ fieldset legend {
 .mail-message-heading time {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .mail-message-subject {
   display: flex;
   align-items: center;
   gap: 5px;
   overflow: hidden;
-  font-size: 11px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1711,7 +1711,7 @@ fieldset legend {
 .mail-message-snippet {
   overflow: hidden;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.45;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1725,7 +1725,7 @@ fieldset legend {
   gap: 8px;
   padding: 30px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
 }
 .mailbox-empty strong {
@@ -1755,7 +1755,7 @@ fieldset legend {
 .mail-reader header small {
   margin: 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .mail-reader-actions {
   display: flex;
@@ -1787,7 +1787,7 @@ fieldset legend {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .mail-reader-attachments a {
   text-decoration: none;
@@ -1818,7 +1818,7 @@ fieldset legend {
   display: grid;
   gap: 5px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 .mail-compose form label:nth-child(3),
@@ -1853,7 +1853,7 @@ fieldset legend {
 }
 .mail-compose-footer small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .mail-attachment-picker {
   cursor: pointer;
@@ -1896,7 +1896,7 @@ fieldset legend {
 .inbox-row p {
   margin: 2px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .empty-state {
   max-width: 620px;
@@ -1940,7 +1940,7 @@ fieldset legend {
   display: flex;
   align-items: center;
   color: var(--primary);
-  font-size: 10px;
+  font-size: 12px;
 }
 .calendar-master-card {
   display: grid;
@@ -1971,7 +1971,7 @@ fieldset legend {
 .calendar-master-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .calendar-master-stats {
   display: flex;
@@ -1984,7 +1984,7 @@ fieldset legend {
   border-radius: 11px;
   color: var(--muted);
   background: rgba(255, 255, 255, 0.65);
-  font-size: 9px;
+  font-size: 12px;
   text-align: center;
 }
 .calendar-master-stats strong {
@@ -2020,7 +2020,7 @@ fieldset legend {
   border-radius: 10px;
   color: var(--muted);
   background: transparent;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .calendar-account-tabs button:hover,
@@ -2038,7 +2038,7 @@ fieldset legend {
   border-radius: 999px;
   color: var(--primary);
   background: var(--primary-soft);
-  font-size: 8px;
+  font-size: 12px;
 }
 .calendar-connect-button {
   flex: 0 0 auto;
@@ -2073,7 +2073,7 @@ fieldset legend {
 .calendar-connect-heading p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .calendar-provider-grid {
   display: grid;
@@ -2114,11 +2114,11 @@ fieldset legend {
   white-space: nowrap;
 }
 .calendar-provider-grid strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .calendar-provider-grid small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .calendar-provider-mark {
   width: 34px;
@@ -2150,7 +2150,7 @@ fieldset legend {
 .calendar-connect-form label,
 .calendar-sync-controls label {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -2169,7 +2169,7 @@ fieldset legend {
   border-radius: 10px;
   color: var(--text);
   background: var(--surface);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: normal;
   text-transform: none;
 }
@@ -2181,7 +2181,7 @@ fieldset legend {
 .calendar-security-note {
   margin: 10px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   text-align: right;
 }
 .calendar-connection-panel {
@@ -2205,7 +2205,7 @@ fieldset legend {
 .calendar-connection-copy > p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .calendar-auth-status {
   display: inline-flex;
@@ -2214,7 +2214,7 @@ fieldset legend {
   border-radius: 999px;
   color: #8a6428;
   background: var(--warm-soft);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 750;
 }
 .calendar-auth-status.active {
@@ -2228,7 +2228,7 @@ fieldset legend {
 .calendar-connection-copy .calendar-setup-note {
   max-width: 560px;
   margin-top: 8px;
-  font-size: 9px;
+  font-size: 12px;
 }
 .calendar-sync-controls {
   display: grid;
@@ -2283,7 +2283,7 @@ fieldset legend {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface-soft);
-  font-size: 10px;
+  font-size: 12px;
 }
 .calendar-source-list input {
   accent-color: var(--primary);
@@ -2294,7 +2294,7 @@ fieldset legend {
 }
 .calendar-source-list small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .calendar-source-dot,
 .calendar-event-color {
@@ -2313,7 +2313,7 @@ fieldset legend {
 }
 .calendar-list-heading > span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .calendar-event-form {
   display: grid;
@@ -2323,7 +2323,7 @@ fieldset legend {
 }
 .calendar-event-form label {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -2365,12 +2365,12 @@ fieldset legend {
   display: grid;
 }
 .calendar-event-row time strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .calendar-event-row time span,
 .calendar-event-row p {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .calendar-event-row p {
   display: flex;
@@ -2386,7 +2386,7 @@ fieldset legend {
   border-radius: 99px;
   color: var(--primary);
   background: var(--primary-soft);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
 }
 .family-schedule-event.external {
@@ -2416,7 +2416,7 @@ fieldset legend {
 }
 .calendar-grid span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .calendar-grid strong {
   margin: 4px 0 12px;
@@ -2426,7 +2426,7 @@ fieldset legend {
   border-radius: 6px;
   background: var(--family-soft);
   color: var(--family);
-  font-size: 8px;
+  font-size: 12px;
 }
 .family-calendar {
   overflow: hidden;
@@ -2455,7 +2455,7 @@ fieldset legend {
 .family-manager-heading p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .family-calendar-actions,
 .family-member-actions,
@@ -2506,7 +2506,7 @@ fieldset legend {
 .family-member-add label,
 .family-event-fields label {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -2524,7 +2524,7 @@ fieldset legend {
   border-radius: 9px;
   color: var(--text);
   background: var(--surface);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: normal;
   text-transform: none;
 }
@@ -2555,7 +2555,7 @@ fieldset legend {
   border-radius: 11px;
   color: #245942;
   background: #dceee3;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 }
 .family-avatar.coral,
@@ -2609,7 +2609,7 @@ fieldset legend {
 .family-event-attendees legend {
   margin-bottom: 6px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -2622,7 +2622,7 @@ fieldset legend {
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 650;
 }
 .family-event-attendees label:has(input:checked) {
@@ -2640,7 +2640,7 @@ fieldset legend {
 .family-event-error {
   margin: 9px 0 0;
   color: #a33c31;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 650;
 }
 .family-event-form-actions {
@@ -2666,7 +2666,7 @@ fieldset legend {
 }
 .family-date-nav strong {
   margin-left: 5px;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .family-visibility {
@@ -2683,7 +2683,7 @@ fieldset legend {
   border-radius: 999px;
   color: var(--muted);
   background: var(--surface);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 650;
   opacity: 0.55;
 }
@@ -2728,11 +2728,11 @@ fieldset legend {
   display: block;
 }
 .family-column-header strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .family-column-header small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .family-time-rail {
   position: relative;
@@ -2746,7 +2746,7 @@ fieldset legend {
 .family-time-rail span {
   padding: 6px 9px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
   text-align: right;
   transform: translateY(-1px);
 }
@@ -2811,14 +2811,14 @@ fieldset legend {
 }
 .family-schedule-event strong {
   overflow: hidden;
-  font-size: 9px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .family-schedule-event span,
 .family-schedule-event small {
   margin-top: 2px;
-  font-size: 7px;
+  font-size: 12px;
 }
 .family-schedule-event small {
   display: flex;
@@ -2848,7 +2848,7 @@ fieldset legend {
 }
 .family-calendar-empty p {
   margin: 3px 0 0;
-  font-size: 10px;
+  font-size: 12px;
 }
 .family-calendar-legend {
   display: flex;
@@ -2859,7 +2859,7 @@ fieldset legend {
   border-top: 1px solid var(--border);
   color: var(--muted);
   background: var(--surface-soft);
-  font-size: 8px;
+  font-size: 12px;
 }
 .family-calendar-legend span {
   display: inline-flex;
@@ -2897,7 +2897,7 @@ fieldset legend {
 .vault-master-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-master-stats {
   display: flex;
@@ -2910,7 +2910,7 @@ fieldset legend {
   border-radius: 11px;
   color: var(--muted);
   background: rgba(255, 255, 255, 0.74);
-  font-size: 9px;
+  font-size: 12px;
   text-align: center;
 }
 .vault-master-stats strong {
@@ -2946,7 +2946,7 @@ fieldset legend {
   border-radius: 10px;
   color: var(--muted);
   background: transparent;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .vault-account-tabs button:hover,
@@ -2960,7 +2960,7 @@ fieldset legend {
   border-radius: 999px;
   color: var(--primary);
   background: var(--primary-soft);
-  font-size: 8px;
+  font-size: 12px;
 }
 .vault-connect-button {
   flex: 0 0 auto;
@@ -2988,7 +2988,7 @@ fieldset legend {
 .vault-connect-heading p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-provider-grid {
   display: grid;
@@ -3025,11 +3025,11 @@ fieldset legend {
   white-space: nowrap;
 }
 .vault-provider-grid strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-provider-grid small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .vault-provider-mark {
   width: 36px;
@@ -3067,7 +3067,7 @@ fieldset legend {
 .vault-connect-form > label,
 .vault-connection-controls > label {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -3084,7 +3084,7 @@ fieldset legend {
   border-radius: 10px;
   color: var(--text);
   background: var(--surface);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: normal;
   text-transform: none;
 }
@@ -3111,7 +3111,7 @@ fieldset legend {
   gap: 5px;
   margin: 11px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .vault-connection-panel {
   position: relative;
@@ -3134,7 +3134,7 @@ fieldset legend {
 .vault-connection-copy > p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-auth-status {
   display: inline-flex;
@@ -3143,7 +3143,7 @@ fieldset legend {
   border-radius: 999px;
   color: #8a6428;
   background: var(--warm-soft);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 750;
 }
 .vault-auth-status.active {
@@ -3164,7 +3164,7 @@ fieldset legend {
 .vault-connection-copy .vault-setup-note {
   max-width: 560px;
   margin-top: 8px;
-  font-size: 9px;
+  font-size: 12px;
 }
 .vault-connection-controls {
   display: grid;
@@ -3208,7 +3208,7 @@ fieldset legend {
   outline: 0;
   color: var(--text);
   background: transparent;
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-browser-actions {
   display: flex;
@@ -3238,7 +3238,7 @@ fieldset legend {
   border-radius: 6px;
   color: var(--muted);
   background: transparent;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 .vault-breadcrumbs button:hover {
@@ -3262,7 +3262,7 @@ fieldset legend {
   border-radius: 9px;
   color: var(--text);
   background: var(--surface);
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-error {
   display: flex;
@@ -3274,7 +3274,7 @@ fieldset legend {
   border-radius: 10px;
   color: #943d33;
   background: #fff5f3;
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-browser .vault-error {
   margin: 0;
@@ -3294,7 +3294,7 @@ fieldset legend {
   border-bottom: 1px solid var(--border);
   color: var(--muted);
   background: #f7faf8;
-  font-size: 9px;
+  font-size: 12px;
 }
 .vault-upload-progress progress {
   width: 100%;
@@ -3317,7 +3317,7 @@ fieldset legend {
   border-radius: 9px;
   color: var(--muted);
   background: transparent;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 650;
 }
 .vault-file-filters button:hover,
@@ -3350,7 +3350,7 @@ fieldset legend {
   max-width: 520px;
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-empty .button {
   margin-top: 15px;
@@ -3372,13 +3372,13 @@ fieldset legend {
   padding: 8px 15px;
   border-bottom: 1px solid var(--border);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .vault-file-row.heading {
   min-height: 35px;
   color: var(--muted);
   background: var(--surface-soft);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -3405,12 +3405,12 @@ fieldset legend {
   white-space: nowrap;
 }
 .vault-file-name strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .vault-file-name small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .vault-file-icon {
   width: 32px;
@@ -3452,7 +3452,7 @@ fieldset legend {
   border-top: 1px solid var(--border);
   color: var(--muted);
   background: var(--surface-soft);
-  font-size: 8px;
+  font-size: 12px;
 }
 .vault-browser-footer span {
   display: inline-flex;
@@ -3486,7 +3486,7 @@ fieldset legend {
   color: var(--muted);
   background: none;
   text-align: left;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 .reset-steps li.active button,
@@ -3504,7 +3504,7 @@ fieldset legend {
   place-items: center;
   border-radius: 7px;
   background: var(--surface-soft);
-  font-size: 9px;
+  font-size: 12px;
 }
 .reset-workspace,
 .settings-panel {
@@ -3538,7 +3538,7 @@ fieldset legend {
 }
 .settings-layout nav a {
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
 }
 .settings-panel h2 {
   font-size: 27px;
@@ -3548,7 +3548,7 @@ fieldset legend {
   gap: 6px;
   margin: 16px 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .input-row input,
 .input-row select {
@@ -3572,7 +3572,7 @@ fieldset legend {
 }
 .toggle-row small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .records-section {
   margin-top: 18px;
@@ -3595,7 +3595,7 @@ fieldset legend {
 .records-heading p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .records-list {
   border-top: 1px solid var(--border);
@@ -3632,7 +3632,7 @@ fieldset legend {
 .record-copy > p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   white-space: pre-wrap;
 }
 .record-kind {
@@ -3642,7 +3642,7 @@ fieldset legend {
   border-radius: 999px;
   color: var(--primary);
   background: var(--primary-soft);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -3671,7 +3671,7 @@ fieldset legend {
   gap: 10px;
   margin-top: 10px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .record-meta > span {
   display: inline-flex;
@@ -3715,7 +3715,7 @@ fieldset legend {
   top: -6px;
   left: calc(100% + 8px);
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .record-actions {
   display: flex;
@@ -3734,7 +3734,7 @@ fieldset legend {
 .records-empty p,
 .today-empty p {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .record-form {
   max-height: min(90vh, 760px);
@@ -3769,17 +3769,17 @@ fieldset legend {
   display: inline-flex;
   align-items: center;
   color: var(--primary);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 .muted {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .search-result p {
   margin: 2px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .inbox-row select {
   max-width: 130px;
@@ -3788,7 +3788,7 @@ fieldset legend {
   border-radius: 10px;
   color: var(--text);
   background: white;
-  font-size: 10px;
+  font-size: 12px;
 }
 .button:disabled {
   cursor: not-allowed;
@@ -3829,7 +3829,7 @@ fieldset legend {
   border-radius: 10px;
   color: var(--text);
   background: var(--surface-soft);
-  font-size: 10px;
+  font-size: 12px;
 }
 .visually-hidden {
   position: absolute !important;
@@ -3848,7 +3848,7 @@ fieldset legend {
   border-radius: 11px;
   color: var(--primary) !important;
   background: var(--primary-soft);
-  font-size: 11px;
+  font-size: 12px;
 }
 .search-empty {
   margin: 18px 0 0;
@@ -3954,12 +3954,12 @@ fieldset legend {
   border-radius: 10px;
   color: var(--primary);
   background: var(--primary-soft);
-  font-size: 11px;
+  font-size: 12px;
 }
 .login-footnote {
   margin: 18px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   text-align: center;
 }
 @keyframes modal-in {
@@ -4149,7 +4149,7 @@ fieldset legend {
     border: 0;
     background: none;
     color: var(--muted);
-    font-size: 9px;
+    font-size: 12px;
   }
   .mobile-nav a.active {
     color: var(--primary);
@@ -4630,17 +4630,17 @@ fieldset legend {
   min-height: 36px;
   display: inline-flex;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
 }
 .stat-card span {
-  font-size: 11px;
+  font-size: 12px;
 }
 .calendar-grid span {
-  font-size: 10px;
+  font-size: 12px;
 }
 .calendar-grid small {
   padding: 5px 6px;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.25;
 }
 .record-kind {
@@ -4653,7 +4653,7 @@ fieldset legend {
   font-size: 9.5px;
 }
 .records-heading p {
-  font-size: 11px;
+  font-size: 12px;
 }
 .records-empty p,
 .today-empty p {
@@ -4661,7 +4661,7 @@ fieldset legend {
 }
 .chips button {
   min-height: 34px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .settings-layout {
   align-items: start;
@@ -4696,11 +4696,11 @@ fieldset legend {
     font-size: 22px;
   }
   .stat-card span {
-    font-size: 10px;
+    font-size: 12px;
   }
   .mobile-nav a,
   .mobile-nav button {
-    font-size: 10px;
+    font-size: 12px;
   }
   .page-intro > .button {
     flex: 0 0 42px;
@@ -4817,7 +4817,7 @@ fieldset legend {
   border-radius: 8px;
   color: var(--muted);
   background: transparent;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 .thread-filters button:hover,
@@ -4836,7 +4836,7 @@ fieldset legend {
   border-radius: 11px;
   color: var(--primary);
   background: rgba(255, 255, 255, 0.7);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 .new-thread-button:hover {
@@ -4854,7 +4854,7 @@ fieldset legend {
 }
 .new-thread-form label {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -4869,7 +4869,7 @@ fieldset legend {
   border-radius: 9px;
   color: var(--text);
   background: var(--surface);
-  font-size: 11px;
+  font-size: 12px;
   text-transform: none;
   letter-spacing: normal;
 }
@@ -4883,7 +4883,7 @@ fieldset legend {
 }
 .composer-member-invite > .text-button {
   justify-self: start;
-  font-size: 9px;
+  font-size: 12px;
 }
 .composer-member-invite > div {
   display: grid;
@@ -4897,7 +4897,7 @@ fieldset legend {
   align-items: flex-start;
   gap: 5px;
   color: var(--primary-strong);
-  font-size: 8px;
+  font-size: 12px;
   line-height: 1.4;
 }
 .composer-member-notice svg {
@@ -4914,7 +4914,7 @@ fieldset legend {
 .thread-list-status {
   margin: 12px 8px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
 }
 .thread-list > button {
@@ -4967,7 +4967,7 @@ fieldset legend {
   white-space: nowrap;
 }
 .thread-list strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .thread-fixed {
   display: inline-flex;
@@ -4978,7 +4978,7 @@ fieldset legend {
   border-radius: 999px;
   color: var(--primary-strong);
   background: color-mix(in srgb, var(--primary) 12%, white);
-  font-size: 7px;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -4986,7 +4986,7 @@ fieldset legend {
 }
 .thread-list small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .thread-view {
   min-width: 0;
@@ -5010,7 +5010,7 @@ fieldset legend {
 }
 .thread-view > header > small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .thread-messages {
   min-height: 0;
@@ -5041,7 +5041,7 @@ fieldset legend {
   display: block;
   margin-top: 4px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .thread-empty,
 .message-empty {
@@ -5060,7 +5060,7 @@ fieldset legend {
 .thread-empty p,
 .message-empty p {
   margin: 3px 0 0;
-  font-size: 10px;
+  font-size: 12px;
 }
 .message-empty {
   min-height: 100%;
@@ -5109,7 +5109,7 @@ fieldset legend {
   border-radius: 999px;
   color: white;
   background: var(--primary);
-  font-size: 8px;
+  font-size: 12px;
 }
 .pending-invitation {
   min-width: 0;
@@ -5138,14 +5138,14 @@ fieldset legend {
   white-space: nowrap;
 }
 .pending-invitation strong {
-  font-size: 10px;
+  font-size: 12px;
 }
 .pending-invitation small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .pending-invitation .text-button {
-  font-size: 8px;
+  font-size: 12px;
 }
 .invitation-link {
   display: grid;
@@ -5161,7 +5161,7 @@ fieldset legend {
 }
 .invitation-link input {
   margin: 0;
-  font-size: 8px;
+  font-size: 12px;
 }
 .message-error {
   margin: 0 0 10px;
@@ -5169,7 +5169,7 @@ fieldset legend {
   border-radius: 9px;
   color: #8a2f2b;
   background: #fceceb;
-  font-size: 9px;
+  font-size: 12px;
 }
 .thread-messages article.message-received {
   margin-right: auto;
@@ -5199,7 +5199,7 @@ fieldset legend {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 10px;
+  font-size: 12px;
 }
 .message-attachment small {
   margin: 0 !important;
@@ -5220,7 +5220,7 @@ fieldset legend {
   border-radius: 8px;
   color: var(--primary);
   background: var(--primary-soft);
-  font-size: 9px;
+  font-size: 12px;
 }
 .message-file-queue button {
   display: grid;
@@ -5247,7 +5247,7 @@ fieldset legend {
 .participant-verification small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .invitation-summary {
   display: flex;
@@ -5267,7 +5267,7 @@ fieldset legend {
 .invitation-summary small {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .message-compose .button {
   width: 42px;
@@ -5285,7 +5285,7 @@ fieldset legend {
 }
 .member-picker legend {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -5308,7 +5308,7 @@ fieldset legend {
   border-radius: 9px;
   color: var(--text);
   background: var(--surface-soft);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
   text-transform: none;
   letter-spacing: normal;
@@ -5332,7 +5332,7 @@ fieldset legend {
 .member-picker label small,
 .member-picker > small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .member-picker > small {
   display: block;
@@ -5344,7 +5344,7 @@ fieldset legend {
   margin-top: 3px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -5377,12 +5377,12 @@ fieldset legend {
 .directory-editor-heading p {
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .editor-field,
 .directory-fields > label {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -5397,7 +5397,7 @@ fieldset legend {
   border-radius: 10px;
   color: var(--text);
   background: var(--surface);
-  font-size: 11px;
+  font-size: 12px;
   text-transform: none;
   letter-spacing: normal;
 }
@@ -5537,7 +5537,7 @@ fieldset legend {
   margin: 15px 0 0;
   padding: 10px 12px;
   border-radius: 11px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .family-action-error {
   border: 1px solid color-mix(in srgb, var(--family) 45%, var(--border));
@@ -5575,11 +5575,11 @@ fieldset legend {
 .family-invite-form > div:first-child small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .family-invite-form label {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -5596,14 +5596,14 @@ fieldset legend {
   background: var(--surface);
   color: var(--text);
   font: inherit;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: normal;
   text-transform: none;
 }
 .family-connect-mail {
   grid-column: 1 / -1;
   justify-self: start;
-  font-size: 10px;
+  font-size: 12px;
 }
 .family-invitation-link {
   display: grid;
@@ -5640,7 +5640,7 @@ fieldset legend {
   border-radius: 13px;
   background: var(--primary-soft);
   color: var(--primary-strong);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .family-account-avatar.tone-1 {
@@ -5673,14 +5673,14 @@ fieldset legend {
   border-radius: 999px;
   background: var(--primary-soft);
   color: var(--primary-strong);
-  font-size: 8px;
+  font-size: 12px;
   text-transform: uppercase;
 }
 .family-account-card p {
   overflow: hidden;
   margin: 3px 0 7px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -5689,7 +5689,7 @@ fieldset legend {
   align-items: center;
   gap: 4px;
   color: var(--primary-strong);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 .family-member-controls {
@@ -5725,12 +5725,12 @@ fieldset legend {
   display: block;
 }
 .family-pending-invitations strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 .family-pending-invitations small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .family-overview-panels {
   display: grid;
@@ -5799,7 +5799,7 @@ fieldset legend {
 }
 .family-agenda-list time {
   color: var(--primary-strong);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -5812,7 +5812,7 @@ fieldset legend {
 .family-agenda-list strong,
 .family-vault-list strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -5820,7 +5820,7 @@ fieldset legend {
 .family-vault-list small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .family-vault-stats {
   display: grid;
@@ -5833,7 +5833,7 @@ fieldset legend {
   border-radius: 11px;
   background: var(--surface-soft);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .family-vault-stats strong {
   display: block;
@@ -5858,7 +5858,7 @@ fieldset legend {
 .family-panel-empty p {
   max-width: 290px;
   margin: 5px 0 0;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .family-panel-error {
@@ -5867,7 +5867,7 @@ fieldset legend {
   border-radius: 10px;
   background: var(--family-soft);
   color: var(--text);
-  font-size: 10px;
+  font-size: 12px;
 }
 .family-panel-footer {
   display: flex;
@@ -5877,7 +5877,7 @@ fieldset legend {
   padding: 12px 20px;
   border-top: 1px solid var(--border);
   color: var(--primary-strong);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   text-decoration: none;
 }
@@ -5904,7 +5904,7 @@ fieldset legend {
 .family-directory-empty p {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 @media (max-width: 1000px) {
@@ -5968,7 +5968,7 @@ fieldset legend {
 .data-warning p {
   margin: 5px 0 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 .data-error {
   margin: 0 0 16px;
@@ -6039,7 +6039,7 @@ fieldset legend {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.09);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 .home-command-pulse > span.attention {
@@ -6054,7 +6054,7 @@ fieldset legend {
 .home-command-pulse > small {
   margin-top: 5px;
   color: #cbd9d1;
-  font-size: 10px;
+  font-size: 12px;
 }
 .home-command-actions {
   display: grid;
@@ -6119,7 +6119,7 @@ fieldset legend {
   margin-top: 1px;
   color: var(--muted);
   white-space: nowrap;
-  font-size: 9px;
+  font-size: 12px;
 }
 .home-system-stats {
   display: grid;
@@ -6169,7 +6169,7 @@ fieldset legend {
 .home-system-stats small {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .home-command-grid,
 .home-lower-grid {
@@ -6238,19 +6238,19 @@ fieldset legend {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
 }
 .home-priority-list small,
 .home-agenda-list small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .home-priority-list article > span {
   padding: 4px 7px;
   border-radius: 999px;
   background: var(--surface-soft);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 .home-priority-list article > span.overdue {
@@ -6267,7 +6267,7 @@ fieldset legend {
 }
 .home-agenda-list time {
   color: var(--primary);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 750;
 }
 .home-guided-action {
@@ -6279,7 +6279,7 @@ fieldset legend {
   border-radius: 12px;
   color: var(--primary);
   background: var(--primary-soft);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 .home-guided-action svg:last-child {
@@ -6293,7 +6293,7 @@ fieldset legend {
   margin: 0;
   color: var(--muted);
   text-align: center;
-  font-size: 10px;
+  font-size: 12px;
 }
 .home-dashboard-empty strong {
   margin-top: 8px;
@@ -6307,7 +6307,7 @@ fieldset legend {
   border-radius: 999px;
   background: var(--surface-soft);
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 .home-area-grid {
@@ -6362,14 +6362,14 @@ fieldset legend {
 .home-area-grid small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .home-area-grid p {
   display: -webkit-box;
   overflow: hidden;
   margin: 13px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -6398,7 +6398,7 @@ fieldset legend {
 .home-connection-list small {
   margin-top: 3px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .home-connection-list > a {
   min-height: 56px;
@@ -6419,7 +6419,7 @@ fieldset legend {
   border-radius: 999px;
   background: var(--primary-soft);
   color: var(--primary);
-  font-size: 8px;
+  font-size: 12px;
 }
 .home-connection-list b.error {
   color: #914e3e;
@@ -6539,7 +6539,7 @@ fieldset legend {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 750;
 }
 .documents-security-summary > strong {
@@ -6551,7 +6551,7 @@ fieldset legend {
 .documents-security-summary > small {
   margin-top: 5px;
   color: #dbe5df;
-  font-size: 10px;
+  font-size: 12px;
 }
 .documents-quick-actions {
   display: grid;
@@ -6593,12 +6593,12 @@ fieldset legend {
 }
 .documents-quick-actions strong {
   align-self: end;
-  font-size: 11px;
+  font-size: 12px;
 }
 .documents-quick-actions small {
   align-self: start;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .documents-dashboard-stats {
   display: grid;
@@ -6647,7 +6647,7 @@ fieldset legend {
 .documents-dashboard-stats small {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .documents-dashboard-grid,
 .documents-lower-grid {
@@ -6714,20 +6714,20 @@ fieldset legend {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
 }
 .document-attention-list small,
 .document-vault-list small,
 .document-recent-list small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .document-attention-list b {
   padding: 4px 7px;
   border-radius: 999px;
   color: #775720;
   background: var(--warm-soft);
-  font-size: 8px;
+  font-size: 12px;
 }
 .document-attention-list b.expired {
   color: #914e3e;
@@ -6782,7 +6782,7 @@ fieldset legend {
   justify-items: center;
   color: var(--muted);
   text-align: center;
-  font-size: 10px;
+  font-size: 12px;
 }
 .documents-dashboard-empty strong {
   margin-top: 8px;
@@ -6797,7 +6797,7 @@ fieldset legend {
   border-radius: 12px;
   color: #914e3e;
   background: var(--family-soft);
-  font-size: 10px;
+  font-size: 12px;
 }
 .document-category-overview > div {
   display: grid;
@@ -6845,14 +6845,14 @@ fieldset legend {
 .document-category-overview small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .document-category-overview p {
   display: -webkit-box;
   overflow: hidden;
   margin: 11px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -6878,7 +6878,7 @@ fieldset legend {
 .documents-privacy-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .documents-privacy-card > a {
   grid-column: 2;
@@ -6887,7 +6887,7 @@ fieldset legend {
   gap: 5px;
   margin-top: 8px;
   color: var(--primary);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -7002,7 +7002,7 @@ fieldset legend {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 750;
 }
 .self-energy-summary > strong {
@@ -7014,7 +7014,7 @@ fieldset legend {
 .self-energy-summary > small {
   margin-top: 5px;
   color: #dbe5df;
-  font-size: 10px;
+  font-size: 12px;
 }
 .self-checkin-card {
   display: grid;
@@ -7049,7 +7049,7 @@ fieldset legend {
 .self-checkin-card p {
   margin: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .self-energy-scale {
   display: grid;
@@ -7078,7 +7078,7 @@ fieldset legend {
 }
 .self-energy-scale span {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
 }
 .self-dashboard-stats {
   display: grid;
@@ -7127,7 +7127,7 @@ fieldset legend {
 .self-dashboard-stats small {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .self-dashboard-grid {
   display: grid;
@@ -7197,7 +7197,7 @@ fieldset legend {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
 }
 .self-action-list small,
 .self-agenda-list small {
@@ -7205,14 +7205,14 @@ fieldset legend {
   color: var(--muted);
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 9px;
+  font-size: 12px;
 }
 .self-action-list article > span {
   padding: 4px 7px;
   border-radius: 999px;
   color: var(--muted);
   background: var(--surface-soft);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
 }
 .self-action-list article > span.overdue {
@@ -7229,7 +7229,7 @@ fieldset legend {
 }
 .self-agenda-list time {
   color: var(--primary);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 750;
 }
 .self-dashboard-empty {
@@ -7239,7 +7239,7 @@ fieldset legend {
   justify-items: center;
   color: var(--muted);
   text-align: center;
-  font-size: 10px;
+  font-size: 12px;
 }
 .self-dashboard-empty strong {
   margin-top: 8px;
@@ -7254,7 +7254,7 @@ fieldset legend {
   border-radius: 12px;
   color: #914e3e;
   background: var(--family-soft);
-  font-size: 10px;
+  font-size: 12px;
 }
 .self-practice-overview > div,
 .self-direction-card > div {
@@ -7296,7 +7296,7 @@ fieldset legend {
 .self-direction-card small {
   margin-top: 2px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 .self-practice-overview p,
 .self-direction-card p {
@@ -7304,7 +7304,7 @@ fieldset legend {
   overflow: hidden;
   margin: 11px 0 0;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }

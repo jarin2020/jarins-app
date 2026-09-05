@@ -148,7 +148,7 @@ uses delegated `Files.Read` or `Files.ReadWrite` plus `offline_access`.
 
 ## Deployment
 
-The web app is portable across a Next.js-compatible platform. Supabase should be provisioned in Frankfurt (`eu-central-1`). Cloudflare Workers and DNS serve `jarins.com`; no account IDs or secrets are committed.
+The web app is portable across a Next.js-compatible platform. Supabase should be provisioned in Frankfurt (`eu-central-1`). Cloudflare Workers and DNS serve `jarins.com`; no account IDs or secrets are committed. Production releases use `pnpm deploy:production`, which verifies the repository, applies linked Supabase migrations, and only then deploys the Workers. The operator checklist is in [production-runbook.md](production-runbook.md).
 
 ## Privacy
 

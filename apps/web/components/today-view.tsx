@@ -14,9 +14,11 @@ import {
 import { useMemo } from "react";
 import { useLifeRecords } from "@/lib/jarins-store";
 import { usePreferences } from "@/lib/preferences-store";
+import { useClientNow } from "@/lib/use-client-now";
 import { useAuth } from "./auth-provider";
 
 export function TodayView() {
+  const now = useClientNow();
   const { records, loading, error, update } = useLifeRecords();
   const { preferences } = usePreferences();
   const { profile, status: authStatus } = useAuth();
@@ -46,7 +48,7 @@ export function TodayView() {
     progress: item.progress ?? 0,
     tone: ["family", "self", "career"][index],
   }));
-  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayKey = now?.toISOString().slice(0, 10) ?? "";
   const datedRecords = records
     .filter(
       (item) => item.date && item.date >= todayKey && item.status !== "done",
@@ -89,13 +91,15 @@ export function TodayView() {
     [records],
   );
   const prompts = preferences.reminders ? datedRecords.slice(0, 2) : [];
-  const greeting =
-    new Date().getHours() < 12
+  const greeting = !now
+    ? "Hello"
+    : now.getHours() < 12
       ? "Good morning"
-      : new Date().getHours() < 18
+      : now.getHours() < 18
         ? "Good afternoon"
         : "Good evening";
   const date = (() => {
+    if (!now) return "Today";
     try {
       return new Intl.DateTimeFormat(
         accountPreferences.locale === "de" ? "de-DE" : "en-GB",
@@ -105,13 +109,13 @@ export function TodayView() {
           month: "long",
           timeZone: accountPreferences.timezone,
         },
-      ).format(new Date());
+      ).format(now);
     } catch {
       return new Intl.DateTimeFormat("en-GB", {
         weekday: "long",
         day: "numeric",
         month: "long",
-      }).format(new Date());
+      }).format(now);
     }
   })();
   return (

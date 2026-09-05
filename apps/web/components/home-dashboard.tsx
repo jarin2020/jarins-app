@@ -30,6 +30,7 @@ import { useHouseholdMembers } from "@/lib/household-members";
 import type { LifeRecord } from "@/lib/jarins-store";
 import { primaryModules } from "@/lib/modules";
 import { useStorageAccounts, useStorageItems } from "@/lib/storage-accounts";
+import { useClientNow } from "@/lib/use-client-now";
 
 type Props = {
   records: LifeRecord[];
@@ -65,6 +66,7 @@ function urgency(record: LifeRecord, today: string) {
 }
 
 export function HomeDashboard({ records, loading, update }: Props) {
+  const now = useClientNow();
   const { supabase, user, householdId, status } = useAuth();
   const ownerId = user?.id ?? "local";
   const email = useEmailAccounts(ownerId, supabase);
@@ -80,10 +82,10 @@ export function HomeDashboard({ records, loading, update }: Props) {
     userId: user?.id,
     householdId,
   });
-  const today = dateKey();
-  const nextWeek = new Date();
-  nextWeek.setDate(nextWeek.getDate() + 7);
-  const nextWeekKey = dateKey(nextWeek);
+  const today = now ? dateKey(now) : "";
+  const nextWeekKey = now
+    ? dateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7))
+    : "";
   const openRecords = useMemo(
     () => records.filter((record) => record.status !== "done"),
     [records],
@@ -113,7 +115,7 @@ export function HomeDashboard({ records, loading, update }: Props) {
     0,
   );
   const upcomingEvents = calendar.events
-    .filter((event) => event.endsAt >= new Date().toISOString())
+    .filter((event) => Boolean(now) && event.endsAt >= now!.toISOString())
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
     .slice(0, 5);
   const modules = primaryModules

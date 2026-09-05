@@ -26,6 +26,7 @@ import {
   type FamilyMemberColor,
   useFamilyCalendar,
 } from "@/lib/family-calendar";
+import { useClientNow } from "@/lib/use-client-now";
 import type { CalendarEvent } from "@/lib/calendar";
 
 type SystemCalendarEvent = {
@@ -199,8 +200,10 @@ export function FamilyCalendar({
     updateEvent,
     removeEvent,
   } = useFamilyCalendar(ownerId, ownerName);
-  const today = dateKey(new Date());
-  const [selectedDate, setSelectedDate] = useState(today);
+  const now = useClientNow();
+  const today = now ? dateKey(now) : "1970-01-01";
+  const [selectedDateOverride, setSelectedDate] = useState<string | null>(null);
+  const selectedDate = selectedDateOverride ?? today;
   const [showEventForm, setShowEventForm] = useState(false);
   const [showMemberManager, setShowMemberManager] = useState(false);
   const [editingEventId, setEditingEventId] = useState<string>();

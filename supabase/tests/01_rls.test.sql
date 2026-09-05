@@ -89,6 +89,7 @@ begin
     returning id into task_id;
 
   perform set_config('request.jwt.claim.sub', partner::text, true);
+  perform public.set_active_household(faria_household);
   update public.tasks set status = 'done' where id = task_id;
   get diagnostics n = row_count;
   if n <> 1 then raise exception 'FAIL S4: partner could not complete a shared task'; end if;
@@ -411,6 +412,75 @@ begin
     where search @@ to_tsquery('simple', 'kita');
   if n <> 1 then raise exception 'FAIL: full-text search matched % rows, expected 1', n; end if;
   raise notice 'PASS     generated tsvector search works';
+end $$;
+
+-- ============ personal modules + read-only household viewers ============
+do $$
+declare
+  faria uuid := '11111111-1111-1111-1111-111111111111';
+  partner uuid := '33333333-3333-3333-3333-333333333333';
+  faria_household uuid;
+  private_record uuid;
+  shared_record uuid;
+  family_thread uuid;
+  blocked boolean := false;
+  n int;
+begin
+  select id into faria_household from public.households where owner_user_id = faria;
+
+  -- This user is the fixture's verified household partner. Viewer must retain
+  -- read access while losing every household mutation path.
+  update public.household_members
+  set role = 'viewer'
+  where household_id = faria_household and user_id = partner;
+
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  insert into public.life_records (module, kind, title)
+  values ('self', 'Private note', 'Owner-only reflection') returning id into private_record;
+  insert into public.life_records (module, kind, title)
+  values ('home', 'Shared task', 'Replace the light') returning id into shared_record;
+  select id into family_thread from public.message_threads
+  where household_id = faria_household and is_family_thread;
+
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  select count(*) into n from public.life_records where id = private_record;
+  if n <> 0 then raise exception 'FAIL: a partner could read another author''s private module'; end if;
+  select count(*) into n from public.life_records where id = shared_record;
+  if n <> 1 then raise exception 'FAIL: a Viewer could not read shared Home data'; end if;
+
+  update public.life_records set title = 'Viewer edit' where id = shared_record;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: a Viewer edited shared life records'; end if;
+
+  blocked := false;
+  begin
+    insert into public.life_records (household_id, module, kind, title)
+    values (faria_household, 'home', 'Shared task', 'Viewer insert');
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a Viewer inserted shared life records'; end if;
+
+  blocked := false;
+  begin
+    perform public.create_message_team('Viewer team', array[]::uuid[]);
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a Viewer created a message team'; end if;
+
+  blocked := false;
+  begin
+    insert into public.messages (household_id, thread_id, body)
+    values (faria_household, family_thread, 'Viewer message');
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a Viewer sent a message'; end if;
+  raise notice 'PASS     personal records are author-only and Viewer access is read-only';
+
+  reset role;
+  update public.household_members
+  set role = 'adult'
+  where household_id = faria_household and user_id = partner;
 end $$;
 
 -- ============ household invitations + messaging ============

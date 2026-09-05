@@ -17,6 +17,7 @@ import type {
   OAuthCredentials,
 } from "@/lib/email-server";
 import { EmailHttpError, saveCredentials } from "@/lib/email-server";
+import { providerFetch, readLimitedJson } from "@/lib/provider-http";
 
 export type SyncedEmail = {
   account_id: string;
@@ -45,6 +46,8 @@ type ProviderAttachment = EmailAttachment & { content?: Uint8Array };
 
 const GRAPH = "https://graph.microsoft.com/v1.0";
 const GMAIL = "https://gmail.googleapis.com/gmail/v1/users/me";
+const MAX_EMAIL_BYTES = 25 * 1024 * 1024;
+const MAX_ENCODED_EMAIL_RESPONSE_BYTES = 36 * 1024 * 1024;
 
 function requiredEnv(name: string) {
   const value = process.env[name];
@@ -75,11 +78,12 @@ async function providerJson<T>(
   provider: string,
   url: string,
   init: RequestInit,
+  maximumBytes = 8 * 1024 * 1024,
 ) {
-  const response = await fetch(url, init);
+  const response = await providerFetch(url, init);
   if (!response.ok) throw safeProviderError(provider, response);
   if (response.status === 204 || response.status === 202) return null as T;
-  return (await response.json()) as T;
+  return readLimitedJson<T>(response, maximumBytes);
 }
 
 async function refreshOAuth(
@@ -100,7 +104,7 @@ async function refreshOAuth(
     grant_type: "refresh_token",
   });
   if (!google) body.set("scope", credentials.scope);
-  const response = await fetch(
+  const response = await providerFetch(
     google
       ? "https://oauth2.googleapis.com/token"
       : "https://login.microsoftonline.com/common/oauth2/v2.0/token",
@@ -108,12 +112,12 @@ async function refreshOAuth(
   );
   if (!response.ok)
     throw safeProviderError(google ? "Google" : "Microsoft", response);
-  const token = (await response.json()) as {
+  const token = await readLimitedJson<{
     access_token: string;
     refresh_token?: string;
     expires_in: number;
     scope?: string;
-  };
+  }>(response, 1024 * 1024);
   const next: OAuthCredentials = {
     kind: "oauth",
     accessToken: token.access_token,
@@ -218,7 +222,7 @@ function gmailDetail(message: GmailMessage): EmailMessageDetail {
     receivedAt: new Date(
       Number(message.internalDate ?? Date.now()),
     ).toISOString(),
-    snippet: message.snippet ?? "",
+    snippet: "",
     isRead: !message.labelIds?.includes("UNREAD"),
     isStarred: Boolean(message.labelIds?.includes("STARRED")),
     hasAttachments: parts.some((part) => Boolean(part.filename)),
@@ -282,7 +286,7 @@ async function syncGmail(
         received_at: new Date(
           Number(message.internalDate ?? Date.now()),
         ).toISOString(),
-        snippet: message.snippet ?? "",
+        snippet: "",
         is_read: !message.labelIds?.includes("UNREAD"),
         is_starred: Boolean(message.labelIds?.includes("STARRED")),
         has_attachments: false,
@@ -360,7 +364,7 @@ async function syncOutlook(
         sender_address: from.address,
         recipients: (message.toRecipients ?? []).map(graphRecipient),
         received_at: message.receivedDateTime ?? new Date().toISOString(),
-        snippet: message.bodyPreview ?? "",
+        snippet: "",
         is_read: Boolean(message.isRead),
         is_starred: message.flag?.flagStatus === "flagged",
         has_attachments: Boolean(message.hasAttachments),
@@ -380,6 +384,11 @@ function customClient(credentials: CustomCredentials) {
     auth: { user: credentials.username, pass: credentials.password },
     logger: false,
     disableAutoIdle: true,
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 30_000,
+    maxLiteralSize: MAX_EMAIL_BYTES,
+    maxResponseSize: MAX_EMAIL_BYTES + 1024 * 1024,
     tls: { rejectUnauthorized: true, minVersion: "TLSv1.2" },
   });
 }
@@ -497,6 +506,7 @@ async function gmailFull(
     "Google",
     `${GMAIL}/messages/${encodeURIComponent(messageId)}?format=full`,
     { headers: bearer(auth.accessToken) },
+    MAX_ENCODED_EMAIL_RESPONSE_BYTES,
   );
 }
 
@@ -525,6 +535,7 @@ export async function getProviderMessage(
           Prefer: 'outlook.body-content-type="text"',
         }),
       },
+      MAX_ENCODED_EMAIL_RESPONSE_BYTES,
     );
     const attachments = message.hasAttachments
       ? await providerJson<{
@@ -574,6 +585,17 @@ export async function getProviderMessage(
     await client.connect();
     const lock = await client.getMailboxLock("INBOX", { readOnly: true });
     try {
+      const metadata = await client.fetchOne(
+        messageId,
+        { uid: true, size: true },
+        { uid: true },
+      );
+      if (!metadata) throw new EmailHttpError(404, "Message not found.");
+      if ((metadata.size ?? 0) > MAX_EMAIL_BYTES)
+        throw new EmailHttpError(
+          413,
+          "This message is too large to open safely.",
+        );
       const fetched = await client.fetchOne(
         messageId,
         { uid: true, source: true },
@@ -872,7 +894,13 @@ export async function downloadProviderAttachment(
       "Google",
       `${GMAIL}/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}`,
       { headers: bearer(auth.accessToken) },
+      MAX_ENCODED_EMAIL_RESPONSE_BYTES,
     );
+    if (payload.size > MAX_EMAIL_BYTES)
+      throw new EmailHttpError(
+        413,
+        "This attachment is too large to download safely.",
+      );
     return {
       id: attachmentId,
       name: part.filename || "attachment",
@@ -893,7 +921,13 @@ export async function downloadProviderAttachment(
       "Microsoft",
       `${GRAPH}/me/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}`,
       { headers: bearer(auth.accessToken) },
+      MAX_ENCODED_EMAIL_RESPONSE_BYTES,
     );
+    if (attachment.size > MAX_EMAIL_BYTES)
+      throw new EmailHttpError(
+        413,
+        "This attachment is too large to download safely.",
+      );
     if (!attachment.contentBytes) {
       throw new EmailHttpError(
         409,
@@ -913,6 +947,17 @@ export async function downloadProviderAttachment(
     await client.connect();
     const lock = await client.getMailboxLock("INBOX", { readOnly: true });
     try {
+      const metadata = await client.fetchOne(
+        messageId,
+        { uid: true, size: true },
+        { uid: true },
+      );
+      if (!metadata) throw new EmailHttpError(404, "Message not found.");
+      if ((metadata.size ?? 0) > MAX_EMAIL_BYTES)
+        throw new EmailHttpError(
+          413,
+          "This message is too large to inspect safely.",
+        );
       const fetched = await client.fetchOne(
         messageId,
         { source: true },

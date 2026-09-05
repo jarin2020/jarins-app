@@ -11,14 +11,14 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const requested = searchParams.get("next") ?? "/today";
+  const requested = searchParams.get("next") ?? "/home";
 
   // Only same-origin relative paths. "//evil.example" is protocol-relative and
   // would otherwise turn this into an open redirect.
   const next =
     requested.startsWith("/") && !requested.startsWith("//")
       ? requested
-      : "/today";
+      : "/home";
 
   if (!code) return NextResponse.redirect(`${origin}/login?error=missing_code`);
 

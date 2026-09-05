@@ -7,6 +7,7 @@ import {
   publicCalendarAccount,
   requireCalendarUser,
 } from "@/lib/calendar-server";
+import { providerFetch } from "@/lib/provider-http";
 
 const patchSchema = z.object({
   label: z.string().trim().min(1).max(80).optional(),
@@ -95,7 +96,7 @@ export async function DELETE(
       loaded.account.provider === "google" &&
       loaded.credentials.kind === "oauth"
     ) {
-      await fetch(
+      await providerFetch(
         `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(loaded.credentials.refreshToken)}`,
         {
           method: "POST",

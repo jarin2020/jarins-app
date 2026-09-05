@@ -25,6 +25,7 @@ import {
   useStorageAccounts,
   useStorageItems,
 } from "@/lib/storage-accounts";
+import { useClientNow } from "@/lib/use-client-now";
 
 type Props = {
   records: LifeRecord[];
@@ -53,6 +54,7 @@ function daysUntil(value: string, today: string) {
 }
 
 export function DocumentsDashboard({ records, loading, update }: Props) {
+  const now = useClientNow();
   const { supabase, user, status } = useAuth();
   const ownerId = user?.id ?? "local";
   const storage = useStorageAccounts(ownerId, supabase);
@@ -60,10 +62,12 @@ export function DocumentsDashboard({ records, loading, update }: Props) {
     kind: "documents",
     enabled: storage.accounts.some((account) => account.status === "active"),
   });
-  const today = localDateKey();
-  const inNinetyDays = new Date();
-  inNinetyDays.setDate(inNinetyDays.getDate() + 90);
-  const horizon = localDateKey(inNinetyDays);
+  const today = now ? localDateKey(now) : "";
+  const horizon = now
+    ? localDateKey(
+        new Date(now.getFullYear(), now.getMonth(), now.getDate() + 90),
+      )
+    : "";
   const documents = useMemo(
     () => records.filter((record) => record.module === "documents"),
     [records],

@@ -40,6 +40,7 @@ type AuthValue = {
     timezone: string;
     locale: "en" | "de";
   }) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -187,6 +188,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [supabase, user],
   );
 
+  const updatePassword = useCallback(
+    async (password: string) => {
+      if (!supabase || !user)
+        throw new Error("Sign in to change your password.");
+      if (password.length < 10) throw new Error("Use at least 10 characters.");
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw new Error(error.message);
+    },
+    [supabase, user],
+  );
+
   const value = useMemo<AuthValue>(
     () => ({
       supabase,
@@ -197,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshHousehold,
       updateProfile,
+      updatePassword,
     }),
     [
       supabase,
@@ -207,6 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshHousehold,
       updateProfile,
+      updatePassword,
     ],
   );
 

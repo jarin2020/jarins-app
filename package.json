@@ -7,17 +7,22 @@
     "build": "turbo build",
     "build:cloudflare": "pnpm --filter @jarins/web exec opennextjs-cloudflare build",
     "deploy:cloudflare": "pnpm --filter @jarins/web run deploy && pnpm deploy:cloudflare:redirect",
+    "deploy:production": "pnpm verify && pnpm db:push && pnpm deploy:cloudflare",
     "deploy:cloudflare:redirect": "pnpm --filter @jarins/web exec wrangler deploy --config ../../apps/www-redirect/wrangler.jsonc",
+    "db:check": "supabase db push --linked --dry-run --skip-vault",
+    "db:push": "supabase db push --linked --skip-vault --yes",
     "cf-typegen": "pnpm --filter @jarins/web cf-typegen",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:rls": "./supabase/tests/run.sh"
+    "test:rls": "./supabase/tests/run.sh",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm build:cloudflare"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
+    "supabase": "^2.116.0",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2"
   },

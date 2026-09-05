@@ -14,6 +14,9 @@ import {
   upsertDiscoveredSources,
 } from "@/lib/calendar-providers";
 import { decryptSecret, sha256Hex } from "@/lib/email-security";
+import { providerFetch, readLimitedJson } from "@/lib/provider-http";
+
+const fetch = providerFetch;
 
 type OAuthStateRow = {
   state_hash: string;
@@ -42,7 +45,7 @@ function redirect(
 
 async function checkedJson<T>(response: Response, message: string): Promise<T> {
   if (!response.ok) throw new CalendarHttpError(502, message);
-  return (await response.json()) as T;
+  return readLimitedJson<T>(response, 1024 * 1024);
 }
 
 export async function GET(

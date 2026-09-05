@@ -21,6 +21,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { useCalendarEvents } from "@/lib/calendar-accounts";
 import type { LifeRecord } from "@/lib/jarins-store";
+import { useClientNow } from "@/lib/use-client-now";
 
 type Props = {
   records: LifeRecord[];
@@ -43,9 +44,10 @@ function dateLabel(value: string) {
 }
 
 export function SelfDashboard({ records, loading, update }: Props) {
+  const now = useClientNow();
   const { supabase, user, status } = useAuth();
   const calendar = useCalendarEvents(user?.id ?? "local", supabase);
-  const today = localDateKey();
+  const today = now ? localDateKey(now) : "";
   const energyKey = `jarins-energy-${today}`;
   const [energy, setEnergy] = useState(3);
 
@@ -90,7 +92,8 @@ export function SelfDashboard({ records, loading, update }: Props) {
     .filter(
       (event) =>
         event.ownerUserId === user?.id &&
-        event.endsAt >= new Date().toISOString(),
+        Boolean(now) &&
+        event.endsAt >= now!.toISOString(),
     )
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const datedSelf = open

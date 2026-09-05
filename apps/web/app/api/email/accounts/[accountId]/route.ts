@@ -4,6 +4,7 @@ import {
   loadOwnedAccount,
   requireEmailUser,
 } from "@/lib/email-server";
+import { providerFetch } from "@/lib/provider-http";
 
 export async function DELETE(
   request: Request,
@@ -15,7 +16,7 @@ export async function DELETE(
     const { accountId } = await params;
     const { account, credentials } = await loadOwnedAccount(context, accountId);
     if (account.provider === "gmail" && credentials.kind === "oauth") {
-      await fetch(
+      await providerFetch(
         `https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(credentials.refreshToken)}`,
         {
           method: "POST",

@@ -17,6 +17,11 @@ import {
   type CalendarSourceRow,
   saveCalendarCredentials,
 } from "@/lib/calendar-server";
+import {
+  providerFetch,
+  readLimitedJson,
+  readLimitedText,
+} from "@/lib/provider-http";
 
 type DiscoveredSource = {
   providerCalendarId: string;
@@ -86,9 +91,9 @@ async function providerJson<T>(
   init: RequestInit,
   message: string,
 ): Promise<T> {
-  const response = await fetch(url, init);
+  const response = await providerFetch(url, init);
   if (!response.ok) {
-    const detail = await response.text().catch(() => "");
+    const detail = await readLimitedText(response, 64 * 1024).catch(() => "");
     console.error(
       "[jarins] calendar provider error",
       response.status,
@@ -97,7 +102,7 @@ async function providerJson<T>(
     throw new CalendarHttpError(response.status === 401 ? 409 : 502, message);
   }
   if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+  return readLimitedJson<T>(response);
 }
 
 async function oauthAccessToken(
@@ -236,7 +241,7 @@ async function davRequest(
   let target = secureCalDavUrl(url);
   let response: Response | null = null;
   for (let redirects = 0; redirects <= 5; redirects += 1) {
-    response = await fetch(target, {
+    response = await providerFetch(target, {
       method,
       redirect: "manual",
       headers: {
@@ -267,7 +272,7 @@ async function davRequest(
   }
   return {
     response,
-    text: await response.text(),
+    text: await readLimitedText(response),
     url: response.url || target.href,
   };
 }
@@ -762,7 +767,7 @@ async function syncGoogle(
     }
     if (pageToken) query.set("pageToken", pageToken);
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(source.provider_calendar_id)}/events?${query}`;
-    const response = await fetch(url, { headers: oauthHeaders(token) });
+    const response = await providerFetch(url, { headers: oauthHeaders(token) });
     if (response.status === 410 && source.sync_cursor) {
       return syncGoogle(token, { ...source, sync_cursor: null }, ownerName);
     }
@@ -771,11 +776,11 @@ async function syncGoogle(
         502,
         `Google could not synchronize ${source.name}.`,
       );
-    const payload = (await response.json()) as {
+    const payload = await readLimitedJson<{
       items?: GoogleEvent[];
       nextPageToken?: string;
       nextSyncToken?: string;
-    };
+    }>(response);
     for (const item of payload.items ?? []) {
       if (item.status === "cancelled" && (!item.start || !item.end))
         removedIds.push(item.id);
@@ -1018,7 +1023,7 @@ export async function createProviderEvent(
       ? source.provider_calendar_id
       : `${source.provider_calendar_id}/`;
     const url = absoluteDavUrl(base, `${uid}.ics`);
-    const response = await fetch(url, {
+    const response = await providerFetch(url, {
       method: "PUT",
       headers: {
         ...basicHeaders(credentials),
@@ -1106,21 +1111,24 @@ export async function updateProviderEvent(
     return microsoftEvent(event, source.name, ownerName);
   }
   if (credentials.kind === "caldav" && existing.provider_url) {
-    const response = await fetch(secureCalDavUrl(existing.provider_url), {
-      method: "PUT",
-      headers: {
-        ...basicHeaders(credentials),
-        "Content-Type": "text/calendar; charset=utf-8",
-        ...(existing.provider_etag
-          ? { "If-Match": existing.provider_etag }
-          : {}),
+    const response = await providerFetch(
+      secureCalDavUrl(existing.provider_url),
+      {
+        method: "PUT",
+        headers: {
+          ...basicHeaders(credentials),
+          "Content-Type": "text/calendar; charset=utf-8",
+          ...(existing.provider_etag
+            ? { "If-Match": existing.provider_etag }
+            : {}),
+        },
+        body: calendarIcs(
+          input,
+          existing.provider_event_id.split(":", 1)[0],
+          account.address,
+        ),
       },
-      body: calendarIcs(
-        input,
-        existing.provider_event_id.split(":", 1)[0],
-        account.address,
-      ),
-    });
+    );
     if (!response.ok)
       throw new CalendarHttpError(502, "CalDAV could not update the event.");
     return {
@@ -1165,7 +1173,7 @@ export async function deleteProviderEvent(
   let response: Response;
   if (account.provider === "google" && credentials.kind === "oauth") {
     const token = await oauthAccessToken(context, account, credentials);
-    response = await fetch(
+    response = await providerFetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(source.provider_calendar_id)}/events/${encodeURIComponent(existing.provider_event_id)}?sendUpdates=all`,
       {
         method: "DELETE",
@@ -1177,12 +1185,12 @@ export async function deleteProviderEvent(
     );
   } else if (account.provider === "microsoft" && credentials.kind === "oauth") {
     const token = await oauthAccessToken(context, account, credentials);
-    response = await fetch(
+    response = await providerFetch(
       `https://graph.microsoft.com/v1.0/me/calendars/${encodeURIComponent(source.provider_calendar_id)}/events/${encodeURIComponent(existing.provider_event_id)}`,
       { method: "DELETE", headers: oauthHeaders(token) },
     );
   } else if (credentials.kind === "caldav" && existing.provider_url) {
-    response = await fetch(secureCalDavUrl(existing.provider_url), {
+    response = await providerFetch(secureCalDavUrl(existing.provider_url), {
       method: "DELETE",
       headers: {
         ...basicHeaders(credentials),

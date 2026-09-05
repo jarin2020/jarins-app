@@ -16,6 +16,7 @@ import {
   type StorageRequestContext,
   type WebDavCredentials,
 } from "@/lib/storage-server";
+import { providerFetch, readLimitedJson } from "@/lib/provider-http";
 
 export type ProviderStorageItem = Omit<
   StorageItemRow,
@@ -73,13 +74,14 @@ type DropboxEntry = {
 
 const googleFolderMime = "application/vnd.google-apps.folder";
 const maximumIndexedItems = 10_000;
+const fetch = providerFetch;
 
 async function checkedJson<T>(response: Response, message: string): Promise<T> {
   if (!response.ok) {
     throw new StorageHttpError(response.status === 401 ? 409 : 502, message);
   }
   if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
+  return readLimitedJson<T>(response);
 }
 
 function oauthHeaders(token: string, extra?: HeadersInit) {

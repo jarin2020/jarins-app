@@ -14,6 +14,9 @@ import {
   type StorageOAuthCredentials,
 } from "@/lib/storage-server";
 import { synchronizeStorageAccount } from "@/lib/storage-sync";
+import { providerFetch, readLimitedJson } from "@/lib/provider-http";
+
+const fetch = providerFetch;
 
 type OAuthStateRow = {
   state_hash: string;
@@ -41,7 +44,7 @@ function redirect(
 
 async function checkedJson<T>(response: Response, message: string): Promise<T> {
   if (!response.ok) throw new StorageHttpError(502, message);
-  return (await response.json()) as T;
+  return readLimitedJson<T>(response, 1024 * 1024);
 }
 
 export async function GET(

@@ -11,7 +11,7 @@ export default async function DynamicPage({
   const { slug } = await params;
   // Rejecting here rather than in the client component means the response
   // actually carries a 404 status, not a 200 with not-found content in it.
-  if (!isKnownRoute(slug[0])) notFound();
+  if (!isKnownRoute(slug)) notFound();
   return (
     <AppShell>
       <ModuleView slug={slug} />

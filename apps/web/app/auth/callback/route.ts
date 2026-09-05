@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       : "/home";
 
   const back = (error: string) =>
-    NextResponse.redirect(`${origin}/login?error=${error}`);
+    NextResponse.redirect(`${origin}/auth/login?error=${error}`);
 
   // Supabase rejected the link before we ever saw a token.
   const upstreamError =
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     // A recovery link must land on the change-password form, whatever `next`
     // says, or the person is silently signed in and never sets a password.
     return NextResponse.redirect(
-      `${origin}${type === "recovery" ? "/reset-password" : next}`,
+      `${origin}${type === "recovery" ? "/auth/reset-password" : next}`,
     );
   }
 

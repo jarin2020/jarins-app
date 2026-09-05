@@ -49,11 +49,8 @@ import { DocumentsDashboard } from "./documents-dashboard";
 export function ModuleView({ slug }: { slug: string[] }) {
   // Unknown roots are rejected with a real 404 by app/[...slug]/page.tsx.
   const root = slug[0] ?? "today";
-  if (root === "login") return <LoginView />;
-  if (root === "signup") return <SignupView />;
-  if (root === "invite") return <InvitationView token={slug[1]} />;
-  if (root === "forgot") return <ForgotPasswordView />;
-  if (root === "reset-password") return <ResetPasswordView />;
+  if (root === "auth")
+    return <AuthRoute screen={slug[1]} rest={slug.slice(2)} />;
   if (root === "onboarding") return <Onboarding />;
   if (root === "reset") return <WeeklyReset />;
   if (root === "inbox") return <InboxView />;
@@ -62,6 +59,16 @@ export function ModuleView({ slug }: { slug: string[] }) {
   if (root === "vault") return <VaultView />;
   if (root === "settings") return <SettingsView section={slug[1]} />;
   return <LifeModule root={root} subsection={slug[1]} />;
+}
+
+/** The signed-out screens. Unknown children are rejected by isKnownRoute. */
+function AuthRoute({ screen, rest }: { screen?: string; rest: string[] }) {
+  if (screen === "login") return <LoginView />;
+  if (screen === "signup") return <SignupView />;
+  if (screen === "forgot-password") return <ForgotPasswordView />;
+  if (screen === "reset-password") return <ResetPasswordView />;
+  if (screen === "invite") return <InvitationView token={rest[0]} />;
+  return null;
 }
 
 function PageIntro({
@@ -1037,7 +1044,7 @@ function SettingsView({ section }: { section?: string }) {
                     {status === "demo" ? (
                       "connect an account"
                     ) : (
-                      <Link href="/signup">create an account</Link>
+                      <Link href="/auth/signup">create an account</Link>
                     )}{" "}
                     to sync across devices.
                   </p>
@@ -1389,10 +1396,10 @@ function InvitationView({ token }: { token?: string }) {
     router.refresh();
   };
 
-  const next = token ? `/invite/${token}` : "/home";
+  const next = token ? `/auth/invite/${token}` : "/home";
   const signupHref = details
-    ? `/signup?invite=${encodeURIComponent(token ?? "")}&email=${encodeURIComponent(details.email)}`
-    : `/signup?next=${encodeURIComponent(next)}`;
+    ? `/auth/signup?invite=${encodeURIComponent(token ?? "")}&email=${encodeURIComponent(details.email)}`
+    : `/auth/signup?next=${encodeURIComponent(next)}`;
 
   return (
     <AuthShell>
@@ -1444,7 +1451,7 @@ function InvitationView({ token }: { token?: string }) {
             <>
               <Link
                 className="button primary"
-                href={`/login?next=${encodeURIComponent(next)}`}
+                href={`/auth/login?next=${encodeURIComponent(next)}`}
               >
                 Sign in to accept
               </Link>

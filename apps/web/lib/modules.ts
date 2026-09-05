@@ -171,21 +171,43 @@ export const findModule = (slug?: string) =>
   primaryModules.find((item) => item.key === "today")!;
 
 /** Routes that exist but are not life-area modules. */
-export const standaloneRoutes = [
+export const standaloneRoutes = ["auth", "onboarding", "reset"] as const;
+
+/**
+ * The signed-out screens. They live under /auth so one prefix covers all of
+ * them — the middleware allowlist, the Supabase redirect allowlist and the CSP
+ * exemptions each name a single path instead of drifting out of sync with a
+ * list of five. It also keeps /reset (the weekly reset, a life-area feature)
+ * from reading as a sibling of /auth/reset-password.
+ *
+ * `callback` is served by app/auth/callback/route.ts, which matches ahead of
+ * the catch-all, so it never reaches ModuleView — it is listed here only so
+ * that the route is recognised rather than 404'd.
+ */
+export const authRoutes = [
   "login",
   "signup",
-  "invite",
-  "forgot",
+  "forgot-password",
   "reset-password",
-  "onboarding",
-  "reset",
+  "invite",
+  "callback",
 ] as const;
 
 /**
- * Whether a first path segment resolves to a real screen. Checked on the server
- * so an unknown URL answers 404 rather than a 200 carrying the not-found body.
+ * Whether a path resolves to a real screen. Checked on the server so an unknown
+ * URL answers 404 rather than a 200 carrying the not-found body.
+ *
+ * Takes the whole slug rather than its first segment: /auth is not a screen on
+ * its own, so /auth/nonsense has to 404 like any other unknown route instead of
+ * rendering an empty shell.
  */
-export const isKnownRoute = (slug?: string) =>
-  !slug ||
-  allModules.some((item) => item.key === slug) ||
-  (standaloneRoutes as readonly string[]).includes(slug);
+export const isKnownRoute = (slug: readonly string[] = []) => {
+  const [root, screen] = slug;
+  if (!root) return true;
+  if (root === "auth")
+    return (authRoutes as readonly string[]).includes(screen);
+  return (
+    allModules.some((item) => item.key === root) ||
+    (standaloneRoutes as readonly string[]).includes(root)
+  );
+};

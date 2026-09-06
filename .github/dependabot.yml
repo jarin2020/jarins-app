@@ -11,12 +11,21 @@ updates:
       production-dependencies:
         dependency-type: production
     ignore:
-      # typescript-eslint refuses to load under TS 7 ("does not support TS 7.0"),
-      # and it arrives transitively through eslint-config-next, so a TypeScript
-      # major bump fails `pnpm lint` no matter what this repo does. Holding the
-      # major back lets the rest of the dev-dependency group land. Drop this
-      # entry once typescript-eslint ships TS 7 support.
+      # Both entries are the same shape of problem: eslint-config-next pulls in
+      # plugins that have not caught up with a major, so the bump breaks
+      # `pnpm lint` and nothing in this repo can fix it. Grouped updates are
+      # all-or-nothing, so one stuck major holds six good bumps hostage.
+      # Re-check both when eslint-config-next next moves, and delete the entry
+      # that no longer applies.
+      #
+      # typescript-eslint refuses to load under TS 7: "typescript-eslint does
+      # not support TS 7.0". 8.69.0 is still its latest release.
       - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      # ESLint 10 removed context.getFilename(); eslint-plugin-react 7.37.5
+      # still calls it, so every React rule throws on load:
+      # "Error while loading rule 'react/display-name'".
+      - dependency-name: eslint
         update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /

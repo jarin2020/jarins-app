@@ -19,7 +19,7 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react";
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { FamilyCalendar } from "@/components/family-calendar";
 import { useCalendarEvents } from "@/lib/calendar-accounts";
@@ -32,6 +32,9 @@ import {
   useStorageAccounts,
   useStorageItems,
 } from "@/lib/storage-accounts";
+
+/** Sentinel for "send from Jarins itself", distinct from any account id. */
+const HOUSE_SENDER = "jarins";
 
 function initials(name: string) {
   return (
@@ -88,6 +91,37 @@ async function sendInvitationEmail(
     throw new Error(payload.error || "The invitation email could not be sent.");
 }
 
+/**
+ * Creates the invitation and mails it from Jarins' own address in one request.
+ *
+ * The token is minted and sent server-side, so the browser never gets to say
+ * which URL goes into an outgoing email.
+ */
+async function createAndSendInvitation(
+  email: string,
+  role: "adult" | "viewer",
+) {
+  const response = await fetch("/api/family/invitations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, role }),
+  });
+  const payload = (await response.json().catch(() => ({}))) as {
+    link?: string;
+    sent?: boolean;
+    from?: string;
+    error?: string;
+  };
+  if (!response.ok || !payload.link)
+    throw new Error(payload.error || "The invitation could not be created.");
+  return payload as {
+    link: string;
+    sent: boolean;
+    from?: string;
+    error?: string;
+  };
+}
+
 export function FamilyOverview({ records }: { records: LifeRecord[] }) {
   const { supabase, user, householdId, status } = useAuth();
   const { preferences } = usePreferences();
@@ -110,11 +144,37 @@ export function FamilyOverview({ records }: { records: LifeRecord[] }) {
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"adult" | "viewer">("adult");
+  // "" is link-only, HOUSE_SENDER is Jarins' own mailbox, anything else is one
+  // of the household's connected accounts.
   const [senderId, setSenderId] = useState("");
+  const [houseAddress, setHouseAddress] = useState<string | null>(null);
   const [invitationLink, setInvitationLink] = useState("");
   const [notice, setNotice] = useState("");
   const [actionError, setActionError] = useState("");
   const [busy, setBusy] = useState("");
+
+  // Whether Jarins can send the invitation itself decides what this form does
+  // by default, so it is resolved before the owner opens it rather than
+  // discovered when they press the button.
+  useEffect(() => {
+    if (status !== "signed-in") return;
+    let active = true;
+    void fetch("/api/family/invitations")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((value) => {
+        const payload = value as { address?: string | null } | null;
+        if (!active || !payload?.address) return;
+        setHouseAddress(payload.address);
+        // Only the initial default. Once someone has chosen a sender, leave it.
+        setSenderId((current) => (current === "" ? HOUSE_SENDER : current));
+      })
+      .catch(() => {
+        // A failed probe just means the form falls back to creating a link.
+      });
+    return () => {
+      active = false;
+    };
+  }, [status]);
 
   const householdName = preferences.household || "Your family";
   const upcoming = useMemo(() => {
@@ -155,6 +215,26 @@ export function FamilyOverview({ records }: { records: LifeRecord[] }) {
     setNotice("");
     setInvitationLink("");
     try {
+      // Jarins' own mailbox mints and sends in a single request, so the token
+      // never travels through the browser on its way into an email.
+      if (senderId === HOUSE_SENDER) {
+        const result = await createAndSendInvitation(inviteEmail, inviteRole);
+        setInvitationLink(result.link);
+        await directory.reload();
+        if (result.sent) {
+          setNotice(
+            `Invitation emailed to ${inviteEmail} from ${result.from ?? houseAddress}.`,
+          );
+          setInviteEmail("");
+        } else {
+          setActionError(
+            result.error ??
+              "The invitation was created but could not be emailed. Copy its link below.",
+          );
+        }
+        return;
+      }
+
       const link = await directory.invite(inviteEmail, inviteRole);
       setInvitationLink(link);
       if (senderId) {
@@ -319,12 +399,15 @@ export function FamilyOverview({ records }: { records: LifeRecord[] }) {
                 value={senderId}
                 onChange={(event) => setSenderId(event.target.value)}
               >
-                <option value="">Create link only</option>
+                {houseAddress && (
+                  <option value={HOUSE_SENDER}>Jarins · {houseAddress}</option>
+                )}
                 {senders.map((account) => (
                   <option value={account.id} key={account.id}>
                     {account.label} · {account.address}
                   </option>
                 ))}
+                <option value="">Create link only</option>
               </select>
             </label>
             <button
@@ -333,9 +416,16 @@ export function FamilyOverview({ records }: { records: LifeRecord[] }) {
               disabled={busy === "invite"}
             >
               <Send size={14} />
-              {senderId ? "Send invitation" : "Create invitation"}
+              {busy === "invite"
+                ? "Sending…"
+                : senderId
+                  ? "Send invitation"
+                  : "Create invitation"}
             </button>
-            {!senders.length && (
+            {/* Only worth suggesting when there is no way to send at all.
+                Once Jarins can send, connecting a personal mailbox is a
+                preference about the From address, not a missing piece. */}
+            {!senders.length && !houseAddress && (
               <Link href="/inbox" className="text-button family-connect-mail">
                 Connect an email account to send directly
                 <ChevronRight size={14} />

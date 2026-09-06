@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { SupabaseBrowserClient } from "@/lib/supabase/client";
+import { invitationLink } from "@/lib/invitation-message";
 
 export type HouseholdAccountRole = "owner" | "adult" | "child" | "viewer";
 
@@ -155,7 +156,7 @@ export function useHouseholdMembers({
       const result = (data as { invitation_token: string }[] | null)?.[0];
       if (!result) throw new Error("The invitation link could not be created.");
       await load();
-      return `${window.location.origin}/invite/${result.invitation_token}`;
+      return invitationLink(window.location.origin, result.invitation_token);
     },
     [load, supabase],
   );

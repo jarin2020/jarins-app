@@ -214,6 +214,92 @@ describe("Family overview", () => {
     ).toBeTruthy();
   });
 
+  // The reported problem: "Invite by email" only ever produced a link to copy,
+  // because sending was conditional on a personal mailbox being connected.
+  it("defaults to Jarins' own mailbox and sends without a connected account", async () => {
+    mocks.fetch.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === "/api/family/invitations" && !init)
+        return Promise.resolve(
+          Response.json({ address: "Jarins <invites@jarins.com>" }),
+        );
+      if (url === "/api/family/invitations")
+        return Promise.resolve(
+          Response.json({
+            link: "https://jarins.com/auth/invite/token",
+            sent: true,
+            from: "Jarins <invites@jarins.com>",
+          }),
+        );
+      return Promise.resolve(Response.json({ sent: true }));
+    });
+
+    render(<FamilyOverview records={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add family member" }));
+
+    // The option exists, and the button already reads "Send invitation" —
+    // which it only does once a sender is selected, so the default moved off
+    // link-only without anyone touching the dropdown.
+    expect(
+      await screen.findByRole("option", {
+        name: "Jarins · Jarins <invites@jarins.com>",
+      }),
+    ).toBeTruthy();
+    expect(
+      await screen.findByRole("button", { name: "Send invitation" }),
+    ).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "newmember@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+
+    await waitFor(() =>
+      expect(mocks.fetch).toHaveBeenCalledWith(
+        "/api/family/invitations",
+        expect.objectContaining({ method: "POST" }),
+      ),
+    );
+    // The token is minted server-side, so the old two-step call must not run.
+    expect(mocks.invite).not.toHaveBeenCalled();
+    expect(
+      await screen.findByText(/Invitation emailed to newmember@example.com/),
+    ).toBeTruthy();
+  });
+
+  // Delivery failing must not read as "nothing happened": the invitation is
+  // real and its link is still the way in.
+  it("still shows the link when Jarins cannot deliver the mail", async () => {
+    mocks.fetch.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === "/api/family/invitations" && !init)
+        return Promise.resolve(
+          Response.json({ address: "invites@jarins.com" }),
+        );
+      if (url === "/api/family/invitations")
+        return Promise.resolve(
+          Response.json({
+            link: "https://jarins.com/auth/invite/token",
+            sent: false,
+            error: "The invitation was created, but it could not be sent.",
+          }),
+        );
+      return Promise.resolve(Response.json({ sent: true }));
+    });
+
+    render(<FamilyOverview records={[]} />);
+    fireEvent.click(screen.getByRole("button", { name: "Add family member" }));
+    await screen.findByRole("button", { name: "Send invitation" });
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "newmember@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+
+    expect(await screen.findByText(/could not be sent/)).toBeTruthy();
+    expect(
+      (screen.getByLabelText("Family invitation link") as HTMLInputElement)
+        .value,
+    ).toBe("https://jarins.com/auth/invite/token");
+  });
+
   it("keeps the invitation entry point visible while owner access is unresolved", () => {
     mocks.canManage = false;
 

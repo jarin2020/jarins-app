@@ -876,3 +876,92 @@ begin
   where module in ('work', 'pipeline', 'portfolio', 'network');
   reset role;
 end $$;
+
+-- ============ teams as a place to work ============
+do $$
+declare
+  faria    uuid := '11111111-1111-1111-1111-111111111111';
+  partner  uuid := '33333333-3333-3333-3333-333333333333';
+  stranger uuid := '22222222-2222-2222-2222-222222222222';
+  pod uuid;
+  task_id uuid;
+  solo_id uuid;
+  blocked boolean;
+  n int;
+begin
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+
+  pod := public.create_message_team('Growth pod', array[partner]);
+
+  -- ---- the creator is an owner, the person added is not ----
+  select count(*) into n from public.message_team_members
+  where team_id = pod and user_id = faria and member_role = 'owner';
+  if n <> 1 then raise exception 'FAIL: the team creator is not an owner'; end if;
+  select count(*) into n from public.message_team_members
+  where team_id = pod and user_id = partner and member_role = 'member';
+  if n <> 1 then raise exception 'FAIL: an added person did not default to member'; end if;
+  raise notice 'PASS     a team creator owns it and the people added are members';
+
+  -- ---- assigned work reaches the assignee; unassigned work does not ----
+  insert into public.life_records (module, kind, title, team_id, assignee_user_id)
+  values ('work', 'Deliverable', 'Ship the pricing page', pod, partner)
+  returning id into task_id;
+  insert into public.life_records (module, kind, title)
+  values ('work', 'Focus', 'My own private note')
+  returning id into solo_id;
+
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  select count(*) into n from public.life_records where id = task_id;
+  if n <> 1 then raise exception 'FAIL: an assignee cannot read the task assigned to them'; end if;
+  select count(*) into n from public.life_records where id = solo_id;
+  if n <> 0 then raise exception 'FAIL: a team-mate read a record with no team on it'; end if;
+  raise notice 'PASS     team work is visible to the team, private work stays private';
+
+  -- ---- a member may finish their own task ----
+  update public.life_records set status = 'done' where id = task_id;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: an assignee could not complete their own task'; end if;
+  raise notice 'PASS     an assignee can move their own task along';
+
+  -- ---- but not manage the team, nor delete the work ----
+  blocked := false;
+  begin
+    perform public.set_message_team_role(pod, faria, 'member');
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a plain member changed a team role'; end if;
+
+  delete from public.life_records where id = task_id;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: a plain member deleted team work'; end if;
+  raise notice 'PASS     a plain member cannot manage the team or delete its work';
+
+  -- ---- a team cannot be left with nobody who can manage it ----
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  blocked := false;
+  begin
+    perform public.set_message_team_role(pod, faria, 'member');
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: the last owner demoted themselves'; end if;
+
+  perform public.set_message_team_role(pod, partner, 'owner');
+  perform public.set_message_team_role(pod, faria, 'member');
+  select count(*) into n from public.message_team_members
+  where team_id = pod and member_role = 'owner';
+  if n <> 1 then raise exception 'FAIL: handing the role on did not work (owners: %)', n; end if;
+  raise notice 'PASS     ownership can be handed on, but never dropped entirely';
+
+  -- ---- and none of it crosses the household ----
+  perform set_config('request.jwt.claim.sub', stranger::text, true);
+  select count(*) into n from public.life_records where id = task_id;
+  if n <> 0 then raise exception 'FAIL: another household read team work'; end if;
+  select count(*) into n from public.message_teams where id = pod;
+  if n <> 0 then raise exception 'FAIL: another household saw the team'; end if;
+  raise notice 'PASS     teams and their work stay inside the household';
+
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  delete from public.life_records where id in (task_id, solo_id);
+  reset role;
+end $$;

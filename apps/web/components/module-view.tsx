@@ -79,6 +79,10 @@ const DocumentsDashboard = dynamic(
   () => import("./documents-dashboard").then((m) => m.DocumentsDashboard),
   { loading },
 );
+const TeamsWorkspace = dynamic(
+  () => import("./teams-workspace").then((m) => m.TeamsWorkspace),
+  { loading, ssr: false },
+);
 const WorkDashboard = dynamic(
   () => import("./work-dashboard").then((m) => m.WorkDashboard),
   { loading },
@@ -278,12 +282,14 @@ function LifeModule({
           update={update}
         />
       )}
+      {root === "teams" && <TeamsWorkspace />}
       {root === "work" && !subsection && (
         <WorkDashboard records={records} loading={loading} update={update} />
       )}
       {!(
         (root === "family" &&
           ["calendar", "vault"].includes(subsection ?? "")) ||
+        root === "teams" ||
         (["home", "self", "documents", "work"].includes(root) && !subsection)
       ) && (
         <>

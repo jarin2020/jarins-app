@@ -25,6 +25,28 @@ additional_redirect_urls = [
 ]
 enable_signup = true
 
+# Everything below restores values that `supabase config push` reset to CLI
+# defaults because this file did not declare them. An omitted key does not mean
+# "leave the remote alone" — it means "push the default". Anything that matters
+# has to be written down here, or the next push quietly weakens it again.
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Without this anyone can sign up with an address they do not control, while the
+# sign-in screen still promises "Verified email required".
+enable_confirmations = true
+secure_password_change = false
+# Rate limit on auth mail. The CLI default of 1s is an email-bombing gift.
+max_frequency = "1m0s"
+otp_length = 8
+otp_expiry = 3600
+
 [storage]
 enabled = true
-file_size_limit = "20MiB"
+# Matches the hosted default. Declared so a push cannot lower it.
+file_size_limit = "50MiB"

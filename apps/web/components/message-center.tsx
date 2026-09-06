@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import {
   ArrowUp,
+  Baby,
+  BriefcaseBusiness as Briefcase,
   Check,
   Copy,
   FileText,
@@ -33,8 +36,9 @@ import {
   type MessageThread,
   useMessageThreads,
 } from "@/lib/messages";
+import { usePreferences } from "@/lib/preferences-store";
 
-type MessageSection = "threads" | "people" | "teams";
+type MessageSection = "threads" | "people" | "teams" | "family";
 
 function toggleId(ids: string[], id: string) {
   return ids.includes(id) ? ids.filter((item) => item !== id) : [...ids, id];
@@ -57,7 +61,25 @@ function MemberPicker({
 }) {
   return (
     <fieldset className="member-picker">
-      <legend>{label}</legend>
+      <legend>
+        {label}
+        {people.length > 1 && (
+          <button
+            type="button"
+            className="text-button"
+            disabled={disabled}
+            onClick={() =>
+              onChange(
+                selected.length === people.length
+                  ? []
+                  : people.map((person) => person.id),
+              )
+            }
+          >
+            {selected.length === people.length ? "Clear" : "Select all"}
+          </button>
+        )}
+      </legend>
       {people.length ? (
         <div>
           {people.map((person) => (
@@ -379,6 +401,7 @@ export function MessageCenter({
     userId: user?.id,
     householdId,
   });
+  const { preferences, save: savePreferences } = usePreferences();
   const threads = cloudEnabled ? cloud.threads : local.threads;
   const people = cloudEnabled ? cloud.people : local.people;
   const teams = cloudEnabled ? cloud.teams : local.teams;
@@ -386,7 +409,7 @@ export function MessageCenter({
     cloudEnabled &&
     people.find((person) => person.id === user?.id)?.role === "viewer",
   );
-  const [section, setSection] = useState<MessageSection>("threads");
+  const [chosenSection, setSection] = useState<MessageSection>("threads");
   const [selectedId, setSelectedId] = useState<string>();
   const [selectedPersonId, setSelectedPersonId] = useState<string>();
   const [selectedTeamId, setSelectedTeamId] = useState<string>();
@@ -558,6 +581,19 @@ export function MessageCenter({
     }
   };
 
+  // The group tab depends on the workspace: a household has a Family, an
+  // employer has Teams, and neither belongs in the other's list. Derived rather
+  // than corrected on change, so switching workspace moves you to the right tab
+  // instead of leaving you on one that no longer exists.
+  const workspace =
+    preferences.workspace === "professional" ? "professional" : "personal";
+  const groupSection: MessageSection =
+    workspace === "professional" ? "teams" : "family";
+  const section: MessageSection =
+    chosenSection === "teams" || chosenSection === "family"
+      ? groupSection
+      : chosenSection;
+
   const switchSection = (next: MessageSection) => {
     resetComposer();
     setSection(next);
@@ -572,7 +608,9 @@ export function MessageCenter({
         ? cloudEnabled
           ? "Invite person"
           : "Add person"
-        : "New team";
+        : section === "family"
+          ? "Manage in Family"
+          : "New team";
   const canCreateItem =
     Boolean(newTitle.trim()) &&
     (section === "people" ||
@@ -640,6 +678,40 @@ export function MessageCenter({
                 teams.
               </p>
             )}
+            <div
+              className="workspace-switch message-workspace-switch"
+              role="radiogroup"
+              aria-label="Workspace"
+            >
+              {(
+                [
+                  { id: "personal", label: "Personal", Icon: Baby },
+                  {
+                    id: "professional",
+                    label: "Professional",
+                    Icon: Briefcase,
+                  },
+                ] as const
+              ).map(({ id, label, Icon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={workspace === id}
+                  className={workspace === id ? "active" : ""}
+                  onClick={() => {
+                    if (workspace === id) return;
+                    // The same preference the sidebar switch writes: one
+                    // workspace, not a second one that only Messages knows about.
+                    savePreferences({ ...preferences, workspace: id });
+                    resetComposer();
+                  }}
+                >
+                  <Icon size={14} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
             <div className="thread-filters" aria-label="Message sections">
               <button
                 type="button"
@@ -657,26 +729,36 @@ export function MessageCenter({
               </button>
               <button
                 type="button"
-                className={section === "teams" ? "active" : ""}
-                onClick={() => switchSection("teams")}
+                className={section === groupSection ? "active" : ""}
+                onClick={() => switchSection(groupSection)}
               >
-                <UsersRound size={15} /> Teams
+                {groupSection === "teams" ? (
+                  <>
+                    <UsersRound size={15} /> Teams
+                  </>
+                ) : (
+                  <>
+                    <Baby size={15} /> Family
+                  </>
+                )}
               </button>
             </div>
 
-            <button
-              type="button"
-              className="new-thread-button"
-              disabled={busy || readOnly}
-              onClick={() => {
-                setActionError("");
-                setInvitationLink("");
-                setComposing((current) => !current);
-              }}
-              aria-expanded={composing}
-            >
-              <Plus size={15} /> {actionLabel}
-            </button>
+            {section !== "family" && (
+              <button
+                type="button"
+                className="new-thread-button"
+                disabled={busy || readOnly}
+                onClick={() => {
+                  setActionError("");
+                  setInvitationLink("");
+                  setComposing((current) => !current);
+                }}
+                aria-expanded={composing}
+              >
+                <Plus size={15} /> {actionLabel}
+              </button>
+            )}
 
             {composing && (
               <form
@@ -993,6 +1075,30 @@ export function MessageCenter({
                     </button>
                   </div>
                 ))}
+              {section === "family" && (
+                <button
+                  type="button"
+                  className="active"
+                  onClick={() => {
+                    const family = threads.find((thread) => thread.isFamily);
+                    if (family) {
+                      setSelectedId(family.id);
+                      switchSection("threads");
+                    }
+                  }}
+                >
+                  <span>
+                    <Baby size={16} />
+                  </span>
+                  <div>
+                    <strong>Family</strong>
+                    <small>
+                      {people.length} member{people.length === 1 ? "" : "s"} ·
+                      from your household
+                    </small>
+                  </div>
+                </button>
+              )}
               {section === "teams" &&
                 teams.map((team) => (
                   <button
@@ -1017,7 +1123,68 @@ export function MessageCenter({
           </aside>
 
           <section className="thread-view">
-            {section === "threads" ? (
+            {section === "family" ? (
+              <div className="directory-detail">
+                <span className="directory-editor-icon">
+                  <Baby size={18} />
+                </span>
+                <div>
+                  <span className="kicker">Personal group</span>
+                  <h3>Family</h3>
+                  <p>
+                    Everyone verified in your household is in this group, and
+                    stays in it. There is nothing to add here — membership comes
+                    from the household itself, so a person joins the
+                    conversation the moment they accept their invitation.
+                  </p>
+                </div>
+                <div className="directory-member-list">
+                  {people.length ? (
+                    people.map((person) => (
+                      <article key={person.id}>
+                        <span>
+                          <UserRound size={15} />
+                        </span>
+                        <div>
+                          <strong>
+                            {person.name}
+                            {person.id === user?.id && <small>You</small>}
+                          </strong>
+                          <small>{person.detail}</small>
+                        </div>
+                        <em>{person.role ?? "member"}</em>
+                      </article>
+                    ))
+                  ) : (
+                    <p className="muted">
+                      No verified members yet. Invite someone from Family.
+                    </p>
+                  )}
+                </div>
+                <div className="directory-detail-actions">
+                  <button
+                    type="button"
+                    className="button primary"
+                    disabled={!threads.some((thread) => thread.isFamily)}
+                    onClick={() => {
+                      const family = threads.find((thread) => thread.isFamily);
+                      if (!family) return;
+                      setSelectedId(family.id);
+                      switchSection("threads");
+                    }}
+                  >
+                    <MessageCircle size={15} /> Open the family thread
+                  </button>
+                  <Link
+                    href="/family"
+                    className="button secondary"
+                    onClick={onClose}
+                  >
+                    <UsersRound size={15} /> Manage the household
+                  </Link>
+                </div>
+              </div>
+            ) : section === "threads" ? (
               activeThread ? (
                 editingThread ? (
                   <ThreadEditor

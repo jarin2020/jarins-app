@@ -99,6 +99,8 @@ describe("MessageCenter", () => {
       />,
     );
 
+    // Teams are a professional group, so the workspace has to be there first.
+    fireEvent.click(screen.getByRole("radio", { name: "Professional" }));
     fireEvent.click(screen.getByRole("button", { name: "Teams" }));
     fireEvent.click(screen.getAllByRole("button", { name: "New team" })[0]!);
     fireEvent.change(screen.getByLabelText("Team name"), {
@@ -114,6 +116,67 @@ describe("MessageCenter", () => {
     ).toBe(true);
     expect(
       screen.getByText("Choose at least one verified person."),
+    ).toBeTruthy();
+  });
+
+  it("offers Family in Personal and Teams in Professional, never both", () => {
+    render(
+      <MessageCenter
+        open
+        onClose={vi.fn()}
+        ownerId="account-3"
+        author="Faria"
+      />,
+    );
+
+    // Personal is the default, so the group tab is the household's.
+    expect(screen.getByRole("button", { name: "Family" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Teams" })).toBeNull();
+
+    fireEvent.click(screen.getByRole("radio", { name: "Professional" }));
+    expect(screen.getByRole("button", { name: "Teams" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Family" })).toBeNull();
+  });
+
+  it("moves you off a group tab the new workspace does not have", () => {
+    render(
+      <MessageCenter
+        open
+        onClose={vi.fn()}
+        ownerId="account-4"
+        author="Faria"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "Professional" }));
+    fireEvent.click(screen.getByRole("button", { name: "Teams" }));
+    expect(
+      screen.getAllByRole("button", { name: "New team" }).length,
+    ).toBeGreaterThan(0);
+
+    // Back to Personal: the Teams panel must not survive the switch.
+    fireEvent.click(screen.getByRole("radio", { name: "Personal" }));
+    expect(screen.queryByRole("button", { name: "New team" })).toBeNull();
+    expect(
+      screen.getByText(/membership comes\s+from the household/i),
+    ).toBeTruthy();
+  });
+
+  it("does not offer anything to create inside Family", () => {
+    render(
+      <MessageCenter
+        open
+        onClose={vi.fn()}
+        ownerId="account-5"
+        author="Faria"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Family" }));
+    // Membership is inherited, so there is no composer here at all.
+    expect(screen.queryByRole("button", { name: /New /i })).toBeNull();
+    expect(
+      screen.getByRole("link", { name: /Manage the household/i }),
     ).toBeTruthy();
   });
 });

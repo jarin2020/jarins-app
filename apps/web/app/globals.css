@@ -8221,3 +8221,94 @@ fieldset legend {
 .capture-button:hover {
   background: var(--primary-soft);
 }
+
+/* ---------------------------------------------------------------------------
+   Messages: the workspace switch, and the Family group it reveals.
+   --------------------------------------------------------------------------- */
+
+.message-workspace-switch {
+  margin: 0 0 10px;
+}
+.message-workspace-switch button {
+  padding: 7px 6px;
+}
+.directory-detail {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 26px;
+  overflow-y: auto;
+}
+.directory-detail h3 {
+  margin: 4px 0 6px;
+  font-size: 21px;
+}
+.directory-detail p {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: 13px;
+}
+.directory-member-list {
+  display: grid;
+  gap: 8px;
+}
+.directory-member-list article {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.directory-member-list article > span {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.directory-member-list strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+}
+.directory-member-list strong small {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.directory-member-list div > small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.directory-member-list em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 750;
+  text-transform: capitalize;
+}
+.directory-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+/* "Select all" sits in the picker's own legend: building a team out of an
+   existing household should not mean ticking every name by hand. */
+.member-picker legend {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}

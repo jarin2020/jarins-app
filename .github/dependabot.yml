@@ -10,6 +10,14 @@ updates:
         dependency-type: development
       production-dependencies:
         dependency-type: production
+    ignore:
+      # typescript-eslint refuses to load under TS 7 ("does not support TS 7.0"),
+      # and it arrives transitively through eslint-config-next, so a TypeScript
+      # major bump fails `pnpm lint` no matter what this repo does. Holding the
+      # major back lets the rest of the dev-dependency group land. Drop this
+      # entry once typescript-eslint ships TS 7 support.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }

@@ -8312,3 +8312,53 @@ fieldset legend {
   gap: 12px;
   width: 100%;
 }
+
+/* The brand is the project's name now, so its tile takes the project's colour
+   — a glance at the corner says which workspace you are in. */
+.brand-mark.accent-green {
+  background: var(--primary);
+}
+.brand-mark.accent-terracotta {
+  background: var(--family);
+}
+.brand-mark.accent-amber {
+  background: var(--warm);
+}
+.brand-mark.accent-slate {
+  background: var(--career);
+}
+.brand-row {
+  align-items: center;
+}
+.brand-edit {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  color: var(--muted);
+  opacity: 0;
+}
+.brand-row:hover .brand-edit,
+.brand-edit:focus-visible {
+  opacity: 1;
+}
+.project-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+.project-preview strong {
+  display: block;
+  font-size: 15px;
+}
+.project-preview small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

@@ -150,6 +150,12 @@ Flags verified against Supabase CLI 2.116.0.
   subscriptions were dead and each view only updated on reload. Handled by
   `supabaseSocketUrl` in `middleware.ts`.
 
+- **`img-src` must name the Supabase origin too.** Profile photos live in the
+  _private_ `avatars` bucket, so they are served as signed object URLs on
+  `https://<ref>.supabase.co`, not from this origin. Without it every avatar is
+  a broken image and the console blames CSP rather than the bucket. Same list in
+  `middleware.ts` as `connect-src`, for a different reason.
+
 - **`style-src` still needs `'unsafe-inline'`** because two progress bars set
   width through the `style` attribute (`records-workspace.tsx`,
   `today-view.tsx`). Move those to a class-driven custom property and the flag

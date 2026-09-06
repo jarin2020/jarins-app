@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Download,
   FileUp,
-  LogOut,
   Search,
   ShieldCheck,
   TimerReset,
@@ -78,6 +77,12 @@ const SelfDashboard = dynamic(
 );
 const DocumentsDashboard = dynamic(
   () => import("./documents-dashboard").then((m) => m.DocumentsDashboard),
+  { loading },
+);
+// The largest settings panel by a wide margin — the photo picker, the link
+// editor and every brand glyph behind it. Only /settings/profile pays for it.
+const ProfileSettings = dynamic(
+  () => import("./profile-settings").then((m) => m.ProfileSettings),
   { loading },
 );
 
@@ -873,45 +878,20 @@ function SettingsView({ section }: { section?: string }) {
   const active = section ?? "profile";
   const { preferences, save: savePreferences } = usePreferences();
   const { replaceAll, mode } = useLifeRecords();
-  const { profile, status, signOut, updateProfile, updatePassword } = useAuth();
+  const { status } = useAuth();
   const [draft, setDraft] = useState(preferences);
   const [saved, setSaved] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [dataMessage, setDataMessage] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const importInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    queueMicrotask(() =>
-      setDraft(
-        status === "signed-in" && profile
-          ? {
-              ...preferences,
-              name: profile.displayName,
-              timezone: profile.timezone,
-              locale: profile.locale,
-            }
-          : preferences,
-      ),
-    );
-  }, [preferences, profile, status]);
-  const save = async (next = draft) => {
+    queueMicrotask(() => setDraft(preferences));
+  }, [preferences]);
+  const save = (next = draft) => {
     setProfileError("");
-    try {
-      if (active === "profile" && status === "signed-in") {
-        await updateProfile({
-          displayName: next.name,
-          timezone: next.timezone,
-          locale: next.locale,
-        });
-      }
-      savePreferences(next);
-      setSaved(true);
-      window.setTimeout(() => setSaved(false), 1600);
-    } catch (error) {
-      setProfileError(
-        error instanceof Error ? error.message : "Profile could not be saved.",
-      );
-    }
+    savePreferences(next);
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1600);
   };
   const patchPreference = <K extends keyof typeof draft>(
     key: K,
@@ -919,7 +899,7 @@ function SettingsView({ section }: { section?: string }) {
   ) => {
     const next = { ...draft, [key]: value };
     setDraft(next);
-    if (typeof value === "boolean") void save(next);
+    if (typeof value === "boolean") save(next);
   };
   const exportData = async () => {
     if (mode === "cloud") {
@@ -1166,94 +1146,13 @@ function SettingsView({ section }: { section?: string }) {
               </button>
             </>
           ) : (
-            <>
-              <label className="input-row">
-                Display name
-                <input
-                  value={draft.name}
-                  onChange={(event) =>
-                    patchPreference("name", event.target.value)
-                  }
-                />
-              </label>
-              <label className="input-row">
-                Timezone
-                <input
-                  value={draft.timezone}
-                  onChange={(event) =>
-                    patchPreference("timezone", event.target.value)
-                  }
-                />
-              </label>
-              <label className="input-row">
-                Locale
-                <select
-                  value={draft.locale}
-                  onChange={(event) =>
-                    patchPreference(
-                      "locale",
-                      event.target.value as typeof draft.locale,
-                    )
-                  }
-                >
-                  <option value="en">English</option>
-                  <option value="de">Deutsch</option>
-                </select>
-              </label>
-              <button
-                className="button primary"
-                disabled={!draft.name.trim()}
-                onClick={() => void save()}
-              >
-                Save profile
-              </button>
-              {status === "signed-in" && (
-                <>
-                  <label className="input-row">
-                    New password
-                    <input
-                      type="password"
-                      autoComplete="new-password"
-                      minLength={10}
-                      value={newPassword}
-                      onChange={(event) => setNewPassword(event.target.value)}
-                    />
-                  </label>
-                  <button
-                    className="button secondary"
-                    disabled={newPassword.length < 10}
-                    onClick={async () => {
-                      setProfileError("");
-                      try {
-                        await updatePassword(newPassword);
-                        setNewPassword("");
-                        setSaved(true);
-                      } catch (error) {
-                        setProfileError(
-                          error instanceof Error
-                            ? error.message
-                            : "Password could not be changed.",
-                        );
-                      }
-                    }}
-                  >
-                    Change password
-                  </button>
-                </>
-              )}
-              {status === "signed-in" && (
-                <button
-                  className="button secondary"
-                  onClick={() => void signOut()}
-                >
-                  <LogOut size={16} /> Sign out
-                </button>
-              )}
-            </>
+            <ProfileSettings />
           )}
-          <span className="save-state" role="status">
-            {profileError || (saved ? "Saved" : "")}
-          </span>
+          {active !== "profile" && (
+            <span className="save-state" role="status">
+              {profileError || (saved ? "Saved" : "")}
+            </span>
+          )}
         </section>
       </div>
     </>

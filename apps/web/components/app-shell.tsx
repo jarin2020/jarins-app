@@ -35,6 +35,7 @@ const MessageCenter = dynamic(
 import { QuickCapture } from "./quick-capture";
 import { usePreferences } from "@/lib/preferences-store";
 import { useAuth } from "./auth-provider";
+import { ProfileAvatar } from "./profile-avatar";
 import { getInitials } from "@/lib/account-profile";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -48,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [search, setSearch] = useState("");
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const { preferences } = usePreferences();
-  const { profile, status, signOut, user } = useAuth();
+  const { profile, status, signOut, user, avatarUrl } = useAuth();
   const displayName =
     status === "signed-in" && profile
       ? profile.displayName
@@ -61,6 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     status === "signed-in" && profile
       ? profile.initials
       : getInitials(displayName);
+  const accent = status === "signed-in" ? profile?.accent : undefined;
 
   const openCapture = useCallback(() => setCaptureOpen(true), []);
   const openMessages = useCallback(() => setMessagesOpen(true), []);
@@ -233,14 +235,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   aria-label={`Open account menu for ${displayName}`}
                   onClick={() => setAccountMenuOpen((open) => !open)}
                 >
-                  <span>{initials}</span>
+                  <ProfileAvatar
+                    url={avatarUrl}
+                    initials={initials}
+                    accent={accent}
+                    size="sm"
+                  />
                   <b>{displayName}</b>
                   <ChevronDown size={14} aria-hidden="true" />
                 </button>
                 {accountMenuOpen && (
                   <div className="account-menu-panel" role="menu">
                     <div className="account-menu-identity">
-                      <span>{initials}</span>
+                      <ProfileAvatar
+                        url={avatarUrl}
+                        initials={initials}
+                        accent={accent}
+                        size="md"
+                      />
                       <div>
                         <strong>{displayName}</strong>
                         <small>

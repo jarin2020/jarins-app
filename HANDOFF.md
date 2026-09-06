@@ -142,6 +142,14 @@ Flags verified against Supabase CLI 2.116.0.
 - **`cancel` and `close` do not bubble**, so React's `onCancel`/`onClose` props
   never fire on `<dialog>`. Listeners are attached to the element itself.
 
+- **`connect-src` must name the `wss://` Supabase origin separately.** CSP
+  scheme matching is not symmetric: an `https:` source authorizes `https:` only,
+  so listing the project URL does not permit
+  `wss://<ref>.supabase.co/realtime/v1/websocket`. With it missing the browser
+  blocked the socket while every REST call still succeeded, so all six realtime
+  subscriptions were dead and each view only updated on reload. Handled by
+  `supabaseSocketUrl` in `middleware.ts`.
+
 - **`style-src` still needs `'unsafe-inline'`** because two progress bars set
   width through the `style` attribute (`records-workspace.tsx`,
   `today-view.tsx`). Move those to a class-driven custom property and the flag

@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   isSupabaseConfigured,
   supabaseAnonKey,
+  supabaseSocketUrl,
   supabaseUrl,
 } from "@/lib/supabase/config";
 
@@ -49,7 +50,10 @@ function buildCsp(nonce: string, secure: boolean) {
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' blob: data:`,
     `font-src 'self'`,
-    `connect-src 'self' ${supabaseUrl ?? ""}`.trim(),
+    // The socket origin is listed separately on purpose: CSP does not let an
+    // `https:` source authorize a `wss:` connection, so without it Realtime is
+    // blocked and every live view goes stale until the page is reloaded.
+    `connect-src 'self' ${[supabaseUrl, supabaseSocketUrl].filter(Boolean).join(" ")}`.trim(),
     `frame-ancestors 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

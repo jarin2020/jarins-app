@@ -22,3 +22,21 @@ export function requireSupabaseConfig() {
   }
   return { url: supabaseUrl, anonKey: supabaseAnonKey };
 }
+
+/**
+ * The origin Realtime opens its WebSocket on, which is the REST origin with a
+ * `wss:` (or, against a local Supabase, `ws:`) scheme.
+ *
+ * This exists solely for `connect-src`. CSP scheme matching is not symmetric:
+ * an `https:` source authorizes `https:` only, so listing the project URL does
+ * *not* permit `wss://<ref>.supabase.co/realtime/v1/websocket`. Omit this and
+ * the browser blocks the socket while every REST call still succeeds — which
+ * looks exactly like working software that never updates until it is reloaded.
+ */
+export function toSocketOrigin(url: string) {
+  return url.trim().replace(/\/+$/, "").replace(/^http/, "ws");
+}
+
+export const supabaseSocketUrl = supabaseUrl
+  ? toSocketOrigin(supabaseUrl)
+  : undefined;

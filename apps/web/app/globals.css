@@ -8166,3 +8166,58 @@ fieldset legend {
   align-items: center;
   gap: 7px;
 }
+
+/* ---------------------------------------------------------------------------
+   Workspace switch — Personal and Professional, in the space quick capture
+   used to take at the foot of the sidebar.
+   --------------------------------------------------------------------------- */
+
+.workspace-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-top: auto;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+.workspace-switch button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 9px 6px;
+  border: 0;
+  border-radius: 11px;
+  background: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+.workspace-switch button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-switch button svg {
+  flex: 0 0 auto;
+}
+.workspace-switch button:hover {
+  color: var(--text);
+}
+.workspace-switch button.active {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: 0 1px 3px rgba(33, 39, 36, 0.09);
+}
+
+/* Quick capture is an icon in the top bar now. The words live in its tooltip
+   and its accessible name, not in three lines of sidebar. */
+.capture-button {
+  color: var(--primary);
+}
+.capture-button:hover {
+  background: var(--primary-soft);
+}

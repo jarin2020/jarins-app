@@ -825,3 +825,54 @@ begin
   update public.profiles set share_contact_with_household = true where id = faria;
   reset role;
 end $$;
+
+-- ============ the professional workspace's modules ============
+do $$
+declare
+  faria   uuid := '11111111-1111-1111-1111-111111111111';
+  partner uuid := '33333333-3333-3333-3333-333333333333';
+  work_record uuid;
+  blocked boolean;
+  n int;
+begin
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+
+  -- All four new modules are accepted where the old constraint refused them.
+  insert into public.life_records (module, kind, title) values
+    ('work', 'Deadline', 'Ship the onboarding revamp'),
+    ('pipeline', 'Application', 'Product marketing, Frankfurt'),
+    ('portfolio', 'Case study', 'Reduced churn by a third'),
+    ('network', 'Follow-up', 'Coffee with the ex-colleague');
+  select id into work_record from public.life_records where module = 'work';
+  raise notice 'PASS     professional modules are accepted by life_records';
+
+  blocked := false;
+  begin
+    insert into public.life_records (module, kind, title)
+    values ('astrology', 'Task', 'Not a module');
+  exception when check_violation then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: an unknown module was accepted'; end if;
+  raise notice 'PASS     the module list is still closed';
+
+  -- The point of the split: work is yours, not the household's. Family and Home
+  -- stay shared; everything else is author-only, and these four are no
+  -- exception just because they are new.
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  select count(*) into n from public.life_records
+  where module in ('work', 'pipeline', 'portfolio', 'network');
+  if n <> 0 then
+    raise exception 'FAIL: a household member read % professional record(s)', n;
+  end if;
+
+  update public.life_records set title = 'hijacked' where id = work_record;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: a household member wrote to a work record'; end if;
+  raise notice 'PASS     professional records are author-only, not household-shared';
+
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  delete from public.life_records
+  where module in ('work', 'pipeline', 'portfolio', 'network');
+  reset role;
+end $$;

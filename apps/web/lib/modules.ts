@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Archive,
   Baby,
+  BriefcaseBusiness as BriefcaseIcon,
   BookOpen,
   BriefcaseBusiness,
   CalendarDays,
@@ -10,14 +11,22 @@ import {
   Home,
   Inbox,
   Landmark,
+  Contact,
+  FolderKanban,
+  Route,
   Search,
   Settings,
   Sparkles,
   SunMedium,
+  Target,
 } from "lucide-react";
 
 export type ModuleKey =
   | "today"
+  | "work"
+  | "pipeline"
+  | "portfolio"
+  | "network"
   | "family"
   | "home"
   | "self"
@@ -165,7 +174,124 @@ export const utilityModules: ModuleDefinition[] = [
   },
 ];
 
-export const allModules = [...primaryModules, ...utilityModules];
+/**
+ * The professional side of the app. Separate definitions rather than a flag on
+ * the personal ones: these are different life areas with their own language,
+ * and a "Family" entry has no business in a workspace about work.
+ */
+export const professionalModules: ModuleDefinition[] = [
+  {
+    key: "work",
+    label: "Work",
+    href: "/work",
+    icon: Target,
+    eyebrow: "One day at a time",
+    description:
+      "What is due, what is moving, and what is blocked — this week's work in one place.",
+  },
+  {
+    key: "pipeline",
+    label: "Pipeline",
+    href: "/pipeline",
+    icon: Route,
+    eyebrow: "Opportunity, not anxiety",
+    description:
+      "Roles, applications and interviews, with the next step always visible.",
+  },
+  {
+    key: "portfolio",
+    label: "Portfolio",
+    href: "/portfolio",
+    icon: FolderKanban,
+    eyebrow: "Evidence beats claims",
+    description:
+      "Case studies, projects and proof you can hand to someone who asks.",
+  },
+  {
+    key: "network",
+    label: "Network",
+    href: "/network",
+    icon: Contact,
+    eyebrow: "People, kept warm",
+    description: "Contacts, introductions and the follow-ups that go stale.",
+  },
+  {
+    key: "career",
+    label: "Career",
+    href: "/career",
+    icon: BriefcaseIcon,
+    eyebrow: "The shape of a working life",
+    description:
+      "Timeline, transition and the narrative that ties the two together.",
+  },
+  {
+    key: "learning",
+    label: "Learning",
+    href: "/learning",
+    icon: BookOpen,
+    eyebrow: "Small blocks, real progress",
+    description: "German B2, Digital Marketing and future learning programs.",
+  },
+  {
+    key: "documents",
+    label: "Documents",
+    href: "/documents",
+    icon: FileText,
+    eyebrow: "Find anything in seconds",
+    description: "A private, deadline-aware index for important records.",
+  },
+];
+
+export const allModules = [
+  ...primaryModules,
+  ...utilityModules,
+  ...professionalModules.filter(
+    (item) => !primaryModules.some((existing) => existing.key === item.key),
+  ),
+];
+
+/**
+ * Which modules each workspace shows, and where it opens.
+ *
+ * Personal is the default and keeps every module it had. Professional reuses
+ * Career, Learning and Documents — the same records, read in a working context
+ * — and adds four of its own. The utility rail is shared: Inbox, Calendar,
+ * VAULT and Search work the same either side of the line.
+ */
+export const workspaces = [
+  {
+    id: "personal" as const,
+    label: "Personal",
+    tagline: "Home, family and you",
+    icon: Home,
+    home: "/today",
+    modules: primaryModules,
+  },
+  {
+    id: "professional" as const,
+    label: "Professional",
+    tagline: "Work, craft and career",
+    icon: BriefcaseIcon,
+    home: "/work",
+    modules: professionalModules,
+  },
+];
+
+export type WorkspaceDefinition = (typeof workspaces)[number];
+
+export const findWorkspace = (id?: string) =>
+  workspaces.find((workspace) => workspace.id === id) ?? workspaces[0];
+
+/** Which workspace a module belongs to, for the modules unique to one side. */
+export const workspaceForModule = (key: string) => {
+  if (professionalModules.some((item) => item.key === key))
+    return primaryModules.some((item) => item.key === key)
+      ? undefined // shared: it belongs to whichever workspace you are in
+      : ("professional" as const);
+  return primaryModules.some((item) => item.key === key)
+    ? ("personal" as const)
+    : undefined;
+};
 export const findModule = (slug?: string) =>
   allModules.find((item) => item.key === slug) ??
   primaryModules.find((item) => item.key === "today")!;

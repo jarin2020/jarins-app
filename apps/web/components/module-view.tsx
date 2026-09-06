@@ -79,6 +79,10 @@ const DocumentsDashboard = dynamic(
   () => import("./documents-dashboard").then((m) => m.DocumentsDashboard),
   { loading },
 );
+const WorkDashboard = dynamic(
+  () => import("./work-dashboard").then((m) => m.WorkDashboard),
+  { loading },
+);
 // The largest settings panel by a wide margin — the photo picker, the link
 // editor and every brand glyph behind it. Only /settings/profile pays for it.
 //
@@ -274,10 +278,13 @@ function LifeModule({
           update={update}
         />
       )}
+      {root === "work" && !subsection && (
+        <WorkDashboard records={records} loading={loading} update={update} />
+      )}
       {!(
         (root === "family" &&
           ["calendar", "vault"].includes(subsection ?? "")) ||
-        (["home", "self", "documents"].includes(root) && !subsection)
+        (["home", "self", "documents", "work"].includes(root) && !subsection)
       ) && (
         <>
           <div className="stat-grid">

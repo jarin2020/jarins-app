@@ -11,8 +11,18 @@ major_version = 17
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000/auth/callback", "https://jarins.com/auth/callback"]
+# Production, not localhost. This is the fallback Supabase puts in an email when
+# the requested emailRedirectTo is not allowlisted below — so getting it wrong
+# does not fail loudly, it silently mails everyone a link to a dev machine.
+site_url = "https://jarins.com"
+# The app always asks for /auth/callback?next=<path>, so the exact entry alone
+# never matches: the query string has to be covered too. `**` spans separators.
+additional_redirect_urls = [
+  "https://jarins.com/auth/callback",
+  "https://jarins.com/auth/**",
+  "http://localhost:3000/auth/callback",
+  "http://localhost:3000/auth/**",
+]
 enable_signup = true
 
 [storage]

@@ -4,18 +4,36 @@ import { Bell, Check, FileText, ListTodo, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { capturedItemSchema, type CapturedItem } from "@/lib/records/schema";
 import { type LifeRecord, useLifeRecords } from "@/lib/jarins-store";
+import { usePreferences } from "@/lib/preferences-store";
 
-const categories = [
-  "Inbox",
-  "Family",
-  "Home",
-  "Self",
-  "Learning",
-  "Career",
-  "Money",
-  "Documents",
-  "Future",
-];
+/**
+ * Where a capture can land, per workspace. Offering "Family" while somebody is
+ * working — or "Pipeline" while they are planning the week — is how a capture
+ * box turns into a filing decision.
+ */
+const workspaceCategories: Record<string, string[]> = {
+  personal: [
+    "Inbox",
+    "Family",
+    "Home",
+    "Self",
+    "Learning",
+    "Career",
+    "Money",
+    "Documents",
+    "Future",
+  ],
+  professional: [
+    "Inbox",
+    "Work",
+    "Pipeline",
+    "Portfolio",
+    "Network",
+    "Career",
+    "Learning",
+    "Documents",
+  ],
+};
 const INBOX_KEY = "jarins-inbox";
 type CaptureType = "task" | "note" | "reminder";
 
@@ -75,8 +93,17 @@ export function QuickCapture({
   open: boolean;
   onClose: () => void;
 }) {
+  const { preferences } = usePreferences();
+  const categories =
+    workspaceCategories[preferences.workspace] ?? workspaceCategories.personal;
   const [text, setText] = useState("");
-  const [category, setCategory] = useState("Inbox");
+  const [chosenCategory, setCategory] = useState("Inbox");
+  // Derived rather than corrected in an effect: switching workspace mid-session
+  // leaves a choice selected that the new workspace does not offer, and a
+  // capture would then file itself somewhere the person cannot see.
+  const category = categories.includes(chosenCategory)
+    ? chosenCategory
+    : "Inbox";
   const [captureType, setCaptureType] = useState<CaptureType>("task");
   const [reminderDate, setReminderDate] = useState(() => localDateKey());
   const [reminderTime, setReminderTime] = useState("");

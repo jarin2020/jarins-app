@@ -6,7 +6,6 @@ import {
   Bell,
   BellRing,
   ChevronDown,
-  Command,
   Database,
   LogIn,
   LogOut,
@@ -20,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { primaryModules, utilityModules } from "@/lib/modules";
+import { findWorkspace, utilityModules, workspaces } from "@/lib/modules";
 import dynamic from "next/dynamic";
 
 /**
@@ -48,7 +47,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const accountMenuRef = useRef<HTMLDivElement>(null);
-  const { preferences } = usePreferences();
+  const { preferences, save: savePreferences } = usePreferences();
+  const workspace = findWorkspace(preferences.workspace);
   const { profile, status, signOut, user, avatarUrl } = useAuth();
   const displayName =
     status === "signed-in" && profile
@@ -136,7 +136,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
         <nav className="nav-list">
-          {primaryModules.map(({ href, icon: Icon, label }) => (
+          {workspace.modules.map(({ href, icon: Icon, label }) => (
             <Link
               key={href}
               href={href}
@@ -162,23 +162,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        <button
-          className="sidebar-capture"
-          type="button"
-          onClick={openCapture}
-          aria-label="Quick capture a task, note or reminder"
+        {/* Two workspaces, one control. A segmented switch rather than a menu
+            because there are exactly two and the answer should be one click,
+            visible without opening anything. */}
+        <div
+          className="workspace-switch"
+          role="radiogroup"
+          aria-label="Workspace"
         >
-          <span className="sidebar-capture-icon">
-            <Plus size={18} />
-          </span>
-          <span className="sidebar-capture-copy">
-            <strong>Quick capture</strong>
-            <small>Task, note or reminder</small>
-          </span>
-          <kbd>
-            <Command size={11} />K
-          </kbd>
-        </button>
+          {workspaces.map((item) => {
+            const Icon = item.icon;
+            const active = item.id === workspace.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                className={active ? "active" : ""}
+                title={item.tagline}
+                onClick={() => {
+                  setMobileOpen(false);
+                  if (active) return;
+                  savePreferences({ ...preferences, workspace: item.id });
+                  // Land on the new workspace's home rather than leaving the
+                  // person on a module its navigation no longer lists.
+                  router.push(item.home);
+                }}
+              >
+                <Icon size={15} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </aside>
 
       {mobileOpen && (
@@ -210,6 +227,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <kbd>⌘ S</kbd>
           </form>
           <div className="top-actions">
+            {/* Quick capture lives here now: one icon, the shortcut in the
+                tooltip, and no three-line block eating the sidebar. */}
+            <button
+              className="icon-button capture-button"
+              type="button"
+              onClick={openCapture}
+              aria-label="Quick capture a task, note or reminder"
+              title="Quick capture  ⌘K"
+            >
+              <Plus size={19} />
+            </button>
             <Link
               href="/calendar"
               className="icon-button"
@@ -344,18 +372,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
       </button>
       <nav className="mobile-nav" aria-label="Mobile navigation">
-        {primaryModules
-          .filter((item) => ["home", "today", "family"].includes(item.key))
-          .map(({ href, icon: Icon, label }) => (
-            <Link
-              key={href}
-              href={href}
-              className={pathname.startsWith(href) ? "active" : ""}
-            >
-              <Icon size={20} />
-              <span>{label}</span>
-            </Link>
-          ))}
+        {workspace.modules.slice(0, 3).map(({ href, icon: Icon, label }) => (
+          <Link
+            key={href}
+            href={href}
+            className={pathname.startsWith(href) ? "active" : ""}
+          >
+            <Icon size={20} />
+            <span>{label}</span>
+          </Link>
+        ))}
         <button className="mobile-capture" onClick={openCapture}>
           <Plus size={22} />
           <span>Capture</span>

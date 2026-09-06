@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const RECORD_MODULES = [
+  // Personal
   "family",
   "home",
   "self",
@@ -9,6 +10,13 @@ export const RECORD_MODULES = [
   "money",
   "documents",
   "future",
+  // Professional. Kept in one list because a record is a record — the split
+  // is a matter of navigation, and search, export and the inbox all read
+  // across both.
+  "work",
+  "pipeline",
+  "portfolio",
+  "network",
 ] as const;
 
 export const RECORD_STATUSES = [
@@ -59,8 +67,12 @@ export const capturedItemSchema = z.object({
 
 export type CapturedItem = z.infer<typeof capturedItemSchema>;
 
+export const WORKSPACES = ["personal", "professional"] as const;
+export type WorkspaceId = (typeof WORKSPACES)[number];
+
 export const preferencesSchema = z.object({
   name: z.string().max(80),
+  workspace: z.enum(WORKSPACES),
   timezone: z.string().max(60),
   locale: z.enum(["en", "de"]),
   household: z.string().max(80),
@@ -98,6 +110,10 @@ export const moduleLabels: Record<RecordModule, string> = {
   money: "Money",
   documents: "Documents",
   future: "Future",
+  work: "Work",
+  pipeline: "Pipeline",
+  portfolio: "Portfolio",
+  network: "Network",
 };
 
 export const kindOptions: Record<RecordModule, string[]> = {
@@ -148,6 +164,31 @@ export const kindOptions: Record<RecordModule, string[]> = {
     "3 years",
     "Someday",
     "Project",
+    "Task",
+  ],
+  work: ["Focus", "Deliverable", "Deadline", "Meeting", "Blocker", "Task"],
+  pipeline: [
+    "Opportunity",
+    "Application",
+    "Interview",
+    "Offer",
+    "Follow-up",
+    "Task",
+  ],
+  portfolio: [
+    "Case study",
+    "Project",
+    "Evidence",
+    "Testimonial",
+    "Publication",
+    "Task",
+  ],
+  network: [
+    "Contact",
+    "Introduction",
+    "Follow-up",
+    "Referral",
+    "Event",
     "Task",
   ],
 };

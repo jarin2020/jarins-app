@@ -8,6 +8,9 @@ import type { Preferences } from "./records/schema";
 
 export const preferenceDefaults: Preferences = {
   name: "Faria",
+  // Personal is the default deliberately: it is the workspace with the seeded
+  // life areas behind it, so a first run never opens on an empty screen.
+  workspace: "personal",
   timezone: "Europe/Berlin",
   locale: "en",
   household: "Jarin household",

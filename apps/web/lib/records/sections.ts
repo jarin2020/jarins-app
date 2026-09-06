@@ -49,6 +49,29 @@ export const subsectionKinds: Partial<
     goals: ["This month", "3 months", "12 months", "3 years", "Someday"],
     projects: ["Project"],
   },
+  work: {
+    focus: ["Focus"],
+    deliverables: ["Deliverable"],
+    deadlines: ["Deadline"],
+    meetings: ["Meeting"],
+    blocked: ["Blocker"],
+  },
+  pipeline: {
+    opportunities: ["Opportunity"],
+    applications: ["Application"],
+    interviews: ["Interview", "Offer"],
+    "follow-ups": ["Follow-up"],
+  },
+  portfolio: {
+    "case-studies": ["Case study"],
+    projects: ["Project"],
+    evidence: ["Evidence", "Testimonial", "Publication"],
+  },
+  network: {
+    contacts: ["Contact"],
+    "follow-ups": ["Follow-up", "Introduction"],
+    referrals: ["Referral"],
+  },
 };
 
 export function recordsInSection(

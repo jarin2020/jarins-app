@@ -8526,3 +8526,43 @@ fieldset legend {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* The workspace switch moved to the middle of the top bar, where it reads as
+   "where am I" rather than as one more thing in the navigation rail. */
+.topbar-workspace-switch {
+  /* Auto margins take the free space on both sides, so the switch sits in the
+     middle rather than wherever space-between happens to leave it. */
+  margin: 0 auto;
+  width: min(300px, 30vw);
+  flex: 0 0 auto;
+}
+/* The search made sense at 55% when it was one of two things up here. */
+.topbar .search-box {
+  width: min(420px, 32%);
+}
+.topbar-workspace-switch button {
+  padding: 7px 6px;
+}
+
+/* The brand is a mark and a name now. The tagline is still the project's — it
+   is in the editor's preview and in this link's tooltip — but it was a third
+   line of chrome in the busiest corner of the screen. */
+.brand {
+  padding-bottom: 20px;
+}
+.brand strong {
+  font-size: 17px;
+}
+.brand-edit {
+  opacity: 0.55;
+}
+.brand-row:hover .brand-edit,
+.brand-edit:focus-visible {
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  .topbar-workspace-switch {
+    display: none;
+  }
+}

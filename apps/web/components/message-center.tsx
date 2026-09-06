@@ -15,6 +15,7 @@ import {
   Pencil,
   Pin,
   Plus,
+  RefreshCw,
   Save,
   Trash2,
   UserRound,
@@ -395,13 +396,18 @@ export function MessageCenter({
   const dialog = useRef<HTMLDialogElement>(null);
   const messageInput = useRef<HTMLInputElement>(null);
   const attachmentInput = useRef<HTMLInputElement>(null);
+  const { preferences, save: savePreferences } = usePreferences();
+  // Resolved before the loaders run: it decides which conversations are
+  // fetched at all, not merely which of them are shown.
+  const workspace =
+    preferences.workspace === "professional" ? "professional" : "personal";
   const local = useMessageThreads(ownerId);
   const cloud = useCloudMessages({
     supabase,
     userId: user?.id,
     householdId,
+    workspace,
   });
-  const { preferences, save: savePreferences } = usePreferences();
   const threads = cloudEnabled ? cloud.threads : local.threads;
   const people = cloudEnabled ? cloud.people : local.people;
   const teams = cloudEnabled ? cloud.teams : local.teams;
@@ -585,8 +591,6 @@ export function MessageCenter({
   // employer has Teams, and neither belongs in the other's list. Derived rather
   // than corrected on change, so switching workspace moves you to the right tab
   // instead of leaving you on one that no longer exists.
-  const workspace =
-    preferences.workspace === "professional" ? "professional" : "personal";
   const groupSection: MessageSection =
     workspace === "professional" ? "teams" : "family";
   const section: MessageSection =
@@ -1174,6 +1178,21 @@ export function MessageCenter({
                     }}
                   >
                     <MessageCircle size={15} /> Open the family thread
+                  </button>
+                  <button
+                    type="button"
+                    className="button secondary"
+                    disabled={busy || !cloudEnabled}
+                    onClick={() => {
+                      setBusy(true);
+                      setActionError("");
+                      void cloud
+                        .syncFamily()
+                        .catch(showError)
+                        .finally(() => setBusy(false));
+                    }}
+                  >
+                    <RefreshCw size={15} /> Sync members
                   </button>
                   <Link
                     href="/family"

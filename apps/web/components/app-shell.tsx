@@ -132,14 +132,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             href={workspace.home}
             className="brand"
             aria-label={`${project.name} home`}
+            title={project.tagline}
           >
             <span className={`brand-mark accent-${project.accent}`}>
               {project.mark}
             </span>
-            <span>
-              <strong>{project.name}</strong>
-              <small>{project.tagline}</small>
-            </span>
+            <strong>{project.name}</strong>
           </Link>
           <button
             className="icon-button brand-edit"
@@ -185,40 +183,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
         </nav>
-        {/* Two workspaces, one control. A segmented switch rather than a menu
-            because there are exactly two and the answer should be one click,
-            visible without opening anything. */}
-        <div
-          className="workspace-switch"
-          role="radiogroup"
-          aria-label="Workspace"
-        >
-          {workspaces.map((item) => {
-            const Icon = item.icon;
-            const active = item.id === workspace.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                className={active ? "active" : ""}
-                title={item.tagline}
-                onClick={() => {
-                  setMobileOpen(false);
-                  if (active) return;
-                  savePreferences({ ...preferences, workspace: item.id });
-                  // Land on the new workspace's home rather than leaving the
-                  // person on a module its navigation no longer lists.
-                  router.push(item.home);
-                }}
-              >
-                <Icon size={15} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
       </aside>
 
       {mobileOpen && (
@@ -249,6 +213,40 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             />
             <kbd>⌘ S</kbd>
           </form>
+          {/* Two workspaces, one control. A segmented switch rather than a menu
+              because there are exactly two and the answer should be one click,
+              visible without opening anything. */}
+          <div
+            className="workspace-switch topbar-workspace-switch"
+            role="radiogroup"
+            aria-label="Workspace"
+          >
+            {workspaces.map((item) => {
+              const Icon = item.icon;
+              const active = item.id === workspace.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  className={active ? "active" : ""}
+                  title={item.tagline}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    if (active) return;
+                    savePreferences({ ...preferences, workspace: item.id });
+                    // Land on the new workspace's home rather than leaving the
+                    // person on a module its navigation no longer lists.
+                    router.push(item.home);
+                  }}
+                >
+                  <Icon size={15} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
           <div className="top-actions">
             {/* Quick capture lives here now: one icon, the shortcut in the
                 tooltip, and no three-line block eating the sidebar. */}

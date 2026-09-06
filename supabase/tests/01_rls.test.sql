@@ -965,3 +965,70 @@ begin
   delete from public.life_records where id in (task_id, solo_id);
   reset role;
 end $$;
+
+-- ============ conversations belong to a workspace ============
+do $$
+declare
+  faria   uuid := '11111111-1111-1111-1111-111111111111';
+  partner uuid := '33333333-3333-3333-3333-333333333333';
+  faria_household uuid;
+  work_thread uuid;
+  home_thread uuid;
+  blocked boolean;
+  n int;
+begin
+  select id into faria_household from public.households where owner_user_id = faria;
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+
+  home_thread := public.create_message_thread('Kitchen', array[partner], array[]::uuid[]);
+  work_thread := public.create_message_thread(
+    'Launch', array[partner], array[]::uuid[], 'professional'
+  );
+
+  select count(*) into n from public.message_threads
+  where id = home_thread and workspace = 'personal';
+  if n <> 1 then raise exception 'FAIL: a thread did not default to the personal workspace'; end if;
+  select count(*) into n from public.message_threads
+  where id = work_thread and workspace = 'professional';
+  if n <> 1 then raise exception 'FAIL: a professional thread was not recorded as one'; end if;
+  raise notice 'PASS     a thread records the workspace it was started in';
+
+  blocked := false;
+  begin
+    perform public.create_message_thread('Nowhere', array[partner], array[]::uuid[], 'astrology');
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: an unknown workspace was accepted'; end if;
+  raise notice 'PASS     the workspace list is closed';
+
+  -- The Family thread is the household's, so it cannot be moved to work.
+  blocked := false;
+  begin
+    update public.message_threads set workspace = 'professional'
+    where household_id = faria_household and is_family_thread;
+  exception when check_violation then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: the Family thread was moved out of Personal'; end if;
+  raise notice 'PASS     the Family thread cannot leave the personal workspace';
+
+  -- ---- one Family, with the household's members and nobody else ----
+  select count(*) into n from public.message_threads
+  where household_id = faria_household and is_family_thread;
+  if n <> 1 then raise exception 'FAIL: % family threads for one household', n; end if;
+
+  perform public.sync_family_message_thread();
+  select count(*) into n
+  from public.message_thread_members m
+  join public.message_threads t on t.id = m.thread_id
+  where t.household_id = faria_household and t.is_family_thread
+    and not exists (
+      select 1 from public.household_members hm
+      where hm.household_id = faria_household and hm.user_id = m.user_id
+    );
+  if n <> 0 then raise exception 'FAIL: % stranger(s) left in the Family thread', n; end if;
+  raise notice 'PASS     syncing Family leaves exactly the household in it';
+
+  delete from public.message_threads where id in (home_thread, work_thread);
+  reset role;
+end $$;

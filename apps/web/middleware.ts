@@ -48,7 +48,11 @@ function buildCsp(nonce: string, secure: boolean) {
     // attribute (records-workspace.tsx, today-view.tsx). Remove this once those
     // move to a class-driven custom property.
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data:`,
+    // The Supabase origin is here for one reason: profile photos live in a
+    // *private* bucket, so they are served as signed object URLs on the project
+    // domain rather than from this one. Without it every avatar is a broken
+    // image and the console blames CSP, not the bucket.
+    `img-src 'self' blob: data: ${supabaseUrl ?? ""}`.trim(),
     `font-src 'self'`,
     // The socket origin is listed separately on purpose: CSP does not let an
     // `https:` source authorize a `wss:` connection, so without it Realtime is

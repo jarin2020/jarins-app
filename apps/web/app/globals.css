@@ -7542,3 +7542,480 @@ fieldset legend {
   color: var(--muted);
   font-size: 11px;
 }
+
+/* ---------------------------------------------------------------------------
+   Profiles: the photo, the accent, the links out, and the family cards that
+   read all three back.
+   --------------------------------------------------------------------------- */
+
+.profile-avatar {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 12px;
+  overflow: hidden;
+}
+.profile-avatar.has-photo {
+  object-fit: cover;
+}
+.profile-avatar.size-sm {
+  width: 31px;
+  height: 31px;
+  border-radius: 10px;
+}
+.profile-avatar.size-md {
+  width: 36px;
+  height: 36px;
+}
+.profile-avatar.size-lg {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  font-size: 13px;
+}
+.profile-avatar.size-xl {
+  width: 78px;
+  height: 78px;
+  border-radius: 22px;
+  font-size: 24px;
+}
+.profile-avatar.accent-green {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.profile-avatar.accent-terracotta {
+  background: var(--family-soft);
+  color: var(--family);
+}
+.profile-avatar.accent-amber {
+  background: var(--warm-soft);
+  color: var(--warm);
+}
+.profile-avatar.accent-slate {
+  background: var(--career-soft);
+  color: var(--career);
+}
+/* The chip and the menu drew their initials tile with a positional `> span`
+   rule, which stops matching the moment the tile becomes an <img>. */
+.profile-chip > .profile-avatar,
+.account-menu-identity > .profile-avatar {
+  color: var(--primary);
+}
+
+/* ---- Settings: photo and accent ---- */
+
+.profile-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0 18px;
+  border-bottom: 1px solid var(--border);
+}
+.profile-photo-row strong {
+  display: block;
+  font-size: 13px;
+}
+.profile-photo-row small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.profile-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 11px;
+}
+
+.profile-accent {
+  margin: 18px 0;
+  padding: 0;
+  border: 0;
+}
+.profile-accent legend {
+  padding: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+.profile-accent small {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.profile-accent > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.profile-accent label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px 8px 9px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.profile-accent label:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.profile-accent label input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.profile-accent label span {
+  width: 17px;
+  height: 17px;
+  border-radius: 6px;
+}
+.profile-accent .accent-green span {
+  background: var(--primary);
+}
+.profile-accent .accent-terracotta span {
+  background: var(--family);
+}
+.profile-accent .accent-amber span {
+  background: var(--warm);
+}
+.profile-accent .accent-slate span {
+  background: var(--career);
+}
+
+/* ---- Settings: shared form furniture ---- */
+
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0 14px;
+}
+.input-row textarea {
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: white;
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+.input-counter {
+  justify-self: end;
+  color: var(--muted);
+  font-size: 11px;
+}
+.save-state.is-error {
+  color: #8f463d;
+}
+
+/* ---- Settings: links out ---- */
+
+.profile-links,
+.profile-emergency {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+.profile-links-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.profile-links-heading strong,
+.profile-emergency > legend {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  /* A legend sits in the border by default and indents itself. This one is a
+     heading inside the panel, not a caption cut into its edge. */
+  float: left;
+  width: 100%;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 750;
+}
+.profile-links-heading small,
+.profile-emergency > small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.profile-links .muted {
+  margin: 0;
+}
+.profile-link-row {
+  display: grid;
+  grid-template-columns: 34px 128px minmax(0, 1.6fr) minmax(0, 1fr) 41px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+}
+.profile-link-row select,
+.profile-link-row input {
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  color: var(--text);
+  font-size: 12px;
+}
+.profile-link-glyph {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--brand, var(--text));
+}
+.profile-emergency .input-grid {
+  margin-top: 4px;
+}
+
+/* Brand colours, so a row is recognisable before it is read. Set as a custom
+   property because both the settings tile and the family chip below tint from
+   it, and they are otherwise unrelated elements. */
+[data-platform="linkedin"] {
+  --brand: #0a66c2;
+}
+[data-platform="xing"] {
+  --brand: #0698a0;
+}
+[data-platform="github"] {
+  --brand: #24292f;
+}
+[data-platform="gitlab"] {
+  --brand: #fc6d26;
+}
+[data-platform="x"] {
+  --brand: #14171a;
+}
+[data-platform="instagram"] {
+  --brand: #d6316d;
+}
+[data-platform="facebook"] {
+  --brand: #0866ff;
+}
+[data-platform="threads"] {
+  --brand: #14171a;
+}
+[data-platform="bluesky"] {
+  --brand: #0285ff;
+}
+[data-platform="mastodon"] {
+  --brand: #5b5cd6;
+}
+[data-platform="youtube"] {
+  --brand: #d90a17;
+}
+[data-platform="tiktok"] {
+  --brand: #14171a;
+}
+[data-platform="twitch"] {
+  --brand: #7b34e0;
+}
+[data-platform="whatsapp"] {
+  --brand: #1da851;
+}
+[data-platform="telegram"] {
+  --brand: #2492c9;
+}
+[data-platform="signal"] {
+  --brand: #3a76f0;
+}
+[data-platform="discord"] {
+  --brand: #5865f2;
+}
+[data-platform="reddit"] {
+  --brand: #e63f00;
+}
+[data-platform="pinterest"] {
+  --brand: #bd081c;
+}
+[data-platform="behance"] {
+  --brand: #1769ff;
+}
+[data-platform="dribbble"] {
+  --brand: #d63b76;
+}
+[data-platform="medium"] {
+  --brand: #14171a;
+}
+[data-platform="substack"] {
+  --brand: #e35a13;
+}
+[data-platform="spotify"] {
+  --brand: #14833b;
+}
+[data-platform="strava"] {
+  --brand: #e04402;
+}
+[data-platform="website"] {
+  --brand: #526f82;
+}
+
+/* ---- Family directory cards ---- */
+
+.family-account-pronouns {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+/* `.family-account-card p` truncates to one line with an ellipsis, which is
+   right for the email address it was written for and wrong for a sentence.
+   Qualified by the card so it actually outranks that rule — a bare class does
+   not beat a class plus a type selector. */
+.family-account-card .family-account-headline,
+.family-account-card .family-account-bio {
+  overflow: visible;
+  white-space: normal;
+}
+.family-account-headline {
+  margin: 3px 0 1px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 650;
+}
+.family-account-facts {
+  margin: 9px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 5px;
+}
+.family-account-facts li {
+  display: flex;
+  align-items: start;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.family-account-facts svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.family-account-facts a {
+  color: var(--primary);
+  font-weight: 700;
+}
+.family-account-facts .is-emergency {
+  color: var(--family);
+}
+.family-account-facts .is-emergency a {
+  color: var(--family);
+}
+.family-account-card .family-account-bio {
+  /* Up to 280 characters is a paragraph in a card this narrow. Three lines is
+     as much as a directory entry should spend on one person. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.family-account-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 11px;
+}
+.family-account-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 10px 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 750;
+}
+.family-account-links a:hover {
+  border-color: var(--brand, var(--border));
+  color: var(--brand, var(--text));
+}
+.family-account-links svg {
+  flex: 0 0 auto;
+  color: var(--brand, var(--muted));
+}
+.family-account-links span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.family-account-private {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.family-account-private a {
+  color: var(--primary);
+  font-weight: 750;
+}
+
+@media (max-width: 760px) {
+  /* Five columns cannot survive a phone. Placed explicitly rather than left to
+     auto-flow: the network, the address and the label each want a full line,
+     and auto-placement would put the address where the delete button is. */
+  .profile-link-row {
+    grid-template-columns: 34px minmax(0, 1fr) 41px;
+  }
+  .profile-link-row .profile-link-glyph {
+    grid-area: 1 / 1;
+  }
+  .profile-link-row select {
+    grid-area: 1 / 2;
+  }
+  .profile-link-row button {
+    grid-area: 1 / 3;
+  }
+  .profile-link-row input:nth-of-type(1) {
+    grid-area: 2 / 1 / auto / 4;
+  }
+  .profile-link-row input:nth-of-type(2) {
+    grid-area: 3 / 1 / auto / 4;
+  }
+  /* Three lines per link runs the rows together without a rule between them. */
+  .profile-link-row + .profile-link-row {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  /* "Add link" breaks onto three lines beside the heading at this width. */
+  .profile-links-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .profile-photo-row {
+    align-items: start;
+  }
+}

@@ -54,14 +54,50 @@ vi.mock("@/lib/household-members", () => ({
         displayName: "Faria Jarin",
         email: "faria@example.com",
         role: "owner",
+        avatarPath: "household-1/photo.webp",
+        accent: "terracotta",
+        pronouns: "she/her",
+        headline: "German B2, then marketing",
+        location: "Frankfurt am Main",
+        phone: "+49 151 0000000",
+        birthday: "1992-04-17",
+        bio: "Runs the household calendar.",
+        links: [
+          {
+            platform: "linkedin",
+            url: "https://www.linkedin.com/in/faria",
+            label: "LinkedIn",
+          },
+          { platform: "xing", url: "https://www.xing.com/profile/Faria" },
+        ],
+        emergencyContact: {
+          name: "Zaman",
+          phone: "+49 151 1111111",
+          relation: "Partner",
+        },
+        sharesContact: true,
       },
       {
+        // A member who publishes nothing: the card still has to render, and
+        // has to show name, photo and role rather than an empty box.
         userId: "adult-2",
         displayName: "Sam Jarin",
         email: "sam@example.com",
         role: "adult",
+        avatarPath: null,
+        accent: "green",
+        pronouns: "",
+        headline: "",
+        location: "",
+        phone: "",
+        birthday: "",
+        bio: "",
+        links: [],
+        emergencyContact: { name: "", phone: "", relation: "" },
+        sharesContact: false,
       },
     ],
+    avatarUrls: { "household-1/photo.webp": "https://example.test/photo.webp" },
     invitations: [
       {
         id: "invite-1",
@@ -176,6 +212,60 @@ describe("Family overview", () => {
     expect(screen.getByText("School meeting")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Family VAULT" })).toBeTruthy();
     expect(screen.getByText("Family documents")).toBeTruthy();
+  });
+
+  it("shows a member's published details, and dials their numbers", () => {
+    render(<FamilyOverview records={[]} />);
+
+    expect(screen.getByText("she/her")).toBeTruthy();
+    expect(screen.getByText("German B2, then marketing")).toBeTruthy();
+    expect(screen.getByText("Frankfurt am Main")).toBeTruthy();
+    expect(screen.getByText("April 17")).toBeTruthy();
+    expect(screen.getByText("Runs the household calendar.")).toBeTruthy();
+
+    // Written with spaces, dialled without them.
+    expect(
+      screen
+        .getByRole("link", { name: "+49 151 0000000" })
+        .getAttribute("href"),
+    ).toBe("tel:+491510000000");
+    // The emergency contact is reachable in the same tap.
+    expect(screen.getByText(/Zaman \(Partner\)/)).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "+49 151 1111111" })
+        .getAttribute("href"),
+    ).toBe("tel:+491511111111");
+  });
+
+  it("labels a link by hand where there is one, and by its network otherwise", () => {
+    render(<FamilyOverview records={[]} />);
+
+    expect(
+      screen.getByRole("link", { name: "LinkedIn" }).getAttribute("href"),
+    ).toBe("https://www.linkedin.com/in/faria");
+    // No label was stored for this one, so the network names it.
+    expect(
+      screen.getByRole("link", { name: "Xing" }).getAttribute("href"),
+    ).toBe("https://www.xing.com/profile/Faria");
+  });
+
+  it("renders a member who publishes nothing without their contact rows", () => {
+    render(<FamilyOverview records={[]} />);
+
+    expect(screen.getByText("Sam Jarin")).toBeTruthy();
+    expect(screen.getAllByText("Adult").length).toBeGreaterThan(0);
+    expect(screen.queryByText("sam@example.com")).toBeTruthy();
+  });
+
+  it("shows a photo where there is one and initials where there is not", () => {
+    const { container } = render(<FamilyOverview records={[]} />);
+
+    const photo = container.querySelector("img.profile-avatar");
+    expect(photo?.getAttribute("src")).toBe("https://example.test/photo.webp");
+    expect(container.querySelector("span.profile-avatar")?.textContent).toBe(
+      "SJ",
+    );
   });
 
   it("puts every verified account into the Family calendar", () => {

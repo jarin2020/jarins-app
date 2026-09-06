@@ -2,19 +2,24 @@
 
 import Link from "next/link";
 import {
+  CakeSlice,
   CalendarDays,
   Check,
   ChevronRight,
   Clock3,
   Copy,
+  EyeOff,
   File,
   Folder,
   FolderKey,
   Mail,
+  MapPin,
   MessageCircle,
+  Phone,
   Send,
   ShieldCheck,
   Trash2,
+  TriangleAlert,
   UserCheck,
   UserPlus,
   UsersRound,
@@ -25,6 +30,9 @@ import { FamilyCalendar } from "@/components/family-calendar";
 import { useCalendarEvents } from "@/lib/calendar-accounts";
 import { useEmailAccounts } from "@/lib/email-accounts";
 import { useHouseholdMembers } from "@/lib/household-members";
+import { BrandGlyph } from "@/components/brand-glyph";
+import { ProfileAvatar } from "@/components/profile-avatar";
+import { profileLinkHandle, profileLinkLabel } from "@/lib/profile-links";
 import type { LifeRecord } from "@/lib/jarins-store";
 import { usePreferences } from "@/lib/preferences-store";
 import {
@@ -52,6 +60,22 @@ function roleLabel(role: string) {
   if (role === "adult") return "Adult";
   if (role === "viewer") return "Viewer";
   return "Child";
+}
+
+/** A birthday reads as a day in the year, not as a timestamp. */
+function birthdayLabel(value: string) {
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+/** `tel:` wants the number, not the way it was written down. */
+function telHref(phone: string) {
+  return `tel:${phone.replace(/[^\d+]/g, "")}`;
 }
 
 function dateLabel(value: string) {
@@ -464,24 +488,110 @@ export function FamilyOverview({ records }: { records: LifeRecord[] }) {
           {directory.loading && !directory.members.length ? (
             <p className="muted">Loading family members…</p>
           ) : (
-            directory.members.map((member, index) => {
+            directory.members.map((member) => {
               const isOwner = member.role === "owner";
               const isCurrent = member.userId === user?.id;
+              const emergency = member.emergencyContact;
               return (
                 <article className="family-account-card" key={member.userId}>
-                  <span className={`family-account-avatar tone-${index % 5}`}>
-                    {initials(member.displayName)}
-                  </span>
+                  <ProfileAvatar
+                    url={
+                      member.avatarPath
+                        ? directory.avatarUrls[member.avatarPath]
+                        : null
+                    }
+                    initials={initials(member.displayName)}
+                    accent={member.accent}
+                    size="lg"
+                  />
                   <div>
                     <strong>
                       {member.displayName}
+                      {member.pronouns && (
+                        <em className="family-account-pronouns">
+                          {member.pronouns}
+                        </em>
+                      )}
                       {isCurrent && <small>You</small>}
                     </strong>
+                    {member.headline && (
+                      <p className="family-account-headline">
+                        {member.headline}
+                      </p>
+                    )}
                     <p>{member.email}</p>
                     <span>
                       <UserCheck size={12} /> {roleLabel(member.role)} ·
                       Verified
                     </span>
+                    {(member.phone ||
+                      member.location ||
+                      member.birthday ||
+                      emergency.name) && (
+                      <ul className="family-account-facts">
+                        {member.phone && (
+                          <li>
+                            <Phone size={12} />
+                            <a href={telHref(member.phone)}>{member.phone}</a>
+                          </li>
+                        )}
+                        {member.location && (
+                          <li>
+                            <MapPin size={12} />
+                            {member.location}
+                          </li>
+                        )}
+                        {member.birthday && (
+                          <li>
+                            <CakeSlice size={12} />
+                            {birthdayLabel(member.birthday)}
+                          </li>
+                        )}
+                        {emergency.name && (
+                          <li className="is-emergency">
+                            <TriangleAlert size={12} />
+                            <span>
+                              {emergency.name}
+                              {emergency.relation && ` (${emergency.relation})`}
+                              {emergency.phone && (
+                                <>
+                                  {" · "}
+                                  <a href={telHref(emergency.phone)}>
+                                    {emergency.phone}
+                                  </a>
+                                </>
+                              )}
+                            </span>
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                    {member.bio && (
+                      <p className="family-account-bio">{member.bio}</p>
+                    )}
+                    {member.links.length > 0 && (
+                      <div className="family-account-links">
+                        {member.links.map((link) => (
+                          <a
+                            key={link.url}
+                            href={link.url}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            data-platform={link.platform}
+                            title={profileLinkHandle(link)}
+                          >
+                            <BrandGlyph platform={link.platform} size={14} />
+                            <span>{profileLinkLabel(link)}</span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {isCurrent && !member.sharesContact && (
+                      <small className="family-account-private">
+                        <EyeOff size={12} /> Only you can see your contact
+                        details. <Link href="/settings/profile">Change</Link>
+                      </small>
+                    )}
                   </div>
                   {directory.canManage && !isOwner && !isCurrent && (
                     <div className="family-member-controls">

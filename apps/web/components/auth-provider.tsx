@@ -15,10 +15,24 @@ import {
   type SupabaseBrowserClient,
 } from "@/lib/supabase/client";
 import {
+  accountProfileColumns,
   buildAccountProfile,
+  toAccountProfileWrite,
   type AccountProfile,
+  type AccountProfileDraft,
   type StoredAccountProfile,
 } from "@/lib/account-profile";
+
+/** What the `avatars` bucket accepts, mirrored so the picker can say so first. */
+const avatarExtensions: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+const maxAvatarBytes = 5 * 1024 * 1024;
+/** Long enough to outlast a session on one screen, short enough that a URL
+ *  copied out of the DOM is not a lasting handle on a family photo. */
+const avatarUrlSeconds = 60 * 60;
 
 /**
  * `demo` means Supabase is not configured: the app runs on this browser only and
@@ -34,12 +48,12 @@ type AuthValue = {
   status: AuthStatus;
   signOut: () => Promise<void>;
   refreshHousehold: () => Promise<string | null>;
-  updateProfile: (profile: {
-    displayName: string;
-    timezone: string;
-    locale: "en" | "de";
-  }) => Promise<void>;
+  updateProfile: (profile: AccountProfileDraft) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
+  /** Signed URL for the signed-in account's own photo, or null. */
+  avatarUrl: string | null;
+  uploadAvatar: (file: File) => Promise<void>;
+  removeAvatar: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -54,6 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [storedProfile, setStoredProfile] = useState<{
     userId: string;
     value: StoredAccountProfile;
+  } | null>(null);
+  const [signedAvatar, setSignedAvatar] = useState<{
+    path: string;
+    url: string;
   } | null>(null);
   const [status, setStatus] = useState<AuthStatus>(
     supabase ? "loading" : "demo",
@@ -84,19 +102,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Derived rather than reset in an effect, so signing out clears it in the
   // same render as the user disappearing.
   const householdId = user ? resolvedHousehold : null;
-  const profile = user
-    ? buildAccountProfile(
-        user,
-        storedProfile?.userId === user.id ? storedProfile.value : null,
-      )
-    : null;
+  // Memoised, not just derived: this object is handed to every consumer through
+  // context, and rebuilding it on each render of the provider gave the settings
+  // form a "new" profile every time an avatar URL or a token arrived.
+  const profile = useMemo(
+    () =>
+      user
+        ? buildAccountProfile(
+            user,
+            storedProfile?.userId === user.id ? storedProfile.value : null,
+          )
+        : null,
+    [storedProfile, user],
+  );
 
   useEffect(() => {
     if (!supabase || !user) return;
     let active = true;
     void supabase
       .from("profiles")
-      .select("display_name, timezone, locale")
+      .select(accountProfileColumns)
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -130,6 +155,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, user]);
 
+  // The bucket is private, so a photo is a signed URL with an expiry rather
+  // than a src. Signed whenever the path changes, which covers upload, removal
+  // and switching accounts alike.
+  //
+  // The URL is kept next to the path it was signed for and matched on read
+  // rather than cleared in the effect body. That is what stops a replaced photo
+  // from showing the previous one for a frame while the new URL is in flight.
+  const avatarUrl =
+    profile?.avatarPath && signedAvatar?.path === profile.avatarPath
+      ? signedAvatar.url
+      : null;
+
+  useEffect(() => {
+    const path = profile?.avatarPath;
+    if (!supabase || !path) return;
+    let active = true;
+    void supabase.storage
+      .from("avatars")
+      .createSignedUrl(path, avatarUrlSeconds)
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error || !data?.signedUrl) {
+          if (error)
+            console.error(
+              "[jarins] could not sign the avatar URL",
+              error.message,
+            );
+          return;
+        }
+        setSignedAvatar({ path, url: data.signedUrl });
+      });
+    return () => {
+      active = false;
+    };
+  }, [supabase, profile?.avatarPath]);
+
   // Anything captured before signing up follows the user into their account.
   useEffect(() => {
     if (!supabase || !user || !householdId) return;
@@ -159,17 +220,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, user]);
 
   const updateProfile = useCallback(
-    async (next: {
-      displayName: string;
-      timezone: string;
-      locale: "en" | "de";
-    }) => {
+    async (next: AccountProfileDraft) => {
       if (!supabase || !user) return;
-      const value: StoredAccountProfile = {
-        display_name: next.displayName.trim(),
-        timezone: next.timezone.trim(),
-        locale: next.locale,
-      };
+      const value = toAccountProfileWrite(next);
       const { error } = await supabase.from("profiles").upsert(
         {
           id: user.id,
@@ -179,7 +232,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       if (error) throw new Error(error.message);
 
-      setStoredProfile({ userId: user.id, value });
+      // Merged rather than replaced: the write deliberately leaves avatar_path
+      // alone, and dropping it here would blank the photo until the next load.
+      setStoredProfile((previous) => ({
+        userId: user.id,
+        value: {
+          ...(previous?.userId === user.id ? previous.value : {}),
+          ...value,
+        },
+      }));
       const { error: metadataError } = await supabase.auth.updateUser({
         data: { display_name: value.display_name },
       });
@@ -191,6 +252,73 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [supabase, user],
   );
+
+  const setAvatarPath = useCallback(
+    async (path: string | null) => {
+      if (!supabase || !user) return;
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({ id: user.id, avatar_path: path }, { onConflict: "id" });
+      if (error) throw new Error(error.message);
+      setStoredProfile((previous) => ({
+        userId: user.id,
+        value: {
+          ...(previous?.userId === user.id
+            ? previous.value
+            : { display_name: null, timezone: null, locale: null }),
+          avatar_path: path,
+        },
+      }));
+    },
+    [supabase, user],
+  );
+
+  const uploadAvatar = useCallback(
+    async (file: File) => {
+      if (!supabase || !user) throw new Error("Sign in to add a photo.");
+      // The bucket's own limits, checked first so the person reads a sentence
+      // rather than a storage API error after a five-megabyte upload.
+      const extension = avatarExtensions[file.type];
+      if (!extension) throw new Error("Use a JPEG, PNG or WebP image.");
+      if (file.size > maxAvatarBytes)
+        throw new Error("Photos must be 5 MB or smaller.");
+      // The household folder, not the user folder: the storage policies read
+      // the first path segment as a household, which is what lets the rest of
+      // the family see the photo at all.
+      if (!householdId)
+        throw new Error(
+          "Your household is still loading. Try again in a moment.",
+        );
+      const path = `${householdId}/${crypto.randomUUID()}.${extension}`;
+      const previous = storedProfile?.value.avatar_path ?? null;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (uploadError) throw new Error(uploadError.message);
+
+      try {
+        await setAvatarPath(path);
+      } catch (error) {
+        // Nothing points at the object now, so leaving it would be a private
+        // photo no screen can reach and no person can delete.
+        await supabase.storage.from("avatars").remove([path]);
+        throw error;
+      }
+      // Best effort, and after the row is committed: a failed cleanup costs
+      // storage, a cleanup before the write costs the photo.
+      if (previous && previous !== path)
+        void supabase.storage.from("avatars").remove([previous]);
+    },
+    [householdId, setAvatarPath, storedProfile, supabase, user],
+  );
+
+  const removeAvatar = useCallback(async () => {
+    if (!supabase || !user) return;
+    const previous = storedProfile?.value.avatar_path ?? null;
+    await setAvatarPath(null);
+    if (previous) void supabase.storage.from("avatars").remove([previous]);
+  }, [setAvatarPath, storedProfile, supabase, user]);
 
   const updatePassword = useCallback(
     async (password: string) => {
@@ -214,6 +342,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshHousehold,
       updateProfile,
       updatePassword,
+      avatarUrl,
+      uploadAvatar,
+      removeAvatar,
     }),
     [
       supabase,
@@ -225,6 +356,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshHousehold,
       updateProfile,
       updatePassword,
+      avatarUrl,
+      uploadAvatar,
+      removeAvatar,
     ],
   );
 

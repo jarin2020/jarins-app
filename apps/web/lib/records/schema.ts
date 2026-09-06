@@ -73,6 +73,20 @@ export type WorkspaceId = (typeof WORKSPACES)[number];
 export const preferencesSchema = z.object({
   name: z.string().max(80),
   workspace: z.enum(WORKSPACES),
+  // What each workspace is called in the sidebar. Optional because every read
+  // path resolves it field by field against defaults (lib/projects.ts), so a
+  // preferences blob written before this existed still opens.
+  projects: z
+    .record(
+      z.enum(WORKSPACES),
+      z.object({
+        name: z.string().max(40),
+        tagline: z.string().max(40),
+        mark: z.string().max(4),
+        accent: z.string().max(20),
+      }),
+    )
+    .optional(),
   timezone: z.string().max(60),
   locale: z.enum(["en", "de"]),
   household: z.string().max(80),

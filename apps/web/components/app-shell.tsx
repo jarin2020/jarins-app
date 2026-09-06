@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   MessageCircle,
+  Pencil,
   Plus,
   Search,
   ShieldCheck,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { findWorkspace, utilityModules, workspaces } from "@/lib/modules";
+import { resolveProject, withProject } from "@/lib/projects";
 import dynamic from "next/dynamic";
 
 /**
@@ -27,6 +29,10 @@ import dynamic from "next/dynamic";
  * it is what reports the unread count to the badge — but it no longer sits in
  * the chunk that has to arrive before the page is interactive.
  */
+const ProjectEditor = dynamic(
+  () => import("./project-editor").then((m) => m.ProjectEditor),
+  { ssr: false },
+);
 const MessageCenter = dynamic(
   () => import("./message-center").then((m) => m.MessageCenter),
   { ssr: false },
@@ -49,6 +55,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const { preferences, save: savePreferences } = usePreferences();
   const workspace = findWorkspace(preferences.workspace);
+  const project = resolveProject(preferences, workspace.id);
+  const [projectEditorOpen, setProjectEditorOpen] = useState(false);
   const { profile, status, signOut, user, avatarUrl } = useAuth();
   const displayName =
     status === "signed-in" && profile
@@ -120,13 +128,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-label="Primary navigation"
       >
         <div className="brand-row">
-          <Link href="/home" className="brand" aria-label="jarins home">
-            <span className="brand-mark">j.</span>
+          <Link
+            href={workspace.home}
+            className="brand"
+            aria-label={`${project.name} home`}
+          >
+            <span className={`brand-mark accent-${project.accent}`}>
+              {project.mark}
+            </span>
             <span>
-              <strong>jarins</strong>
-              <small>Life OS</small>
+              <strong>{project.name}</strong>
+              <small>{project.tagline}</small>
             </span>
           </Link>
+          <button
+            className="icon-button brand-edit"
+            type="button"
+            onClick={() => setProjectEditorOpen(true)}
+            aria-label={`Rename the ${workspace.label.toLowerCase()} workspace`}
+            title="Rename this space"
+          >
+            <Pencil size={15} />
+          </button>
           <button
             className="icon-button mobile-only"
             onClick={() => setMobileOpen(false)}
@@ -391,6 +414,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <span>More</span>
         </button>
       </nav>
+      <ProjectEditor
+        key={`${workspace.id}-${projectEditorOpen}`}
+        open={projectEditorOpen}
+        workspace={workspace.id}
+        project={project}
+        onClose={() => setProjectEditorOpen(false)}
+        onSave={(next) => {
+          savePreferences({
+            ...preferences,
+            projects: withProject(preferences, workspace.id, next),
+          });
+          setProjectEditorOpen(false);
+        }}
+      />
       <QuickCapture open={captureOpen} onClose={() => setCaptureOpen(false)} />
       <MessageCenter
         open={messagesOpen}

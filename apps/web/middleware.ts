@@ -108,13 +108,27 @@ export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured || !supabaseUrl || !supabaseAnonKey)
     return response;
 
+  /**
+   * @supabase/ssr hands setAll the headers that must travel with a refreshed
+   * auth cookie — no-store, so a CDN never serves one user's session token to
+   * another. The parameter is optional to TypeScript, so ignoring it type-checks
+   * and tests clean; it only shows up as a cache hit on somebody else's session.
+   * Kept here so the redirect below can carry them too.
+   */
+  let authCookieHeaders: Record<string, string> = {};
+
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll: () => request.cookies.getAll(),
-      setAll: (list) =>
+      setAll: (list, headers) => {
         list.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
-        ),
+        );
+        authCookieHeaders = headers;
+        Object.entries(headers).forEach(([key, value]) =>
+          response.headers.set(key, value),
+        );
+      },
     },
   });
 
@@ -143,6 +157,10 @@ export async function middleware(request: NextRequest) {
     );
     const redirect = securityHeaders(NextResponse.redirect(url), csp);
     response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    // The cookies move to the fresh response, so their no-store headers must too.
+    Object.entries(authCookieHeaders).forEach(([key, value]) =>
+      redirect.headers.set(key, value),
+    );
     return redirect;
   };
 

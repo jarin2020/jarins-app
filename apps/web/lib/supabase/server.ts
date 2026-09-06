@@ -10,6 +10,13 @@ export async function createSupabaseServerClient() {
   return createServerClient(url, anonKey, {
     cookies: {
       getAll: () => cookieStore.getAll(),
+      /**
+       * The second argument @supabase/ssr passes here is the no-store header set
+       * that must accompany an auth cookie. It is deliberately unused: this
+       * client is built on next/headers, which reaches the cookie jar but not
+       * the response headers. The middleware runs on every matched request and
+       * sets both there; see middleware.ts.
+       */
       setAll: (list) => {
         try {
           list.forEach(({ name, value, options }) =>

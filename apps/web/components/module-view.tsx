@@ -81,9 +81,14 @@ const DocumentsDashboard = dynamic(
 );
 // The largest settings panel by a wide margin — the photo picker, the link
 // editor and every brand glyph behind it. Only /settings/profile pays for it.
+//
+// `ssr: false` because the whole screen is a function of client-only auth
+// state. Rendered on the server it can only produce the signed-out variant,
+// which a signed-in visitor then sees flash "a photo needs an account" before
+// hydration replaces it with their actual profile.
 const ProfileSettings = dynamic(
   () => import("./profile-settings").then((m) => m.ProfileSettings),
-  { loading },
+  { loading, ssr: false },
 );
 
 export function ModuleView({ slug }: { slug: string[] }) {
@@ -200,6 +205,23 @@ function LifeModule({
     money: ["Overview", "Recurring", "Upcoming", "Goals"],
     documents: ["Overview", "Expiring", "Categories"],
     future: ["Overview", "Goals", "Projects"],
+    work: [
+      "Overview",
+      "Focus",
+      "Deliverables",
+      "Deadlines",
+      "Meetings",
+      "Blocked",
+    ],
+    pipeline: [
+      "Overview",
+      "Opportunities",
+      "Applications",
+      "Interviews",
+      "Follow ups",
+    ],
+    portfolio: ["Overview", "Case studies", "Projects", "Evidence"],
+    network: ["Overview", "Contacts", "Follow ups", "Referrals"],
   };
   const stat = (value: number) => (loading ? "—" : String(value));
   return (
@@ -1034,18 +1056,23 @@ function SettingsView({ section }: { section?: string }) {
             </Link>
           ))}
         </nav>
-        <section className="settings-panel">
-          <h2>
-            {active === "data"
-              ? "Your data"
-              : active === "privacy"
-                ? "Privacy controls"
-                : active === "notifications"
-                  ? "Notifications"
-                  : active === "household"
-                    ? "Household"
-                    : "Profile preferences"}
-          </h2>
+        {/* Profile brings its own cards, so it drops the panel's box rather
+            than drawing a border inside a border — and the page title above
+            already says "Profile". */}
+        <section
+          className={`settings-panel ${active === "profile" ? "is-plain" : ""}`}
+        >
+          {active !== "profile" && (
+            <h2>
+              {active === "data"
+                ? "Your data"
+                : active === "privacy"
+                  ? "Privacy controls"
+                  : active === "notifications"
+                    ? "Notifications"
+                    : "Household"}
+            </h2>
+          )}
           {active === "data" ? (
             <>
               {mode === "local" && (

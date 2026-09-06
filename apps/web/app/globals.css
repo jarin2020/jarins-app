@@ -163,59 +163,6 @@ h3 {
 .nav-utility a {
   padding-block: 9px;
 }
-.sidebar-capture {
-  margin-top: auto;
-  width: 100%;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 13px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--surface);
-  color: var(--text);
-  text-align: left;
-}
-.sidebar-capture:hover {
-  border-color: #c6dac9;
-  background: var(--primary-soft);
-}
-.sidebar-capture-icon {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  color: white;
-  background: var(--primary);
-}
-.sidebar-capture-copy {
-  min-width: 0;
-}
-.sidebar-capture strong,
-.sidebar-capture small {
-  display: block;
-}
-.sidebar-capture strong {
-  font-size: 12px;
-}
-.sidebar-capture small {
-  color: var(--muted);
-  font-size: 12px;
-}
-.sidebar-capture kbd {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 3px 6px;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  color: var(--muted);
-  background: var(--surface-soft);
-  font: inherit;
-  font-size: 12px;
-}
 .main-column {
   min-width: 0;
 }
@@ -4038,20 +3985,11 @@ fieldset legend {
   }
   .brand > span:last-child,
   .nav-list a span,
-  .sidebar-capture-copy,
-  .sidebar-capture kbd {
-    display: none;
-  }
   .brand {
     padding-inline: 10px;
   }
   .nav-list a {
     justify-content: center;
-  }
-  .sidebar-capture {
-    display: flex;
-    justify-content: center;
-    padding: 10px;
   }
   .today-hero {
     grid-template-columns: 1fr;
@@ -4095,18 +4033,8 @@ fieldset legend {
   }
   .sidebar .brand > span:last-child,
   .sidebar .nav-list a span,
-  .sidebar .sidebar-capture-copy {
-    display: block;
-  }
-  .sidebar .sidebar-capture kbd {
-    display: inline-flex;
-  }
   .sidebar .nav-list a {
     justify-content: flex-start;
-  }
-  .sidebar .sidebar-capture {
-    display: grid;
-    justify-content: initial;
   }
   .nav-scrim {
     display: block;
@@ -8018,4 +7946,223 @@ fieldset legend {
   .profile-photo-row {
     align-items: start;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   The profile screen: a profile you read, with one section editable at a time.
+   --------------------------------------------------------------------------- */
+
+.profile-screen {
+  display: grid;
+  gap: 14px;
+}
+.profile-card {
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.profile-section-header h3 {
+  margin: 0;
+  flex: 1 1 auto;
+  font-size: 15px;
+}
+.profile-section-actions {
+  display: flex;
+  gap: 7px;
+}
+.profile-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.profile-edit:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.profile-visibility {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.profile-visibility.is-always {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* ---- the identity block, which is the part that reads as a profile ---- */
+
+.profile-identity {
+  display: flex;
+  align-items: start;
+  gap: 18px;
+}
+.profile-identity > div {
+  min-width: 0;
+}
+.profile-identity h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 2px 0 0;
+  font-size: 23px;
+}
+.profile-pronouns {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+.profile-headline {
+  margin: 5px 0 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+}
+.profile-email {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.profile-bio {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  max-width: 62ch;
+}
+
+/* ---- read-only facts ---- */
+
+.profile-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+}
+.profile-fact dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.profile-fact dd {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.profile-fact dd svg {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+.is-unset {
+  color: var(--muted);
+  font-weight: 500;
+  font-style: italic;
+}
+.profile-screen .muted.is-unset {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+
+/* ---- links, shown as chips until edited ---- */
+
+.profile-link-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.profile-link-chips a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 6px 12px 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.profile-link-chips a:hover {
+  border-color: var(--brand, var(--border));
+  color: var(--brand, var(--text));
+}
+.profile-link-chips svg {
+  flex: 0 0 auto;
+  color: var(--brand, var(--muted));
+}
+.profile-link-chips span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- the panel already supplies a border; these sit inside a card ---- */
+
+.profile-screen .profile-links,
+.profile-screen .profile-emergency {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.profile-screen .profile-photo-row {
+  padding-top: 0;
+}
+.profile-screen .toggle-row {
+  border-top: 0;
+  padding-top: 0;
+}
+.profile-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+@media (max-width: 760px) {
+  .profile-section-header {
+    flex-wrap: wrap;
+  }
+  .profile-identity {
+    flex-direction: column;
+  }
+}
+.settings-panel.is-plain {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+/* The label carries a leading eye icon; a bare block drops it onto its own
+   line, because an inline SVG has no baseline to sit on next to block text. */
+.profile-screen .toggle-row strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }

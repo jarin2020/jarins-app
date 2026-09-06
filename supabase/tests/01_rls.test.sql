@@ -696,3 +696,132 @@ begin
 
   reset role;
 end $$;
+
+-- ============ profile details and the contact-sharing switch ============
+do $$
+declare
+  faria uuid := '11111111-1111-1111-1111-111111111111';
+  partner uuid := '33333333-3333-3333-3333-333333333333';
+  stranger uuid := '22222222-2222-2222-2222-222222222222';
+  faria_household uuid;
+  directory record;
+  blocked boolean;
+  n int;
+begin
+  select id into faria_household from public.households where owner_user_id = faria;
+
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+
+  update public.profiles set
+    avatar_path = faria_household || '/' || gen_random_uuid() || '.webp',
+    phone = '+49 151 0000000',
+    pronouns = 'she/her',
+    headline = 'German B2, then marketing',
+    location = 'Frankfurt',
+    birthday = '1992-04-17',
+    accent_color = 'terracotta',
+    emergency_contact_name = 'Zaman',
+    emergency_contact_phone = '+49 151 1111111',
+    emergency_contact_relation = 'Partner',
+    links = '[{"platform":"linkedin","url":"https://www.linkedin.com/in/faria","label":"LinkedIn"}]'::jsonb
+  where id = faria;
+
+  -- ---- the shape checks are the boundary, not the form ----
+  blocked := false;
+  begin
+    update public.profiles set avatar_path = '../../etc/passwd' where id = faria;
+  exception when check_violation then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: an avatar path outside the household folder was accepted'; end if;
+
+  blocked := false;
+  begin
+    update public.profiles set accent_color = 'hotpink' where id = faria;
+  exception when check_violation then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: an unknown accent colour was accepted'; end if;
+
+  blocked := false;
+  begin
+    update public.profiles set links = '[{"platform":"linkedin","url":"javascript:alert(1)"}]'::jsonb
+    where id = faria;
+  exception when check_violation then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a non-http link URL was accepted'; end if;
+
+  blocked := false;
+  begin
+    update public.profiles set links = (
+      select jsonb_agg(jsonb_build_object('platform', 'website', 'url', 'https://example.test/' || i))
+      from generate_series(1, 11) i
+    ) where id = faria;
+  exception when check_violation then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: more than ten links were accepted'; end if;
+
+  blocked := false;
+  begin
+    update public.profiles set links = '{"platform":"website"}'::jsonb where id = faria;
+  exception when check_violation then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a links value that is not an array was accepted'; end if;
+
+  update public.profiles set links = '[]'::jsonb where id = faria;
+  update public.profiles set
+    links = '[{"platform":"linkedin","url":"https://www.linkedin.com/in/faria","label":"LinkedIn"}]'::jsonb
+  where id = faria;
+  raise notice 'PASS     profile detail shape is enforced at the database, not the form';
+
+  -- ---- a household member reads the shared fields ----
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  select * into directory from public.list_household_users() where user_id = faria;
+  if directory.phone is null or directory.birthday is null
+     or directory.emergency_contact_name is null
+     or jsonb_array_length(directory.links) <> 1 then
+    raise exception 'FAIL: published contact details were withheld from a household member';
+  end if;
+  if directory.avatar_path is null or directory.headline is null then
+    raise exception 'FAIL: identity fields were withheld from a household member';
+  end if;
+  raise notice 'PASS     published profile details reach the rest of the household';
+
+  -- ---- switching sharing off withholds contact, but not identity ----
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  update public.profiles set share_contact_with_household = false where id = faria;
+
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  select * into directory from public.list_household_users() where user_id = faria;
+  if directory.phone is not null or directory.location is not null
+     or directory.birthday is not null or directory.bio is not null
+     or directory.emergency_contact_name is not null
+     or directory.emergency_contact_phone is not null
+     or jsonb_array_length(directory.links) <> 0 then
+    raise exception 'FAIL: contact details leaked after sharing was switched off';
+  end if;
+  if directory.display_name is null or directory.avatar_path is null
+     or directory.headline is null or directory.accent_color is null then
+    raise exception 'FAIL: identity fields disappeared with the contact switch';
+  end if;
+  raise notice 'PASS     the contact switch withholds contact details and keeps identity';
+
+  -- ---- but the author still reads their own row whole ----
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  select * into directory from public.list_household_users() where user_id = faria;
+  if directory.phone is null or directory.emergency_contact_phone is null then
+    raise exception 'FAIL: a member could not see their own withheld details';
+  end if;
+  raise notice 'PASS     a member always reads their own directory row whole';
+
+  -- ---- and none of it reaches another household ----
+  perform set_config('request.jwt.claim.sub', stranger::text, true);
+  select count(*) into n from public.list_household_users() where user_id = faria;
+  if n <> 0 then raise exception 'FAIL: another household read % directory row(s)', n; end if;
+  select count(*) into n from public.profiles where id = faria;
+  if n <> 0 then raise exception 'FAIL: profiles are readable outside their owner'; end if;
+  raise notice 'PASS     profile details stay inside the household';
+
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  update public.profiles set share_contact_with_household = true where id = faria;
+  reset role;
+end $$;

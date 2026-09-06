@@ -21,6 +21,15 @@
         "3200"
       ],
       "port": 3200
+    },
+    {
+      "name": "jarins-web-local-supabase",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "eval \"$(npx supabase status -o env | sed 's/^/export /')\" && NEXT_PUBLIC_SUPABASE_URL=\"$API_URL\" NEXT_PUBLIC_SUPABASE_ANON_KEY=\"$ANON_KEY\" NEXT_PUBLIC_APP_URL=http://localhost:3100 exec pnpm --filter @jarins/web dev --port 3100"
+      ],
+      "port": 3100
     }
   ]
 }

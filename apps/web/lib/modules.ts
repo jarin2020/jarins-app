@@ -19,6 +19,7 @@ import {
   Sparkles,
   SunMedium,
   Target,
+  UsersRound,
 } from "lucide-react";
 
 export type ModuleKey =
@@ -27,6 +28,7 @@ export type ModuleKey =
   | "pipeline"
   | "portfolio"
   | "network"
+  | "teams"
   | "family"
   | "home"
   | "self"
@@ -206,6 +208,15 @@ export const professionalModules: ModuleDefinition[] = [
     eyebrow: "Evidence beats claims",
     description:
       "Case studies, projects and proof you can hand to someone who asks.",
+  },
+  {
+    key: "teams",
+    label: "Teams",
+    href: "/teams",
+    icon: UsersRound,
+    eyebrow: "People, and who does what",
+    description:
+      "Who is in each team, what their role is, and what has been assigned to whom.",
   },
   {
     key: "network",

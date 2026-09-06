@@ -25,6 +25,27 @@ mode**, where middleware guards every route and records live in Postgres behind
 row-level security. Anything captured before signing up is carried into the
 account on first authenticated load.
 
+## Ways into an account
+
+`/auth/signup` offers four, and `/auth/login` reaches the same providers:
+
+- **Email and a password.** Minimum ten characters, confirmed by a mailed link.
+- **Email and no password at all.** Supabase creates the account and mails a
+  link each time. The same call signs an existing account back in, so someone
+  who cannot remember whether they already registered gets the right outcome
+  either way.
+- **An identity provider** — Google, Apple, GitHub or Microsoft. Two settings
+  turn one on: uncomment its block in `supabase/config.toml`, and name it in
+  `NEXT_PUBLIC_AUTH_OAUTH_PROVIDERS`. Nothing renders until both are done,
+  deliberately: a button for a provider Supabase has not been configured for
+  strands the person on a raw JSON 400 from `/auth/v1/authorize`, on the
+  Supabase domain, with no link back.
+- **A household invitation**, at `/auth/invite/<token>`, which pre-fills the
+  invited address and joins that household instead of creating a new one.
+
+Whichever route is used, `handle_new_user()` creates the profile, the household
+and the ownership row in the same transaction as the account.
+
 ## Verification
 
 ```bash

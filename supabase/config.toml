@@ -46,6 +46,44 @@ max_frequency = "1m0s"
 otp_length = 8
 otp_expiry = 3600
 
+# Identity providers.
+#
+# Undeclared here means disabled: the CLI default for every external provider is
+# `enabled = false`, so a `supabase config push` turns off anything that was
+# switched on in the dashboard. Enabling one is therefore a two-part change —
+# uncomment its block below, and add the provider to
+# NEXT_PUBLIC_AUTH_OAUTH_PROVIDERS in the web build, or the button never renders.
+#
+# `secret` values are read from the shell, never written here. With each
+# provider, register the redirect URI Supabase owns —
+# https://<project-ref>.supabase.co/auth/v1/callback — not a jarins.com path:
+# the app is only reached afterwards, through additional_redirect_urls above.
+#
+# Apple additionally requires the Services ID as the client id, and returns the
+# person's name exactly once, on the first authorization.
+
+# [auth.external.google]
+# enabled = true
+# client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+# secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+# skip_nonce_check = false
+
+# [auth.external.apple]
+# enabled = true
+# client_id = "env(SUPABASE_AUTH_APPLE_CLIENT_ID)"
+# secret = "env(SUPABASE_AUTH_APPLE_SECRET)"
+
+# [auth.external.github]
+# enabled = true
+# client_id = "env(SUPABASE_AUTH_GITHUB_CLIENT_ID)"
+# secret = "env(SUPABASE_AUTH_GITHUB_SECRET)"
+
+# [auth.external.azure]
+# enabled = true
+# client_id = "env(SUPABASE_AUTH_AZURE_CLIENT_ID)"
+# secret = "env(SUPABASE_AUTH_AZURE_SECRET)"
+# url = "https://login.microsoftonline.com/common"
+
 [storage]
 enabled = true
 # Matches the hosted default. Declared so a push cannot lower it.

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { SupabaseBrowserClient } from "@/lib/supabase/client";
+import type { WorkspaceId } from "@/lib/records/schema";
 import type {
   ConversationKind,
   HouseholdInvitation,
@@ -105,10 +106,13 @@ export function useCloudMessages({
   supabase,
   userId,
   householdId,
+  workspace,
 }: {
   supabase: SupabaseBrowserClient;
   userId?: string;
   householdId?: string | null;
+  /** Which workspace's conversations to load. The two lists are disjoint. */
+  workspace: WorkspaceId;
 }) {
   const enabled = Boolean(supabase && userId && householdId);
   const [threads, setThreads] = useState<MessageThread[]>([]);
@@ -134,8 +138,14 @@ export function useCloudMessages({
         supabase
           .from("message_threads")
           .select(
-            "id,title,is_family_thread,created_by,created_at,updated_at,message_thread_members(user_id,member_role,direct_member,last_read_at),message_thread_teams(team_id),messages(id,sender_user_id,body,created_at,message_attachments(id,file_name,mime_type,size_bytes,storage_path))",
+            "id,title,is_family_thread,workspace,created_by,created_at,updated_at,message_thread_members(user_id,member_role,direct_member,last_read_at),message_thread_teams(team_id),messages(id,sender_user_id,body,created_at,message_attachments(id,file_name,mime_type,size_bytes,storage_path))",
           )
+          // Scoped twice on purpose. The household keeps a person who belongs
+          // to two of them from seeing both Family threads at once, and the
+          // workspace is what makes the two message lists genuinely separate
+          // rather than one list with a filter on top.
+          .eq("household_id", householdId)
+          .eq("workspace", workspace)
           .order("updated_at", { ascending: false }),
         supabase
           .from("message_teams")
@@ -289,7 +299,7 @@ export function useCloudMessages({
     } finally {
       setLoading(false);
     }
-  }, [householdId, supabase, userId]);
+  }, [householdId, supabase, userId, workspace]);
 
   useEffect(() => {
     if (!enabled) {
@@ -375,6 +385,7 @@ export function useCloudMessages({
           thread_title: input.title,
           participant_ids: input.participantIds ?? [],
           team_ids: input.teamIds ?? [],
+          thread_workspace: workspace,
         },
       );
       if (rpcError) throw new Error(rpcError.message);
@@ -382,7 +393,7 @@ export function useCloudMessages({
       const id = data as string;
       return { id };
     },
-    [load, supabase],
+    [load, supabase, workspace],
   );
 
   const updateThread = useCallback(
@@ -415,6 +426,17 @@ export function useCloudMessages({
     },
     [load, supabase],
   );
+
+  /** Re-derives the Family thread's members from the household. Membership is
+   *  meant to follow automatically; this is the button for when it has not. */
+  const syncFamily = useCallback(async () => {
+    if (!supabase) throw new Error("Accounts are not connected.");
+    const { error: rpcError } = await supabase.rpc(
+      "sync_family_message_thread",
+    );
+    if (rpcError) throw new Error(rpcError.message);
+    await load();
+  }, [load, supabase]);
 
   const createTeam = useCallback(
     async (input: { name: string; memberIds: string[] }) => {
@@ -587,6 +609,7 @@ export function useCloudMessages({
     create,
     updateThread,
     removeThread,
+    syncFamily,
     createTeam,
     updateTeam,
     removeTeam,

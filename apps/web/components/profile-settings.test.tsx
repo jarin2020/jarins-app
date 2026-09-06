@@ -29,7 +29,10 @@ vi.mock("./auth-provider", () => ({
         timezone: "Europe/Berlin",
         locale: "de",
         accent_color: "terracotta",
+        pronouns: "she/her",
+        headline: "German B2, then marketing",
         phone: "+49 151 0000000",
+        birthday: "1992-04-17",
         links: [
           { platform: "linkedin", url: "https://www.linkedin.com/in/faria" },
         ],
@@ -53,51 +56,131 @@ vi.mock("./auth-provider", () => ({
 const fieldValue = (label: string) =>
   (screen.getByLabelText(label) as HTMLElement & { value: string }).value;
 
+const edit = (section: string) =>
+  fireEvent.click(screen.getByRole("button", { name: `Edit ${section}` }));
+const saveSection = () =>
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
 describe("ProfileSettings", () => {
   beforeEach(() => {
     localStorage.clear();
     mocks.status = "signed-in";
     mocks.avatarUrl = null;
-    Object.values(mocks).forEach(
-      (value) =>
-        typeof value === "function" &&
-        (value as ReturnType<typeof vi.fn>).mockReset?.(),
-    );
+    [
+      mocks.updateProfile,
+      mocks.uploadAvatar,
+      mocks.removeAvatar,
+      mocks.updatePassword,
+      mocks.signOut,
+    ].forEach((fn) => fn.mockReset());
     mocks.updateProfile.mockResolvedValue(undefined);
     mocks.uploadAvatar.mockResolvedValue(undefined);
   });
   afterEach(() => cleanup());
 
   const settled = () =>
-    waitFor(() => expect(fieldValue("Display name")).toBe("Faria Jarin"));
+    waitFor(() =>
+      expect(screen.getByRole("heading", { name: /Faria Jarin/ })).toBeTruthy(),
+    );
 
-  it("loads the stored profile into the form", async () => {
+  // ---- the default view ----
+
+  it("opens on a profile to read, not a form to fill in", async () => {
     render(<ProfileSettings />);
     await settled();
 
-    // "Phone" appears twice on this form, and is only unambiguous because the
-    // emergency fields are grouped in a fieldset with a legend.
-    const emergency = within(
-      screen.getByRole("group", { name: /Emergency contact/ }),
-    );
-    expect(
-      (emergency.getByLabelText("Phone") as HTMLElement & { value: string })
-        .value,
-    ).toBe("");
+    expect(screen.getByText("she/her")).toBeTruthy();
+    expect(screen.getByText("German B2, then marketing")).toBeTruthy();
+    expect(screen.getByText("+49 151 0000000")).toBeTruthy();
+    expect(screen.getByText("April 17, 1992")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "LinkedIn" })).toBeTruthy();
+    // Nothing is editable until asked for.
+    expect(screen.queryByLabelText("Display name")).toBeNull();
+    expect(screen.queryByLabelText("Phone")).toBeNull();
+  });
+
+  it("says a field is unset rather than leaving a blank space", async () => {
+    render(<ProfileSettings />);
+    await settled();
+
+    const emergency = screen
+      .getByRole("heading", { name: "Emergency contact" })
+      .closest("section") as HTMLElement;
+    expect(within(emergency).getAllByText("Not set").length).toBe(3);
+  });
+
+  it("labels each section with who can see it", async () => {
+    render(<ProfileSettings />);
+    await settled();
+
+    const identity = screen
+      .getByRole("heading", { name: "Identity" })
+      .closest("section") as HTMLElement;
+    expect(within(identity).getByText("Household")).toBeTruthy();
+
+    const preferences = screen
+      .getByRole("heading", { name: "Preferences" })
+      .closest("section") as HTMLElement;
+    expect(within(preferences).getByText("Only you")).toBeTruthy();
+  });
+
+  // ---- editing one section at a time ----
+
+  it("opens only the section asked for", async () => {
+    render(<ProfileSettings />);
+    await settled();
+    edit("identity");
+
+    expect(screen.getByLabelText("Display name")).toBeTruthy();
+    // The contact fields stay closed.
+    expect(screen.queryByLabelText("Where you are")).toBeNull();
+    // And cannot be opened while another section is open.
     expect(
       screen
-        .getAllByLabelText("Phone")
-        .map((field) => (field as HTMLElement & { value: string }).value),
-    ).toContain("+49 151 0000000");
-    expect(fieldValue("Address for link 1")).toBe(
-      "https://www.linkedin.com/in/faria",
-    );
-    expect(fieldValue("Network for link 1")).toBe("linkedin");
+        .getByRole("button", { name: "Edit contact" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
   });
+
+  it("saves the section and returns to the profile", async () => {
+    render(<ProfileSettings />);
+    await settled();
+    edit("identity");
+
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "Faria" },
+    });
+    saveSection();
+
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalled());
+    expect(mocks.updateProfile.mock.calls[0][0].displayName).toBe("Faria");
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Display name")).toBeNull(),
+    );
+  });
+
+  it("throws away an edit when cancelled", async () => {
+    render(<ProfileSettings />);
+    await settled();
+    edit("identity");
+
+    fireEvent.change(screen.getByLabelText("Display name"), {
+      target: { value: "Someone else" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: /Faria Jarin/ })).toBeTruthy(),
+    );
+    expect(mocks.updateProfile).not.toHaveBeenCalled();
+  });
+
+  // ---- links ----
 
   it("recognises the network from a pasted address", async () => {
     render(<ProfileSettings />);
     await settled();
+    edit("profiles and links");
 
     fireEvent.click(screen.getByRole("button", { name: /Add link/ }));
     fireEvent.change(screen.getByLabelText("Address for link 2"), {
@@ -110,6 +193,7 @@ describe("ProfileSettings", () => {
   it("stops guessing the network once it has been chosen by hand", async () => {
     render(<ProfileSettings />);
     await settled();
+    edit("profiles and links");
 
     fireEvent.click(screen.getByRole("button", { name: /Add link/ }));
     fireEvent.change(screen.getByLabelText("Network for link 2"), {
@@ -125,11 +209,12 @@ describe("ProfileSettings", () => {
   it("refuses to save an address it cannot resolve, naming which one", async () => {
     render(<ProfileSettings />);
     await settled();
+    edit("profiles and links");
 
     fireEvent.change(screen.getByLabelText("Address for link 1"), {
       target: { value: "not a url" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
+    saveSection();
 
     await waitFor(() =>
       expect(screen.getByRole("status").textContent).toBe(
@@ -142,9 +227,10 @@ describe("ProfileSettings", () => {
   it("drops a row left empty rather than treating it as a mistake", async () => {
     render(<ProfileSettings />);
     await settled();
+    edit("profiles and links");
 
     fireEvent.click(screen.getByRole("button", { name: /Add link/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
+    saveSection();
 
     await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalled());
     expect(mocks.updateProfile.mock.calls[0][0].links).toEqual([
@@ -155,6 +241,7 @@ describe("ProfileSettings", () => {
   it("normalises what was typed before saving it", async () => {
     render(<ProfileSettings />);
     await settled();
+    edit("profiles and links");
 
     fireEvent.change(screen.getByLabelText("Address for link 1"), {
       target: { value: "linkedin.com/in/faria" },
@@ -162,7 +249,7 @@ describe("ProfileSettings", () => {
     fireEvent.change(screen.getByLabelText("Label for link 1"), {
       target: { value: "  Work  " },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
+    saveSection();
 
     await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalled());
     expect(mocks.updateProfile.mock.calls[0][0].links).toEqual([
@@ -177,22 +264,26 @@ describe("ProfileSettings", () => {
   it("removes a link", async () => {
     render(<ProfileSettings />);
     await settled();
+    edit("profiles and links");
 
     fireEvent.click(screen.getByRole("button", { name: "Remove link 1" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
+    saveSection();
 
     await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalled());
     expect(mocks.updateProfile.mock.calls[0][0].links).toEqual([]);
   });
 
+  // ---- validation, sharing, photo ----
+
   it("rejects a birthday in the future before it reaches the column", async () => {
     render(<ProfileSettings />);
     await settled();
+    edit("contact");
 
     fireEvent.change(screen.getByLabelText("Birthday"), {
       target: { value: "2099-01-01" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
+    saveSection();
 
     await waitFor(() =>
       expect(screen.getByRole("status").textContent).toBe(
@@ -202,14 +293,27 @@ describe("ProfileSettings", () => {
     expect(mocks.updateProfile).not.toHaveBeenCalled();
   });
 
+  it("applies the sharing switch immediately, without an edit step", async () => {
+    render(<ProfileSettings />);
+    await settled();
+
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalled());
+    expect(mocks.updateProfile.mock.calls[0][0].shareContactWithHousehold).toBe(
+      false,
+    );
+  });
+
   it("also writes the name, timezone and locale this device reads offline", async () => {
     render(<ProfileSettings />);
     await settled();
+    edit("identity");
 
     fireEvent.change(screen.getByLabelText("Display name"), {
       target: { value: "Faria" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
+    saveSection();
 
     await waitFor(() => expect(mocks.updateProfile).toHaveBeenCalled());
     expect(
@@ -223,11 +327,9 @@ describe("ProfileSettings", () => {
     );
     render(<ProfileSettings />);
     await settled();
+    edit("identity");
 
-    const picker = document.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement;
-    fireEvent.change(picker, {
+    fireEvent.change(document.querySelector('input[type="file"]')!, {
       target: { files: [new File(["x"], "note.txt", { type: "text/plain" })] },
     });
 
@@ -241,6 +343,7 @@ describe("ProfileSettings", () => {
   it("offers Remove only once there is a photo to remove", async () => {
     const { unmount } = render(<ProfileSettings />);
     await settled();
+    edit("identity");
     expect(screen.queryByRole("button", { name: "Remove" })).toBeNull();
     unmount();
     cleanup();
@@ -248,6 +351,7 @@ describe("ProfileSettings", () => {
     mocks.avatarUrl = "https://example.test/photo.webp";
     render(<ProfileSettings />);
     await settled();
+    edit("identity");
     fireEvent.click(screen.getByRole("button", { name: "Remove" }));
     await waitFor(() => expect(mocks.removeAvatar).toHaveBeenCalled());
   });
@@ -255,9 +359,9 @@ describe("ProfileSettings", () => {
   it("keeps unsaved input when the provider hands it an equal profile again", async () => {
     // The mocked provider rebuilds the profile object on every render, which is
     // what the real one did until this was keyed on content instead of identity.
-    // Re-rendering must not throw away what is half-typed.
     const { rerender } = render(<ProfileSettings />);
     await settled();
+    edit("identity");
 
     fireEvent.change(screen.getByLabelText("Headline"), {
       target: { value: "Half a thou" },
@@ -274,13 +378,14 @@ describe("ProfileSettings", () => {
     await waitFor(() =>
       expect(screen.getByText(/need an account/)).toBeTruthy(),
     );
-    expect(screen.queryByRole("button", { name: /Add link/ })).toBeNull();
-    expect(screen.queryByLabelText("Phone")).toBeNull();
     expect(
-      screen.queryByRole("group", { name: /Emergency contact/ }),
+      screen.queryByRole("button", { name: "Edit profiles and links" }),
     ).toBeNull();
-    // The three that do work on one device are still editable.
-    expect(screen.getByLabelText("Display name")).toBeTruthy();
-    expect(screen.getByLabelText("Timezone")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Edit contact" })).toBeNull();
+    // Identity and preferences still work on one device.
+    expect(screen.getByRole("button", { name: "Edit identity" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Edit preferences" }),
+    ).toBeTruthy();
   });
 });

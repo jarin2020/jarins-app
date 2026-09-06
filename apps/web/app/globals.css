@@ -7444,3 +7444,101 @@ fieldset legend {
 .screen-loading {
   min-height: 60vh;
 }
+
+/* Ways into an account.
+
+   The sign-up route was always there and nobody found it, because the only
+   pointer to it was a footnote under the sign-in form. These are the two doors
+   side by side, the identity providers above the form, and the choice between a
+   password and a mailed link inside it. */
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: -8px 0 20px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+.auth-tabs a {
+  padding: 9px;
+  border-radius: 11px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  text-align: center;
+  text-decoration: none;
+}
+.auth-tabs a.active {
+  color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(33, 48, 40, 0.1);
+}
+.auth-tabs a:hover:not(.active) {
+  color: var(--text);
+}
+.auth-providers {
+  display: grid;
+  gap: 8px;
+}
+/* .login-card .button forces every button in the card full width with a top
+   margin; the provider stack sets its own spacing, so it opts out. */
+.login-card .auth-provider {
+  margin-top: 0;
+}
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.auth-divider:before,
+.auth-divider:after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.auth-method {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+.auth-method legend {
+  padding: 0;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.auth-method label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  cursor: pointer;
+}
+.auth-method label:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.auth-method input {
+  margin: 2px 0 0;
+  accent-color: var(--primary);
+}
+.auth-method strong {
+  display: block;
+  font-size: 13px;
+}
+.auth-method small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+}

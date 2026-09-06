@@ -46,6 +46,13 @@ account on first authenticated load.
 Whichever route is used, `handle_new_user()` creates the profile, the household
 and the ownership row in the same transaction as the account.
 
+Family → Add family member sends the invitation itself once `INVITE_SMTP_URL`
+and `INVITE_FROM_ADDRESS` are set (see `apps/web/.env.example`); the token is
+minted and mailed in one server request, so the browser never chooses the URL
+that goes into an outgoing email. Without those two secrets the form still
+creates a working invitation and offers its link to copy. A household member who
+has connected their own mailbox can still send from their own address instead.
+
 ## Verification
 
 ```bash

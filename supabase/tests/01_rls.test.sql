@@ -1032,3 +1032,105 @@ begin
   delete from public.message_threads where id in (home_thread, work_thread);
   reset role;
 end $$;
+
+-- ============ inviting somebody straight into a team ============
+do $$
+declare
+  faria   uuid := '11111111-1111-1111-1111-111111111111';
+  partner uuid := '33333333-3333-3333-3333-333333333333';
+  newcomer uuid := '66666666-6666-6666-6666-666666666666';
+  stranger uuid := '22222222-2222-2222-2222-222222222222';
+  pod uuid;
+  foreign_pod uuid;
+  token text;
+  blocked boolean;
+  n int;
+begin
+  insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data)
+  values (newcomer, 'newcomer@example.test', now(), '{}')
+  on conflict (id) do nothing;
+
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  pod := public.create_message_team('Marketing and Sales', array[]::uuid[]);
+
+  select i.invitation_token into token
+  from public.create_household_invitation(
+    'newcomer@example.test', 'adult', pod, 'owner'
+  ) i;
+  if token is null then raise exception 'FAIL: no invitation was issued'; end if;
+
+  select count(*) into n from public.household_invitations
+  where team_id = pod and team_role = 'owner' and accepted_at is null;
+  if n <> 1 then raise exception 'FAIL: the invitation did not record its team'; end if;
+  raise notice 'PASS     an invitation carries the team and the role it was issued for';
+
+  -- A team from another household cannot be named. Created as its owner,
+  -- because RLS would otherwise hide it from Faria and the id would be null —
+  -- which proves nothing.
+  perform set_config('request.jwt.claim.sub', stranger::text, true);
+  foreign_pod := public.create_message_team('Someone else''s pod', array[]::uuid[]);
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  blocked := false;
+  begin
+    perform public.create_household_invitation(
+      'someone@example.test', 'adult', foreign_pod, 'member'
+    );
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: invited into another household''s team'; end if;
+  raise notice 'PASS     an invitation cannot name another household''s team';
+
+  -- Accepting joins the household and the team, in the role named.
+  perform set_config('request.jwt.claim.sub', newcomer::text, true);
+  perform public.accept_household_invitation(token);
+
+  select count(*) into n from public.household_members
+  where user_id = newcomer and household_id = (
+    select household_id from public.message_teams where id = pod
+  );
+  if n <> 1 then raise exception 'FAIL: accepting did not join the household'; end if;
+
+  select count(*) into n from public.message_team_members
+  where team_id = pod and user_id = newcomer and member_role = 'owner';
+  if n <> 1 then raise exception 'FAIL: accepting did not join the team in its role'; end if;
+  raise notice 'PASS     accepting joins the household and the team in one step';
+
+  -- The access level came from the invitation, so it manages the team now.
+  perform public.set_message_team_role(pod, newcomer, 'member');
+  select count(*) into n from public.message_team_members
+  where team_id = pod and user_id = newcomer and member_role = 'member';
+  if n <> 1 then raise exception 'FAIL: the invited owner could not use its access'; end if;
+  raise notice 'PASS     the access level chosen at invite time is the one granted';
+
+  -- A plain member cannot invite into the team.
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  blocked := false;
+  begin
+    perform public.create_team_invitation('other@example.test', pod, 'member');
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a non-owner invited into a team'; end if;
+  raise notice 'PASS     only a team owner can invite into their team';
+
+  -- Owning a team is not the same as being allowed to admit a stranger to the
+  -- household that contains it.
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  insert into public.message_team_members (team_id, user_id, added_by, member_role)
+  values (pod, partner, faria, 'owner')
+  on conflict (team_id, user_id) do update set member_role = 'owner';
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  blocked := false;
+  begin
+    perform public.create_team_invitation('outsider@example.test', pod, 'member');
+  exception when others then blocked := true;
+  end;
+  if not blocked then
+    raise exception 'FAIL: a team owner who is not the household owner admitted a stranger';
+  end if;
+  raise notice 'PASS     admitting someone new stays with the household owner';
+
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  delete from public.message_teams where id = pod;
+  reset role;
+end $$;

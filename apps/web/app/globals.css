@@ -8232,7 +8232,18 @@ fieldset legend {
 
 .message-workspace-switch {
   margin: 0 auto;
-  width: min(320px, 46%);
+  /* Wide enough for "Professional". At 46% it clipped both labels to "P.",
+     which made the two buttons indistinguishable — the one thing a switch
+     must never be. */
+  width: max-content;
+  max-width: 100%;
+}
+.message-workspace-switch button {
+  padding: 7px 14px;
+  white-space: nowrap;
+}
+.message-workspace-switch button span {
+  overflow: visible;
 }
 .message-workspace-switch button {
   padding: 7px 6px;
@@ -8686,5 +8697,68 @@ fieldset legend {
 @media (max-width: 600px) {
   .search-overlay .search-result-open {
     display: none;
+  }
+}
+
+/* Creating a team and inviting into it both happen here now, so both need a
+   form rather than a link to somewhere else. */
+.teams-new {
+  display: grid;
+  gap: 8px;
+}
+.teams-new input {
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: white;
+  color: var(--text);
+  font-size: 12px;
+}
+.teams-new div {
+  display: flex;
+  gap: 7px;
+}
+.teams-new div .button {
+  flex: 1;
+}
+.teams-invite {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.teams-invite .profile-section-header {
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.teams-invite .profile-section-header h3 {
+  font-size: 13px;
+}
+.teams-invite-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+.teams-invite-row input,
+.teams-invite-row select,
+.teams-invite-link input {
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: white;
+  color: var(--text);
+  font-size: 12px;
+}
+.teams-invite-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+@media (max-width: 760px) {
+  .teams-invite-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

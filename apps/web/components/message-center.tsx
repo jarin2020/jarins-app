@@ -659,9 +659,40 @@ export function MessageCenter({
     >
       <div className="message-center">
         <header className="message-center-header">
-          <div>
-            <span className="eyebrow">People, teams and threads</span>
-            <h2 id="messages-title">Messages</h2>
+          <h2 id="messages-title">Messages</h2>
+          <div
+            className="workspace-switch message-workspace-switch"
+            role="radiogroup"
+            aria-label="Workspace"
+          >
+            {(
+              [
+                { id: "personal", label: "Personal", Icon: Baby },
+                {
+                  id: "professional",
+                  label: "Professional",
+                  Icon: Briefcase,
+                },
+              ] as const
+            ).map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={workspace === id}
+                className={workspace === id ? "active" : ""}
+                onClick={() => {
+                  if (workspace === id) return;
+                  // The same preference the sidebar switch writes: one
+                  // workspace, not a second one that only Messages knows about.
+                  savePreferences({ ...preferences, workspace: id });
+                  resetComposer();
+                }}
+              >
+                <Icon size={14} />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
           <button
             className="icon-button"
@@ -682,40 +713,6 @@ export function MessageCenter({
                 teams.
               </p>
             )}
-            <div
-              className="workspace-switch message-workspace-switch"
-              role="radiogroup"
-              aria-label="Workspace"
-            >
-              {(
-                [
-                  { id: "personal", label: "Personal", Icon: Baby },
-                  {
-                    id: "professional",
-                    label: "Professional",
-                    Icon: Briefcase,
-                  },
-                ] as const
-              ).map(({ id, label, Icon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  role="radio"
-                  aria-checked={workspace === id}
-                  className={workspace === id ? "active" : ""}
-                  onClick={() => {
-                    if (workspace === id) return;
-                    // The same preference the sidebar switch writes: one
-                    // workspace, not a second one that only Messages knows about.
-                    savePreferences({ ...preferences, workspace: id });
-                    resetComposer();
-                  }}
-                >
-                  <Icon size={14} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
             <div className="thread-filters" aria-label="Message sections">
               <button
                 type="button"

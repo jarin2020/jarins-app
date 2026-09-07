@@ -1211,7 +1211,10 @@ fieldset legend {
   background: white;
   color: var(--career);
 }
-.career-trail span {
+/* The step badge, not every span in the card: unscoped, this also caught the
+   "My transition" kicker and squeezed it into a 23px square on top of the
+   heading. */
+.career-trail > div > div > span {
   width: 23px;
   height: 23px;
   display: grid;
@@ -1220,8 +1223,8 @@ fieldset legend {
   background: rgba(255, 255, 255, 0.13);
   font-size: 12px;
 }
-.career-trail strong,
-.career-trail small {
+.career-trail > div > div > strong,
+.career-trail > div > div > small {
   display: block;
 }
 .career-trail strong {

@@ -1211,3 +1211,119 @@ begin
 
   reset role;
 end $$;
+
+-- ============ a person is a conversation ============
+do $$
+declare
+  faria    uuid := '11111111-1111-1111-1111-111111111111';
+  partner  uuid := '33333333-3333-3333-3333-333333333333';
+  stranger uuid := '22222222-2222-2222-2222-222222222222';
+  direct uuid;
+  again uuid;
+  from_the_other_side uuid;
+  professional uuid;
+  blocked boolean;
+  n int;
+begin
+  -- An earlier block left the partner a viewer, which is the first thing worth
+  -- checking: read-only means read-only, conversations included.
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  blocked := false;
+  begin
+    perform public.ensure_direct_message_thread(faria);
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a viewer started a conversation'; end if;
+  raise notice 'PASS     a viewer cannot start a direct conversation';
+
+  -- Restored to the collaborator the fixture describes, for the rest of this.
+  reset role;
+  update public.household_members set role = 'adult'
+  where user_id = partner
+    and household_id = (select id from public.households
+                        where owner_user_id = faria);
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+
+  direct := public.ensure_direct_message_thread(partner);
+  if direct is null then raise exception 'FAIL: no conversation was made for the pair'; end if;
+
+  -- Asking twice does not make two, and neither does asking from the other end.
+  again := public.ensure_direct_message_thread(partner);
+  if again <> direct then raise exception 'FAIL: a second conversation was created'; end if;
+  perform set_config('request.jwt.claim.sub', partner::text, true);
+  from_the_other_side := public.ensure_direct_message_thread(faria);
+  if from_the_other_side <> direct then
+    raise exception 'FAIL: each side opened a different conversation';
+  end if;
+  raise notice 'PASS     two people share one conversation, whoever opens it first';
+
+  -- Both are in it, and neither of them runs it.
+  select count(*) into n from public.message_thread_members where thread_id = direct;
+  if n <> 2 then raise exception 'FAIL: the pair conversation has % members, expected 2', n; end if;
+  select count(*) into n from public.message_thread_members
+  where thread_id = direct and member_role = 'owner';
+  if n <> 0 then raise exception 'FAIL: somebody owns a conversation between equals'; end if;
+  raise notice 'PASS     both people are in it and neither of them owns it';
+
+  -- Which is what stops it turning into a group chat, or being renamed away.
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  blocked := false;
+  begin
+    insert into public.message_thread_members (thread_id, user_id, added_by)
+    values (direct, stranger, faria);
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a third person joined a direct conversation'; end if;
+
+  -- Renaming and deleting are gated by the row policies rather than by an
+  -- error, so these pass silently and change nothing. What matters is that
+  -- nothing changed.
+  update public.message_threads set title = 'Renamed' where id = direct;
+  select count(*) into n from public.message_threads
+  where id = direct and title = 'Direct message';
+  if n <> 1 then raise exception 'FAIL: a direct conversation was renamed'; end if;
+
+  delete from public.message_threads where id = direct;
+  select count(*) into n from public.message_threads where id = direct;
+  if n <> 1 then raise exception 'FAIL: one person deleted the pair''s conversation'; end if;
+  raise notice 'PASS     nobody can rename it, delete it, or add a third person';
+
+  -- Personal and Professional are separate places to talk.
+  professional := public.ensure_direct_message_thread(partner, 'professional');
+  if professional = direct then
+    raise exception 'FAIL: one conversation served both workspaces';
+  end if;
+  select count(*) into n from public.message_threads
+  where direct_key is not null and workspace = 'personal';
+  if n <> 1 then raise exception 'FAIL: % personal pair conversations, expected 1', n; end if;
+  raise notice 'PASS     each workspace has its own conversation for the same pair';
+
+  -- You cannot talk to yourself, or to somebody outside the household.
+  blocked := false;
+  begin
+    perform public.ensure_direct_message_thread(faria);
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a conversation was opened with oneself'; end if;
+
+  blocked := false;
+  begin
+    perform public.ensure_direct_message_thread(stranger);
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a conversation was opened with an outsider'; end if;
+  raise notice 'PASS     only verified people in your household, and never yourself';
+
+  -- And an outsider cannot read what the pair said.
+  insert into public.messages (household_id, thread_id, body)
+  values ((select household_id from public.message_threads where id = direct),
+          direct, 'Just between us');
+  perform set_config('request.jwt.claim.sub', stranger::text, true);
+  select count(*) into n from public.messages where thread_id = direct;
+  if n <> 0 then raise exception 'FAIL: an outsider read a direct conversation'; end if;
+  raise notice 'PASS     a direct conversation is readable only by the two in it';
+
+  reset role;
+end $$;

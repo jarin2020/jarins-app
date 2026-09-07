@@ -110,10 +110,14 @@ export function SearchOverlay({
         .from("message_teams")
         .select("id,name,message_team_members(user_id)")
         .eq("household_id", householdId),
+      // A pair conversation is stored under "Direct message", which is nobody's
+      // name and no use in a result list. Searching a person's name finds the
+      // person, and the person is the way into that conversation.
       supabase
         .from("message_threads")
         .select("id,title,workspace")
-        .eq("household_id", householdId),
+        .eq("household_id", householdId)
+        .is("direct_key", null),
     ]).then(([people, teams, threads]) => {
       if (!active) return;
       setDirectory({

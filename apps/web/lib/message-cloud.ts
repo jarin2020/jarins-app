@@ -63,6 +63,7 @@ type ThreadRow = {
   title: string;
   is_family_thread: boolean;
   team_id: string | null;
+  direct_key: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -139,7 +140,7 @@ export function useCloudMessages({
         supabase
           .from("message_threads")
           .select(
-            "id,title,is_family_thread,team_id,workspace,created_by,created_at,updated_at,message_thread_members(user_id,member_role,direct_member,last_read_at),message_thread_teams(team_id),messages(id,sender_user_id,body,created_at,message_attachments(id,file_name,mime_type,size_bytes,storage_path))",
+            "id,title,is_family_thread,team_id,direct_key,workspace,created_by,created_at,updated_at,message_thread_members(user_id,member_role,direct_member,last_read_at),message_thread_teams(team_id),messages(id,sender_user_id,body,created_at,message_attachments(id,file_name,mime_type,size_bytes,storage_path))",
           )
           // Scoped twice on purpose. The household keeps a person who belongs
           // to two of them from seeing both Family threads at once, and the
@@ -200,11 +201,19 @@ export function useCloudMessages({
             a.created_at.localeCompare(b.created_at),
           );
           const lastRead = currentMember?.last_read_at;
+          // A pair conversation is stored under a key rather than a name, so
+          // the other half of the pair is who it is with — and each side sees
+          // the other, which no single stored title could manage.
+          const directUserId = thread.direct_key
+            ? (members.find((member) => member.user_id !== userId)?.user_id ??
+              null)
+            : null;
           return {
             id: thread.id,
             title: thread.title,
             isFamily: thread.is_family_thread,
             teamId: thread.team_id,
+            directUserId,
             kind: (thread.message_thread_teams?.length
               ? "team"
               : "person") as ConversationKind,
@@ -455,6 +464,20 @@ export function useCloudMessages({
     [load, supabase],
   );
 
+  const openDirectThread = useCallback(
+    async (personId: string) => {
+      if (!supabase) throw new Error("Accounts are not connected.");
+      const { data, error: rpcError } = await supabase.rpc(
+        "ensure_direct_message_thread",
+        { target_user: personId, thread_workspace: workspace },
+      );
+      if (rpcError) throw new Error(rpcError.message);
+      await load();
+      return data as string | null;
+    },
+    [load, supabase, workspace],
+  );
+
   const createTeam = useCallback(
     async (input: { name: string; memberIds: string[] }) => {
       if (!supabase) throw new Error("Accounts are not connected.");
@@ -628,6 +651,7 @@ export function useCloudMessages({
     removeThread,
     syncFamily,
     openTeamThread,
+    openDirectThread,
     createTeam,
     updateTeam,
     removeTeam,

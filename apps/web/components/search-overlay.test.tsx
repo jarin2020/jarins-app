@@ -10,12 +10,20 @@ import { SearchOverlay } from "./search-overlay";
 
 const supabase = vi.hoisted(() => {
   const filters: Record<string, string> = {};
+  // Thenable rather than a promise, so a filter can still be chained after one
+  // — which is how the real builder works, and how these queries are written.
   const builder = (table: string) => ({
     select: () => builder(table),
     eq: (column: string, value: string) => {
       filters[`${table}.${column}`] = value;
-      return Promise.resolve({ data: [], error: null });
+      return builder(table);
     },
+    is: (column: string, value: unknown) => {
+      filters[`${table}.${column}`] = `is ${String(value)}`;
+      return builder(table);
+    },
+    then: (resolve: (result: { data: never[]; error: null }) => unknown) =>
+      resolve({ data: [], error: null }),
   });
   return {
     filters,
@@ -146,5 +154,15 @@ describe("SearchOverlay", () => {
       ),
     );
     expect(supabase.filters["message_teams.household_id"]).toBe("household-1");
+  });
+
+  it("leaves pair conversations out of the thread results", async () => {
+    // They are stored as "Direct message", which is nobody's name. The person
+    // is what you search for, and the person is the way in.
+    render(<SearchOverlay open onClose={vi.fn()} />);
+
+    await waitFor(() =>
+      expect(supabase.filters["message_threads.direct_key"]).toBe("is null"),
+    );
   });
 });

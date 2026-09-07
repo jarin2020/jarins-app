@@ -420,6 +420,7 @@ export function MessageCenter({
   const [composing, setComposing] = useState(false);
   const [editingThread, setEditingThread] = useState(false);
   const [editingTeam, setEditingTeam] = useState(false);
+  const [editingPerson, setEditingPerson] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDetail, setNewDetail] = useState("");
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
@@ -495,23 +496,56 @@ export function MessageCenter({
   // answer to nothing else. Listing the others here as well would give the same
   // conversation two homes and no clear one.
   const ownThreads = threads.filter(
-    (thread) => !thread.isFamily && !thread.teamId,
+    (thread) => !thread.isFamily && !thread.teamId && !thread.directUserId,
   );
+  // Yourself is in the household list but is not someone to write to, so the
+  // People tab is everyone else. The pickers keep the full list, because
+  // membership is a different question from who you can message.
+  const others = people.filter((person) => person.id !== user?.id);
+  const activePerson =
+    others.find((person) => person.id === selectedPersonId) ?? others[0];
   const activeThread =
     section === "family"
       ? threads.find((thread) => thread.isFamily)
       : section === "teams"
         ? threads.find((thread) => thread.teamId === activeTeamId)
-        : (ownThreads.find((thread) => thread.id === selectedId) ??
-          ownThreads[0]);
-  const activePerson =
-    people.find((person) => person.id === selectedPersonId) ?? people[0];
+        : section === "people"
+          ? threads.find((thread) => thread.directUserId === activePerson?.id)
+          : (ownThreads.find((thread) => thread.id === selectedId) ??
+            ownThreads[0]);
   const activeTeam =
     teams.find((team) => team.id === selectedTeamId) ?? teams[0];
 
   // A team's conversation is made when it is first opened rather than when the
   // team is created: a team that is never talked in should not leave an empty
   // thread behind, and this way the two can never be out of step.
+  // The person's row in the list carries their conversation's news, the way a
+  // thread's row carries its own.
+  const directThreadFor = (personId: string) =>
+    threads.find((thread) => thread.directUserId === personId);
+  const directUnread = (personId: string) =>
+    directThreadFor(personId)?.unreadCount ?? 0;
+  const directLastLine = (personId: string) =>
+    directThreadFor(personId)?.messages.at(-1)?.text;
+
+  const activePersonId = activePerson?.id;
+  useEffect(() => {
+    if (section !== "people" || !activePersonId) return;
+    if (threads.some((thread) => thread.directUserId === activePersonId))
+      return;
+    if (!cloudEnabled) {
+      local.openDirectThread(activePersonId);
+      return;
+    }
+    let active = true;
+    void cloud.openDirectThread(activePersonId).catch((caught) => {
+      if (active) showError(caught);
+    });
+    return () => {
+      active = false;
+    };
+  }, [section, cloudEnabled, activePersonId, threads, cloud, local, showError]);
+
   useEffect(() => {
     if (section !== "teams" || !activeTeamId) return;
     if (threads.some((thread) => thread.teamId === activeTeamId)) return;
@@ -647,6 +681,7 @@ export function MessageCenter({
     setSection(next);
     setEditingThread(false);
     setEditingTeam(false);
+    setEditingPerson(false);
     setActionError("");
   };
 
@@ -682,6 +717,16 @@ export function MessageCenter({
     showError,
   ]);
 
+  const directPerson = activeThread?.directUserId
+    ? people.find((person) => person.id === activeThread.directUserId)
+    : undefined;
+  // What to call the conversation on screen. Every kind but a pair one is
+  // named by its title; a pair one is named by the person you are talking to.
+  const conversationName = activeThread
+    ? activeThread.directUserId
+      ? (directPerson?.name ?? "Direct message")
+      : activeThread.title
+    : "";
   const threadParticipants = activeThread
     ? [
         ...(activeThread.participantIds ?? [])
@@ -1018,7 +1063,7 @@ export function MessageCenter({
               {cloudEnabled &&
                 cloud.loading &&
                 ((section === "threads" && ownThreads.length === 0) ||
-                  (section === "people" && people.length === 0) ||
+                  (section === "people" && others.length === 0) ||
                   (section === "teams" && teams.length === 0)) && (
                   <p className="thread-list-status" role="status">
                     Loading messages…
@@ -1055,7 +1100,7 @@ export function MessageCenter({
                   );
                 })}
               {section === "people" &&
-                people.map((person) => (
+                others.map((person) => (
                   <button
                     type="button"
                     key={person.id}
@@ -1066,10 +1111,17 @@ export function MessageCenter({
                       <UserRound size={16} />
                     </span>
                     <div>
-                      <strong>{person.name}</strong>
+                      <strong>
+                        {person.name}
+                        {directUnread(person.id) > 0 && (
+                          <span className="thread-unread">
+                            {directUnread(person.id)}
+                          </span>
+                        )}
+                      </strong>
                       <small>
-                        {person.detail || "Person"}
-                        {person.verified ? " · Verified" : ""}
+                        {directLastLine(person.id) ??
+                          (person.detail || "Person")}
                       </small>
                     </div>
                   </button>
@@ -1149,8 +1201,23 @@ export function MessageCenter({
           <section className="thread-view">
             {section === "threads" ||
             section === "family" ||
-            section === "teams" ? (
-              editingTeam && activeTeam ? (
+            section === "teams" ||
+            section === "people" ? (
+              editingPerson && activePerson && !cloudEnabled ? (
+                <PersonEditor
+                  key={activePerson.id}
+                  person={activePerson}
+                  onSave={(changes) => {
+                    local.updatePerson(activePerson.id, changes);
+                    setEditingPerson(false);
+                  }}
+                  onRemove={() => {
+                    local.removePerson(activePerson.id);
+                    setSelectedPersonId(undefined);
+                    setEditingPerson(false);
+                  }}
+                />
+              ) : editingTeam && activeTeam ? (
                 <TeamEditor
                   key={activeTeam.id}
                   team={activeTeam}
@@ -1230,15 +1297,22 @@ export function MessageCenter({
                             ? "Family thread"
                             : activeThread.teamId
                               ? "Team conversation"
-                              : "Thread"}
+                              : activeThread.directUserId
+                                ? "Direct message"
+                                : "Thread"}
                         </span>
-                        <h3>{activeThread.title}</h3>
+                        {/* A pair conversation is stored under a key, not a
+                            name, so it is titled by whoever you are talking
+                            to — which is different for each of you. */}
+                        <h3>{conversationName}</h3>
                         <small className="thread-participants">
                           {activeThread.isFamily
                             ? `${people.length} verified member${people.length === 1 ? "" : "s"} · membership updates automatically`
-                            : threadParticipants.length
-                              ? threadParticipants.join(", ")
-                              : "Only you so far"}
+                            : activeThread.directUserId
+                              ? `${directPerson?.detail ?? "In your household"}${directPerson?.verified ? " · Verified" : ""}`
+                              : threadParticipants.length
+                                ? threadParticipants.join(", ")
+                                : "Only you so far"}
                         </small>
                       </div>
                       {activeThread.isFamily && cloudEnabled && (
@@ -1270,8 +1344,19 @@ export function MessageCenter({
                           <Pencil size={14} /> Team settings
                         </button>
                       )}
+                      {activeThread.directUserId && !cloudEnabled && (
+                        <button
+                          className="button secondary small"
+                          type="button"
+                          disabled={busy}
+                          onClick={() => setEditingPerson(true)}
+                        >
+                          <Pencil size={14} /> Edit person
+                        </button>
+                      )}
                       {!activeThread.isFamily &&
                         !activeThread.teamId &&
+                        !activeThread.directUserId &&
                         (!cloudEnabled ||
                           activeThread.memberRole === "owner") && (
                           <button
@@ -1393,9 +1478,9 @@ export function MessageCenter({
                         disabled={busy || readOnly}
                         value={text}
                         onChange={(event) => setText(event.target.value)}
-                        placeholder={`Message ${activeThread.title}`}
+                        placeholder={`Message ${conversationName}`}
                         maxLength={4000}
-                        aria-label={`Message ${activeThread.title}`}
+                        aria-label={`Message ${conversationName}`}
                       />
                       <button
                         type="submit"
@@ -1418,6 +1503,30 @@ export function MessageCenter({
                     The Family conversation is the household&apos;s, and it
                     appears once there is one to belong to.
                   </p>
+                </div>
+              ) : section === "people" ? (
+                <div className="message-empty">
+                  <UserRound size={28} />
+                  <h3>
+                    {activePerson ? activePerson.name : "Nobody else yet"}
+                  </h3>
+                  <p>
+                    {activePerson
+                      ? "Opening your conversation\u2026"
+                      : cloudEnabled
+                        ? "Invite someone to the household, and you can write to them here."
+                        : "Add someone, and you can write to them here."}
+                  </p>
+                  {!activePerson && (
+                    <button
+                      className="button primary small"
+                      type="button"
+                      onClick={() => setComposing(true)}
+                    >
+                      <Plus size={15} />{" "}
+                      {cloudEnabled ? "Invite person" : "Add person"}
+                    </button>
+                  )}
                 </div>
               ) : section === "teams" ? (
                 <div className="message-empty">
@@ -1443,61 +1552,6 @@ export function MessageCenter({
                     onClick={() => setComposing(true)}
                   >
                     <Plus size={15} /> New thread
-                  </button>
-                </div>
-              )
-            ) : section === "people" ? (
-              activePerson ? (
-                cloudEnabled ? (
-                  <div className="directory-editor account-participant">
-                    <span className="directory-editor-icon">
-                      <UserRound size={24} />
-                    </span>
-                    <div className="directory-editor-heading">
-                      <span className="kicker">Verified participant</span>
-                      <h3>{activePerson.name}</h3>
-                      <p>{activePerson.detail}</p>
-                    </div>
-                    <div className="participant-verification">
-                      <Check size={17} />
-                      <div>
-                        <strong>Email verified</strong>
-                        <small>
-                          This account can receive messages on every signed-in
-                          device.
-                        </small>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <PersonEditor
-                    key={activePerson.id}
-                    person={activePerson}
-                    onSave={(changes) =>
-                      local.updatePerson(activePerson.id, changes)
-                    }
-                    onRemove={() => {
-                      local.removePerson(activePerson.id);
-                      setSelectedPersonId(undefined);
-                    }}
-                  />
-                )
-              ) : (
-                <div className="message-empty">
-                  <UserRound size={28} />
-                  <h3>No people yet</h3>
-                  <p>
-                    {cloudEnabled
-                      ? "Invite a verified account, then include it in teams and threads."
-                      : "Add someone once, then include them in teams and threads."}
-                  </p>
-                  <button
-                    className="button primary small"
-                    type="button"
-                    onClick={() => setComposing(true)}
-                  >
-                    <Plus size={15} />{" "}
-                    {cloudEnabled ? "Invite person" : "Add person"}
                   </button>
                 </div>
               )

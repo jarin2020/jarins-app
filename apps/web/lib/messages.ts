@@ -34,6 +34,8 @@ const messageThreadSchema = z.object({
   teamIds: z.array(z.string().min(1)).max(20).optional(),
   messages: z.array(messageSchema).max(1000),
   isFamily: z.boolean().optional(),
+  /** The team this conversation belongs to, when it is a team's own. */
+  teamId: z.string().min(1).nullish(),
   memberRole: z.enum(["owner", "member"]).optional(),
   unreadCount: z.number().nonnegative().optional(),
   createdAt: z.string().min(1),
@@ -159,6 +161,7 @@ export function createMessageThread(
     kind: ConversationKind;
     participantIds?: string[];
     teamIds?: string[];
+    teamId?: string;
   },
 ) {
   const now = new Date().toISOString();
@@ -168,6 +171,7 @@ export function createMessageThread(
     kind: input.kind,
     participantIds: input.participantIds ?? [],
     teamIds: input.teamIds ?? [],
+    ...(input.teamId ? { teamId: input.teamId } : {}),
     messages: [],
     createdAt: now,
     updatedAt: now,
@@ -286,6 +290,7 @@ export function updateMessageTeam(
   teamId: string,
   changes: { name: string; memberIds: string[] },
 ) {
+  const now = new Date().toISOString();
   writeMessageTeams(
     ownerId,
     readMessageTeams(ownerId).map((team) =>
@@ -294,9 +299,24 @@ export function updateMessageTeam(
             ...team,
             name: changes.name.trim(),
             memberIds: changes.memberIds,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           }
         : team,
+    ),
+  );
+  // The team's conversation is the team, so it is renamed and re-peopled with
+  // it rather than drifting into a thread named after a team that is gone.
+  writeMessageThreads(
+    ownerId,
+    readMessageThreads(ownerId).map((thread) =>
+      thread.teamId === teamId
+        ? {
+            ...thread,
+            title: changes.name.trim(),
+            participantIds: changes.memberIds,
+            updatedAt: now,
+          }
+        : thread,
     ),
   );
 }
@@ -308,11 +328,35 @@ export function removeMessageTeam(ownerId: string, teamId: string) {
   );
   writeMessageThreads(
     ownerId,
-    readMessageThreads(ownerId).map((thread) => ({
-      ...thread,
-      teamIds: (thread.teamIds ?? []).filter((id) => id !== teamId),
-    })),
+    readMessageThreads(ownerId)
+      .filter((thread) => thread.teamId !== teamId)
+      .map((thread) => ({
+        ...thread,
+        teamIds: (thread.teamIds ?? []).filter((id) => id !== teamId),
+      })),
   );
+}
+
+/**
+ * A team's conversation, made on first use.
+ *
+ * Asking twice gives back the same one — the team is the identity, not the
+ * thread — so opening the Teams tab can call this freely.
+ */
+export function openMessageTeamThread(ownerId: string, teamId: string) {
+  const existing = readMessageThreads(ownerId).find(
+    (thread) => thread.teamId === teamId,
+  );
+  if (existing) return existing;
+  const team = readMessageTeams(ownerId).find((item) => item.id === teamId);
+  if (!team) return undefined;
+  return createMessageThread(ownerId, {
+    title: team.name,
+    kind: "team",
+    participantIds: team.memberIds,
+    teamIds: [team.id],
+    teamId: team.id,
+  });
 }
 
 export function appendThreadMessage(
@@ -414,6 +458,10 @@ export function useMessageThreads(ownerId: string) {
     (teamId: string) => removeMessageTeam(ownerId, teamId),
     [ownerId],
   );
+  const openTeamThread = useCallback(
+    (teamId: string) => openMessageTeamThread(ownerId, teamId),
+    [ownerId],
+  );
 
   return {
     threads,
@@ -429,5 +477,6 @@ export function useMessageThreads(ownerId: string) {
     createTeam,
     updateTeam,
     removeTeam,
+    openTeamThread,
   };
 }

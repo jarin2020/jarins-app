@@ -4921,7 +4921,8 @@ fieldset legend {
   font-size: 12px;
   text-align: center;
 }
-.thread-list > button {
+.thread-list > button,
+.thread-list > .thread-row {
   min-width: 0;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -4935,23 +4936,13 @@ fieldset legend {
   text-align: left;
 }
 .thread-list > button:hover,
-.thread-list > button.active {
+.thread-list > button.active,
+.thread-list > .thread-row {
   background: var(--surface);
   box-shadow: 0 6px 18px rgba(33, 48, 40, 0.05);
 }
-.thread-list > button.family-thread {
-  position: sticky;
-  z-index: 2;
-  top: 0;
-  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
-  background: var(--primary-soft);
-  box-shadow: 0 7px 20px rgba(33, 48, 40, 0.08);
-}
-.thread-list > button.family-thread.active {
-  border-color: color-mix(in srgb, var(--primary) 48%, var(--border));
-  background: var(--surface);
-}
-.thread-list > button > span {
+.thread-list > button > span,
+.thread-list > .thread-row > span {
   width: 31px;
   height: 31px;
   display: grid;
@@ -4960,7 +4951,8 @@ fieldset legend {
   color: var(--primary);
   background: var(--primary-soft);
 }
-.thread-list > button div {
+.thread-list > button div,
+.thread-list > .thread-row div {
   min-width: 0;
 }
 .thread-list strong,
@@ -4972,21 +4964,6 @@ fieldset legend {
 }
 .thread-list strong {
   font-size: 12px;
-}
-.thread-fixed {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  margin-left: 6px;
-  padding: 2px 5px;
-  border-radius: 999px;
-  color: var(--primary-strong);
-  background: color-mix(in srgb, var(--primary) 12%, white);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  vertical-align: middle;
 }
 .thread-list small {
   color: var(--muted);

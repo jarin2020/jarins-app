@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   ArrowUp,
   Baby,
@@ -13,7 +12,6 @@ import {
   MessagesSquare,
   Paperclip,
   Pencil,
-  Pin,
   Plus,
   RefreshCw,
   Save,
@@ -421,6 +419,7 @@ export function MessageCenter({
   const [selectedTeamId, setSelectedTeamId] = useState<string>();
   const [composing, setComposing] = useState(false);
   const [editingThread, setEditingThread] = useState(false);
+  const [editingTeam, setEditingTeam] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDetail, setNewDetail] = useState("");
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
@@ -435,13 +434,16 @@ export function MessageCenter({
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
 
-  const showError = useCallback((caught: unknown) => {
-    setActionError(
-      caught instanceof Error
-        ? caught.message
-        : "That change could not be saved.",
-    );
-  }, []);
+  const showError = useCallback(
+    (caught: unknown) => {
+      setActionError(
+        caught instanceof Error
+          ? caught.message
+          : "That change could not be saved.",
+      );
+    },
+    [setActionError],
+  );
 
   useEffect(() => {
     onUnreadCountChange?.(cloudEnabled ? cloud.unreadCount : 0);
@@ -466,12 +468,65 @@ export function MessageCenter({
     return () => element.removeEventListener("close", handleClose);
   }, []);
 
+  // The group tab depends on the workspace: a household has a Family, an
+  // employer has Teams, and neither belongs in the other's list. Derived rather
+  // than corrected on change, so switching workspace moves you to the right tab
+  // instead of leaving you on one that no longer exists.
+  const groupSection: MessageSection =
+    workspace === "professional" ? "teams" : "family";
+  const section: MessageSection =
+    chosenSection === "teams" || chosenSection === "family"
+      ? groupSection
+      : chosenSection;
+
+  const activeTeamId =
+    teams.find((team) => team.id === selectedTeamId)?.id ?? teams[0]?.id;
+
+  /**
+   * Which conversation the right-hand pane is showing.
+   *
+   * The tab decides, rather than there being three panes that each reinvent
+   * one. Family and a team each have exactly one conversation of their own, so
+   * choosing the group *is* choosing the thread — and Threads is left for the
+   * groupings that answer to nothing else.
+   */
+  // Family and each team own a conversation apiece, and each has a tab of its
+  // own to be reached through. Threads is what is left: the groupings that
+  // answer to nothing else. Listing the others here as well would give the same
+  // conversation two homes and no clear one.
+  const ownThreads = threads.filter(
+    (thread) => !thread.isFamily && !thread.teamId,
+  );
   const activeThread =
-    threads.find((thread) => thread.id === selectedId) ?? threads[0];
+    section === "family"
+      ? threads.find((thread) => thread.isFamily)
+      : section === "teams"
+        ? threads.find((thread) => thread.teamId === activeTeamId)
+        : (ownThreads.find((thread) => thread.id === selectedId) ??
+          ownThreads[0]);
   const activePerson =
     people.find((person) => person.id === selectedPersonId) ?? people[0];
   const activeTeam =
     teams.find((team) => team.id === selectedTeamId) ?? teams[0];
+
+  // A team's conversation is made when it is first opened rather than when the
+  // team is created: a team that is never talked in should not leave an empty
+  // thread behind, and this way the two can never be out of step.
+  useEffect(() => {
+    if (section !== "teams" || !activeTeamId) return;
+    if (threads.some((thread) => thread.teamId === activeTeamId)) return;
+    if (!cloudEnabled) {
+      local.openTeamThread(activeTeamId);
+      return;
+    }
+    let active = true;
+    void cloud.openTeamThread(activeTeamId).catch((caught) => {
+      if (active) showError(caught);
+    });
+    return () => {
+      active = false;
+    };
+  }, [section, cloudEnabled, activeTeamId, threads, cloud, local, showError]);
 
   const resetComposer = () => {
     setNewTitle("");
@@ -587,21 +642,11 @@ export function MessageCenter({
     }
   };
 
-  // The group tab depends on the workspace: a household has a Family, an
-  // employer has Teams, and neither belongs in the other's list. Derived rather
-  // than corrected on change, so switching workspace moves you to the right tab
-  // instead of leaving you on one that no longer exists.
-  const groupSection: MessageSection =
-    workspace === "professional" ? "teams" : "family";
-  const section: MessageSection =
-    chosenSection === "teams" || chosenSection === "family"
-      ? groupSection
-      : chosenSection;
-
   const switchSection = (next: MessageSection) => {
     resetComposer();
     setSection(next);
     setEditingThread(false);
+    setEditingTeam(false);
     setActionError("");
   };
 
@@ -972,7 +1017,7 @@ export function MessageCenter({
             <div className="thread-list">
               {cloudEnabled &&
                 cloud.loading &&
-                ((section === "threads" && threads.length === 0) ||
+                ((section === "threads" && ownThreads.length === 0) ||
                   (section === "people" && people.length === 0) ||
                   (section === "teams" && teams.length === 0)) && (
                   <p className="thread-list-status" role="status">
@@ -980,45 +1025,31 @@ export function MessageCenter({
                   </p>
                 )}
               {section === "threads" &&
-                threads.map((thread) => {
+                ownThreads.map((thread) => {
                   const last = thread.messages.at(-1);
                   return (
                     <button
                       type="button"
                       key={thread.id}
-                      className={`${activeThread?.id === thread.id ? "active" : ""} ${thread.isFamily ? "family-thread" : ""}`.trim()}
+                      className={activeThread?.id === thread.id ? "active" : ""}
                       onClick={() => {
                         setSelectedId(thread.id);
                         setEditingThread(false);
                       }}
                     >
                       <span>
-                        {thread.isFamily ? (
-                          <UsersRound size={16} />
-                        ) : (
-                          <MessageCircle size={16} />
-                        )}
+                        <MessageCircle size={16} />
                       </span>
                       <div>
                         <strong>
                           {thread.title}
-                          {thread.isFamily && (
-                            <span className="thread-fixed">
-                              <Pin size={9} /> Fixed
-                            </span>
-                          )}
                           {(thread.unreadCount ?? 0) > 0 && (
                             <span className="thread-unread">
                               {thread.unreadCount}
                             </span>
                           )}
                         </strong>
-                        <small>
-                          {last?.text ??
-                            (thread.isFamily
-                              ? "Everyone in your household"
-                              : "New conversation")}
-                        </small>
+                        <small>{last?.text ?? "New conversation"}</small>
                       </div>
                     </button>
                   );
@@ -1076,18 +1107,10 @@ export function MessageCenter({
                     </button>
                   </div>
                 ))}
+              {/* Not a button: the household has exactly one conversation and
+                  it is already open, so there is nothing here to choose. */}
               {section === "family" && (
-                <button
-                  type="button"
-                  className="active"
-                  onClick={() => {
-                    const family = threads.find((thread) => thread.isFamily);
-                    if (family) {
-                      setSelectedId(family.id);
-                      switchSection("threads");
-                    }
-                  }}
-                >
+                <div className="thread-row">
                   <span>
                     <Baby size={16} />
                   </span>
@@ -1098,7 +1121,7 @@ export function MessageCenter({
                       from your household
                     </small>
                   </div>
-                </button>
+                </div>
               )}
               {section === "teams" &&
                 teams.map((team) => (
@@ -1124,84 +1147,44 @@ export function MessageCenter({
           </aside>
 
           <section className="thread-view">
-            {section === "family" ? (
-              <div className="directory-detail">
-                <span className="directory-editor-icon">
-                  <Baby size={18} />
-                </span>
-                <div>
-                  <span className="kicker">Personal group</span>
-                  <h3>Family</h3>
-                  <p>
-                    Everyone verified in your household is in this group, and
-                    stays in it. There is nothing to add here — membership comes
-                    from the household itself, so a person joins the
-                    conversation the moment they accept their invitation.
-                  </p>
-                </div>
-                <div className="directory-member-list">
-                  {people.length ? (
-                    people.map((person) => (
-                      <article key={person.id}>
-                        <span>
-                          <UserRound size={15} />
-                        </span>
-                        <div>
-                          <strong>
-                            {person.name}
-                            {person.id === user?.id && <small>You</small>}
-                          </strong>
-                          <small>{person.detail}</small>
-                        </div>
-                        <em>{person.role ?? "member"}</em>
-                      </article>
-                    ))
-                  ) : (
-                    <p className="muted">
-                      No verified members yet. Invite someone from Family.
-                    </p>
-                  )}
-                </div>
-                <div className="directory-detail-actions">
-                  <button
-                    type="button"
-                    className="button primary"
-                    disabled={!threads.some((thread) => thread.isFamily)}
-                    onClick={() => {
-                      const family = threads.find((thread) => thread.isFamily);
-                      if (!family) return;
-                      setSelectedId(family.id);
-                      switchSection("threads");
-                    }}
-                  >
-                    <MessageCircle size={15} /> Open the family thread
-                  </button>
-                  <button
-                    type="button"
-                    className="button secondary"
-                    disabled={busy || !cloudEnabled}
-                    onClick={() => {
-                      setBusy(true);
-                      setActionError("");
-                      void cloud
-                        .syncFamily()
-                        .catch(showError)
-                        .finally(() => setBusy(false));
-                    }}
-                  >
-                    <RefreshCw size={15} /> Sync members
-                  </button>
-                  <Link
-                    href="/family"
-                    className="button secondary"
-                    onClick={onClose}
-                  >
-                    <UsersRound size={15} /> Manage the household
-                  </Link>
-                </div>
-              </div>
-            ) : section === "threads" ? (
-              activeThread ? (
+            {section === "threads" ||
+            section === "family" ||
+            section === "teams" ? (
+              editingTeam && activeTeam ? (
+                <TeamEditor
+                  key={activeTeam.id}
+                  team={activeTeam}
+                  people={people}
+                  busy={busy}
+                  onSave={(changes) => {
+                    setBusy(true);
+                    setActionError("");
+                    const operation = cloudEnabled
+                      ? cloud.updateTeam(activeTeam.id, changes)
+                      : Promise.resolve(
+                          local.updateTeam(activeTeam.id, changes),
+                        );
+                    void operation
+                      .then(() => setEditingTeam(false))
+                      .catch(showError)
+                      .finally(() => setBusy(false));
+                  }}
+                  onRemove={() => {
+                    setBusy(true);
+                    setActionError("");
+                    const operation = cloudEnabled
+                      ? cloud.removeTeam(activeTeam.id)
+                      : Promise.resolve(local.removeTeam(activeTeam.id));
+                    void operation
+                      .then(() => {
+                        setSelectedTeamId(undefined);
+                        setEditingTeam(false);
+                      })
+                      .catch(showError)
+                      .finally(() => setBusy(false));
+                  }}
+                />
+              ) : activeThread ? (
                 editingThread ? (
                   <ThreadEditor
                     key={activeThread.id}
@@ -1243,7 +1226,11 @@ export function MessageCenter({
                     <header>
                       <div>
                         <span className="kicker">
-                          {activeThread.isFamily ? "Family thread" : "Thread"}
+                          {activeThread.isFamily
+                            ? "Family thread"
+                            : activeThread.teamId
+                              ? "Team conversation"
+                              : "Thread"}
                         </span>
                         <h3>{activeThread.title}</h3>
                         <small className="thread-participants">
@@ -1254,7 +1241,37 @@ export function MessageCenter({
                               : "Only you so far"}
                         </small>
                       </div>
+                      {activeThread.isFamily && cloudEnabled && (
+                        <button
+                          className="button secondary small"
+                          type="button"
+                          disabled={busy}
+                          onClick={() => {
+                            setBusy(true);
+                            setActionError("");
+                            void cloud
+                              .syncFamily()
+                              .catch(showError)
+                              .finally(() => setBusy(false));
+                          }}
+                        >
+                          <RefreshCw size={14} /> Sync members
+                        </button>
+                      )}
+                      {/* A team's conversation is managed as a team, not as a
+                          thread: its name and its people come from there. */}
+                      {activeThread.teamId && (
+                        <button
+                          className="button secondary small"
+                          type="button"
+                          disabled={busy || readOnly}
+                          onClick={() => setEditingTeam(true)}
+                        >
+                          <Pencil size={14} /> Team settings
+                        </button>
+                      )}
                       {!activeThread.isFamily &&
+                        !activeThread.teamId &&
                         (!cloudEnabled ||
                           activeThread.memberRole === "owner") && (
                           <button
@@ -1393,11 +1410,33 @@ export function MessageCenter({
                     </form>
                   </>
                 )
+              ) : section === "family" ? (
+                <div className="message-empty">
+                  <Baby size={28} />
+                  <h3>No household yet</h3>
+                  <p>
+                    The Family conversation is the household&apos;s, and it
+                    appears once there is one to belong to.
+                  </p>
+                </div>
+              ) : section === "teams" ? (
+                <div className="message-empty">
+                  <UsersRound size={28} />
+                  <h3>{activeTeam ? activeTeam.name : "No teams yet"}</h3>
+                  <p>
+                    {activeTeam
+                      ? "Opening this team\u2019s conversation\u2026"
+                      : "Make a team, and its conversation opens here \u2014 named after it, with its people in it."}
+                  </p>
+                </div>
               ) : (
                 <div className="message-empty">
                   <MessagesSquare size={28} />
                   <h3>No threads yet</h3>
-                  <p>Add people or teams, then begin a conversation.</p>
+                  <p>
+                    Threads are for the groupings that are not a team or the
+                    family — a one-off, a couple of people, a topic.
+                  </p>
                   <button
                     className="button primary small"
                     type="button"

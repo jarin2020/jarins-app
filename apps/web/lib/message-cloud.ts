@@ -62,6 +62,7 @@ type ThreadRow = {
   id: string;
   title: string;
   is_family_thread: boolean;
+  team_id: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -138,7 +139,7 @@ export function useCloudMessages({
         supabase
           .from("message_threads")
           .select(
-            "id,title,is_family_thread,workspace,created_by,created_at,updated_at,message_thread_members(user_id,member_role,direct_member,last_read_at),message_thread_teams(team_id),messages(id,sender_user_id,body,created_at,message_attachments(id,file_name,mime_type,size_bytes,storage_path))",
+            "id,title,is_family_thread,team_id,workspace,created_by,created_at,updated_at,message_thread_members(user_id,member_role,direct_member,last_read_at),message_thread_teams(team_id),messages(id,sender_user_id,body,created_at,message_attachments(id,file_name,mime_type,size_bytes,storage_path))",
           )
           // Scoped twice on purpose. The household keeps a person who belongs
           // to two of them from seeing both Family threads at once, and the
@@ -203,6 +204,7 @@ export function useCloudMessages({
             id: thread.id,
             title: thread.title,
             isFamily: thread.is_family_thread,
+            teamId: thread.team_id,
             kind: (thread.message_thread_teams?.length
               ? "team"
               : "person") as ConversationKind,
@@ -438,6 +440,21 @@ export function useCloudMessages({
     await load();
   }, [load, supabase]);
 
+  /** The team's own conversation, made the first time somebody opens it. */
+  const openTeamThread = useCallback(
+    async (teamId: string) => {
+      if (!supabase) throw new Error("Accounts are not connected.");
+      const { data, error: rpcError } = await supabase.rpc(
+        "ensure_team_message_thread",
+        { target_team: teamId },
+      );
+      if (rpcError) throw new Error(rpcError.message);
+      await load();
+      return data as string | null;
+    },
+    [load, supabase],
+  );
+
   const createTeam = useCallback(
     async (input: { name: string; memberIds: string[] }) => {
       if (!supabase) throw new Error("Accounts are not connected.");
@@ -610,6 +627,7 @@ export function useCloudMessages({
     updateThread,
     removeThread,
     syncFamily,
+    openTeamThread,
     createTeam,
     updateTeam,
     removeTeam,

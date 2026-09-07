@@ -157,12 +157,51 @@ describe("MessageCenter", () => {
     // Back to Personal: the Teams panel must not survive the switch.
     fireEvent.click(screen.getByRole("radio", { name: "Personal" }));
     expect(screen.queryByRole("button", { name: "New team" })).toBeNull();
-    expect(
-      screen.getByText(/membership comes\s+from the household/i),
-    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Family" })).toBeTruthy();
   });
 
-  it("does not offer anything to create inside Family", () => {
+  it("opens a team's own conversation from the Teams tab", async () => {
+    render(
+      <MessageCenter
+        open
+        onClose={vi.fn()}
+        ownerId="account-6"
+        author="Faria"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("radio", { name: "Professional" }));
+    fireEvent.click(screen.getByRole("button", { name: "Teams" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "New team" })[0]!);
+    fireEvent.change(screen.getByLabelText("Team name"), {
+      target: { value: "Product" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add another person" }));
+    fireEvent.change(screen.getByLabelText("Person’s name"), {
+      target: { value: "Alex" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Add and select" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create team" }));
+
+    // The team is the conversation: choosing it in Teams is what opens it, and
+    // you can talk there without going near the Threads tab.
+    const composer = await screen.findByLabelText("Message Product");
+    expect(screen.getByRole("heading", { name: "Product" })).toBeTruthy();
+    expect(screen.getByText("Team conversation")).toBeTruthy();
+
+    fireEvent.change(composer, { target: { value: "Standup at nine" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+    await waitFor(() =>
+      expect(screen.getAllByText("Standup at nine").length).toBeGreaterThan(0),
+    );
+
+    // And it stays the team's: Threads is for the groupings that answer to
+    // nothing else, so the same conversation must not turn up twice.
+    fireEvent.click(screen.getByRole("button", { name: "Threads" }));
+    expect(screen.getByText("No threads yet")).toBeTruthy();
+  });
+
+  it("opens Family as a conversation, not a settings form", () => {
     render(
       <MessageCenter
         open
@@ -173,10 +212,10 @@ describe("MessageCenter", () => {
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Family" }));
-    // Membership is inherited, so there is no composer here at all.
+    // Membership is inherited, so the tab is for talking to the household
+    // rather than configuring it — and with no household on this device, it
+    // says that instead of offering to make a thread.
     expect(screen.queryByRole("button", { name: /New /i })).toBeNull();
-    expect(
-      screen.getByRole("link", { name: /Manage the household/i }),
-    ).toBeTruthy();
+    expect(screen.getByText(/No household yet/i)).toBeTruthy();
   });
 });

@@ -1134,3 +1134,80 @@ begin
   delete from public.message_teams where id = pod;
   reset role;
 end $$;
+
+-- ============ a team is a conversation ============
+do $$
+declare
+  faria   uuid := '11111111-1111-1111-1111-111111111111';
+  partner uuid := '33333333-3333-3333-3333-333333333333';
+  stranger uuid := '22222222-2222-2222-2222-222222222222';
+  pod uuid;
+  pod_thread uuid;
+  again uuid;
+  blocked boolean;
+  n int;
+begin
+  set local role authenticated;
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  pod := public.create_message_team('Marketing', array[partner]);
+
+  pod_thread := public.ensure_team_message_thread(pod);
+  if pod_thread is null then raise exception 'FAIL: no thread was made for the team'; end if;
+
+  -- Asking twice does not make two.
+  again := public.ensure_team_message_thread(pod);
+  if again <> pod_thread then raise exception 'FAIL: a second thread was created'; end if;
+  select count(*) into n from public.message_threads where team_id = pod;
+  if n <> 1 then raise exception 'FAIL: % threads for one team', n; end if;
+  raise notice 'PASS     a team has exactly one conversation, however often it is asked for';
+
+  -- It carries the team's name and its people.
+  select count(*) into n from public.message_threads
+  where id = pod_thread and title = 'Marketing' and workspace = 'professional';
+  if n <> 1 then raise exception 'FAIL: the team thread is misnamed or in the wrong workspace'; end if;
+  select count(*) into n from public.message_thread_members where thread_id = pod_thread;
+  if n <> 2 then raise exception 'FAIL: the team thread has % members, expected 2', n; end if;
+  raise notice 'PASS     it carries the team''s name, workspace and people';
+
+  -- Renaming the team renames the conversation.
+  perform public.update_message_team(pod, 'Marketing and Sales', array[faria, partner]);
+  select count(*) into n from public.message_threads
+  where id = pod_thread and title = 'Marketing and Sales';
+  if n <> 1 then raise exception 'FAIL: renaming the team did not rename its conversation'; end if;
+  raise notice 'PASS     renaming a team renames its conversation';
+
+  -- Leaving the team leaves the conversation.
+  perform public.update_message_team(pod, 'Marketing and Sales', array[faria]);
+  perform public.ensure_team_message_thread(pod);
+  select count(*) into n from public.message_thread_members
+  where thread_id = pod_thread and user_id = partner;
+  if n <> 0 then raise exception 'FAIL: somebody removed from the team kept talking in it'; end if;
+  raise notice 'PASS     leaving the team leaves its conversation';
+
+  -- Somebody outside cannot conjure one.
+  perform set_config('request.jwt.claim.sub', stranger::text, true);
+  blocked := false;
+  begin
+    perform public.ensure_team_message_thread(pod);
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: an outsider opened a team conversation'; end if;
+
+  -- And the conversation cannot be deleted out from under the team.
+  perform set_config('request.jwt.claim.sub', faria::text, true);
+  blocked := false;
+  begin
+    delete from public.message_threads where id = pod_thread;
+  exception when others then blocked := true;
+  end;
+  if not blocked then raise exception 'FAIL: a team conversation was deleted while the team lived'; end if;
+  raise notice 'PASS     a team conversation is the team''s, and outsiders cannot reach it';
+
+  -- Deleting the team takes the conversation with it.
+  delete from public.message_teams where id = pod;
+  select count(*) into n from public.message_threads where id = pod_thread;
+  if n <> 0 then raise exception 'FAIL: the conversation outlived its team'; end if;
+  raise notice 'PASS     deleting a team takes its conversation with it';
+
+  reset role;
+end $$;

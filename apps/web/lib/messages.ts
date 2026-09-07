@@ -36,6 +36,12 @@ const messageThreadSchema = z.object({
   isFamily: z.boolean().optional(),
   /** The team this conversation belongs to, when it is a team's own. */
   teamId: z.string().min(1).nullish(),
+  /**
+   * The other person, when this is the conversation between the two of you.
+   * Stored per side rather than as a title: "Direct message" is nobody's name,
+   * and each of you should see the other's.
+   */
+  directUserId: z.string().min(1).nullish(),
   memberRole: z.enum(["owner", "member"]).optional(),
   unreadCount: z.number().nonnegative().optional(),
   createdAt: z.string().min(1),
@@ -162,6 +168,7 @@ export function createMessageThread(
     participantIds?: string[];
     teamIds?: string[];
     teamId?: string;
+    directUserId?: string;
   },
 ) {
   const now = new Date().toISOString();
@@ -172,6 +179,7 @@ export function createMessageThread(
     participantIds: input.participantIds ?? [],
     teamIds: input.teamIds ?? [],
     ...(input.teamId ? { teamId: input.teamId } : {}),
+    ...(input.directUserId ? { directUserId: input.directUserId } : {}),
     messages: [],
     createdAt: now,
     updatedAt: now,
@@ -258,14 +266,17 @@ export function removeMessagePerson(ownerId: string, personId: string) {
       memberIds: team.memberIds.filter((id) => id !== personId),
     })),
   );
+  // Removing the person removes the conversation that was only ever with them.
   writeMessageThreads(
     ownerId,
-    readMessageThreads(ownerId).map((thread) => ({
-      ...thread,
-      participantIds: (thread.participantIds ?? []).filter(
-        (id) => id !== personId,
-      ),
-    })),
+    readMessageThreads(ownerId)
+      .filter((thread) => thread.directUserId !== personId)
+      .map((thread) => ({
+        ...thread,
+        participantIds: (thread.participantIds ?? []).filter(
+          (id) => id !== personId,
+        ),
+      })),
   );
 }
 
@@ -335,6 +346,30 @@ export function removeMessageTeam(ownerId: string, teamId: string) {
         teamIds: (thread.teamIds ?? []).filter((id) => id !== teamId),
       })),
   );
+}
+
+/**
+ * The conversation with one person, made on first use.
+ *
+ * Local storage has one owner, so the pair is just this device's account and
+ * the person chosen — the same idempotence as the account version, without the
+ * key: asking again gives back the one that exists.
+ */
+export function openDirectMessageThread(ownerId: string, personId: string) {
+  const existing = readMessageThreads(ownerId).find(
+    (thread) => thread.directUserId === personId,
+  );
+  if (existing) return existing;
+  const person = readMessagePeople(ownerId).find(
+    (item) => item.id === personId,
+  );
+  if (!person) return undefined;
+  return createMessageThread(ownerId, {
+    title: person.name,
+    kind: "person",
+    participantIds: [person.id],
+    directUserId: person.id,
+  });
 }
 
 /**
@@ -462,6 +497,10 @@ export function useMessageThreads(ownerId: string) {
     (teamId: string) => openMessageTeamThread(ownerId, teamId),
     [ownerId],
   );
+  const openDirectThread = useCallback(
+    (personId: string) => openDirectMessageThread(ownerId, personId),
+    [ownerId],
+  );
 
   return {
     threads,
@@ -478,5 +517,6 @@ export function useMessageThreads(ownerId: string) {
     updateTeam,
     removeTeam,
     openTeamThread,
+    openDirectThread,
   };
 }

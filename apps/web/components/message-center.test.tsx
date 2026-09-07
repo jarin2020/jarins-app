@@ -201,6 +201,43 @@ describe("MessageCenter", () => {
     expect(screen.getByText("No threads yet")).toBeTruthy();
   });
 
+  it("opens a conversation with one person from the People tab", async () => {
+    render(
+      <MessageCenter
+        open
+        onClose={vi.fn()}
+        ownerId="account-7"
+        author="Faria"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "People" }));
+    const openComposer = screen.getAllByRole("button", { name: "Add person" });
+    fireEvent.click(openComposer[0]!);
+    fireEvent.change(screen.getByLabelText("Name"), {
+      target: { value: "Alex" },
+    });
+    // The second one is the form's submit; the first opened the form.
+    fireEvent.click(screen.getAllByRole("button", { name: "Add person" })[1]!);
+
+    // Choosing the person is what opens the conversation — there is nothing to
+    // name and nobody to pick out of a list.
+    const composer = await screen.findByLabelText("Message Alex");
+    expect(screen.getByText("Direct message")).toBeTruthy();
+
+    fireEvent.change(composer, { target: { value: "Are you free at six?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("Are you free at six?").length,
+      ).toBeGreaterThan(0),
+    );
+
+    // And it belongs to the person, not to Threads.
+    fireEvent.click(screen.getByRole("button", { name: "Threads" }));
+    expect(screen.getByText("No threads yet")).toBeTruthy();
+  });
+
   it("opens Family as a conversation, not a settings form", () => {
     render(
       <MessageCenter

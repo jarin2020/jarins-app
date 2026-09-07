@@ -11,16 +11,25 @@ import {
   Route,
   Target,
   Timer,
+  Trash2,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { LifeRecord } from "@/lib/jarins-store";
 import { useClientNow } from "@/lib/use-client-now";
+import { dueByDay, pipelineFunnel, statusBreakdown } from "@/lib/work-metrics";
+import { DueChart, FunnelChart, StatusChart } from "./work-charts";
 
 type Props = {
   records: LifeRecord[];
   loading: boolean;
   update: (id: string, changes: Partial<LifeRecord>) => Promise<void>;
+  add: (
+    record: Omit<LifeRecord, "id" | "createdAt" | "updatedAt">,
+  ) => Promise<unknown>;
+  remove: (id: string) => Promise<void>;
 };
+
+const WORK_KINDS = ["Focus", "Deliverable", "Deadline", "Meeting", "Blocker"];
 
 function localDateKey(value = new Date()) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
@@ -42,7 +51,13 @@ function dateLabel(value: string) {
  * move on an opportunity is. Everything reads from the same life_records the
  * rest of the app uses, filtered to the four professional modules.
  */
-export function WorkDashboard({ records, loading, update }: Props) {
+export function WorkDashboard({
+  records,
+  loading,
+  update,
+  add,
+  remove,
+}: Props) {
   const now = useClientNow();
   const today = now ? localDateKey(now) : "";
 
@@ -71,6 +86,38 @@ export function WorkDashboard({ records, loading, update }: Props) {
     .filter((record) => record.module === "network")
     .filter((record) => record.status !== "done")
     .slice(0, 4);
+
+  // Left for the React Compiler rather than hand-memoised: these are filters
+  // and counts over a list already in memory, and a useMemo whose input is not
+  // itself memoised is one the compiler has to skip the whole component over.
+  const bars = statusBreakdown(work);
+  const days = today ? dueByDay(work, today) : [];
+  const funnel = pipelineFunnel(pipeline);
+
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftKind, setDraftKind] = useState(WORK_KINDS[1]);
+  const [draftDate, setDraftDate] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editStatus, setEditStatus] = useState<LifeRecord["status"]>("open");
+  const [busy, setBusy] = useState(false);
+
+  const openEditor = (record: LifeRecord) => {
+    setEditing(record.id);
+    setEditTitle(record.title);
+    setEditDate(record.date ?? "");
+    setEditStatus(record.status);
+  };
+
+  const run = async (operation: Promise<unknown>) => {
+    setBusy(true);
+    try {
+      await operation;
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const stat = (value: number) => (loading ? "—" : String(value));
 
@@ -151,6 +198,88 @@ export function WorkDashboard({ records, loading, update }: Props) {
         </article>
       </section>
 
+      <div className="work-charts">
+        <section aria-labelledby="chart-status">
+          <header>
+            <span className="eyebrow">Where it stands</span>
+            <h2 id="chart-status">Work by status</h2>
+          </header>
+          <StatusChart bars={bars} />
+        </section>
+        <section aria-labelledby="chart-due">
+          <header>
+            <span className="eyebrow">The fortnight ahead</span>
+            <h2 id="chart-due">What lands when</h2>
+          </header>
+          <DueChart days={days} />
+        </section>
+        <section aria-labelledby="chart-funnel">
+          <header>
+            <span className="eyebrow">Opportunities</span>
+            <h2 id="chart-funnel">Pipeline by stage</h2>
+          </header>
+          <FunnelChart stages={funnel} />
+        </section>
+      </div>
+
+      <section className="work-add" aria-labelledby="work-add-title">
+        <div className="profile-section-header">
+          <h3 id="work-add-title">Add to the week</h3>
+        </div>
+        <form
+          className="teams-task-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!draftTitle.trim()) return;
+            void run(
+              add({
+                module: "work",
+                kind: draftKind,
+                title: draftTitle.trim(),
+                detail: "",
+                status: "open",
+                ...(draftDate ? { date: draftDate } : {}),
+              }).then(() => {
+                setDraftTitle("");
+                setDraftDate("");
+              }),
+            );
+          }}
+        >
+          <input
+            aria-label="What needs doing"
+            placeholder="What needs doing?"
+            value={draftTitle}
+            maxLength={200}
+            disabled={busy}
+            onChange={(event) => setDraftTitle(event.target.value)}
+          />
+          <select
+            aria-label="Kind"
+            value={draftKind}
+            disabled={busy}
+            onChange={(event) => setDraftKind(event.target.value)}
+          >
+            {WORK_KINDS.map((kind) => (
+              <option key={kind}>{kind}</option>
+            ))}
+          </select>
+          <input
+            aria-label="Due"
+            type="date"
+            value={draftDate}
+            disabled={busy}
+            onChange={(event) => setDraftDate(event.target.value)}
+          />
+          <button
+            className="button primary small"
+            disabled={busy || !draftTitle.trim()}
+          >
+            <Plus size={15} /> Add
+          </button>
+        </form>
+      </section>
+
       <div className="self-dashboard-grid">
         <section
           className="self-dashboard-card actions"
@@ -167,33 +296,114 @@ export function WorkDashboard({ records, loading, update }: Props) {
           </header>
           {dueSoon.length ? (
             <div className="self-action-list">
-              {dueSoon.map((record) => (
-                <article key={record.id}>
-                  <button
-                    type="button"
-                    aria-label={`Complete ${record.title}`}
-                    onClick={() =>
-                      void update(record.id, { status: "done", progress: 100 })
-                    }
+              {dueSoon.map((record) =>
+                editing === record.id ? (
+                  <form
+                    className="work-edit"
+                    key={record.id}
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      if (!editTitle.trim()) return;
+                      void run(
+                        update(record.id, {
+                          title: editTitle.trim(),
+                          status: editStatus,
+                          ...(editDate ? { date: editDate } : {}),
+                        }).then(() => setEditing(null)),
+                      );
+                    }}
                   >
-                    <Check size={14} />
-                  </button>
-                  <Link
-                    href={`/work/${record.kind.toLowerCase().replaceAll(" ", "-")}s`}
-                  >
-                    <strong>{record.title}</strong>
-                    <small>
-                      {record.kind}
-                      {record.detail ? ` · ${record.detail}` : ""}
-                    </small>
-                  </Link>
-                  <span className={record.date === today ? "overdue" : ""}>
-                    {record.date === today
-                      ? "Today"
-                      : dateLabel(record.date as string)}
-                  </span>
-                </article>
-              ))}
+                    <input
+                      autoFocus
+                      aria-label={`Title of ${record.title}`}
+                      value={editTitle}
+                      maxLength={200}
+                      disabled={busy}
+                      onChange={(event) => setEditTitle(event.target.value)}
+                    />
+                    <input
+                      aria-label={`Due date of ${record.title}`}
+                      type="date"
+                      value={editDate}
+                      disabled={busy}
+                      onChange={(event) => setEditDate(event.target.value)}
+                    />
+                    <select
+                      aria-label={`Status of ${record.title}`}
+                      value={editStatus}
+                      disabled={busy}
+                      onChange={(event) =>
+                        setEditStatus(
+                          event.target.value as LifeRecord["status"],
+                        )
+                      }
+                    >
+                      <option value="open">Open</option>
+                      <option value="in-progress">In progress</option>
+                      <option value="paused">Paused</option>
+                      <option value="done">Done</option>
+                    </select>
+                    <button className="button primary small" disabled={busy}>
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="button secondary small"
+                      onClick={() => setEditing(null)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="icon-button danger"
+                      aria-label={`Delete ${record.title}`}
+                      disabled={busy}
+                      onClick={() => {
+                        if (!window.confirm(`Delete “${record.title}”?`))
+                          return;
+                        void run(
+                          remove(record.id).then(() => setEditing(null)),
+                        );
+                      }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </form>
+                ) : (
+                  <article key={record.id}>
+                    <button
+                      type="button"
+                      aria-label={`Complete ${record.title}`}
+                      disabled={busy}
+                      onClick={() =>
+                        void update(record.id, {
+                          status: "done",
+                          progress: 100,
+                        })
+                      }
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      className="work-item-open"
+                      aria-label={`Edit ${record.title}`}
+                      onClick={() => openEditor(record)}
+                    >
+                      <strong>{record.title}</strong>
+                      <small>
+                        {record.kind}
+                        {record.detail ? ` · ${record.detail}` : ""}
+                      </small>
+                    </button>
+                    <span className={record.date === today ? "overdue" : ""}>
+                      {record.date === today
+                        ? "Today"
+                        : dateLabel(record.date as string)}
+                    </span>
+                  </article>
+                ),
+              )}
             </div>
           ) : (
             <div className="self-dashboard-empty">

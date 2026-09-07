@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findWorkspace, utilityModules, workspaces } from "@/lib/modules";
+import { findWorkspace, workspaces } from "@/lib/modules";
 import { resolveProject, withProject } from "@/lib/projects";
 import dynamic from "next/dynamic";
 
@@ -169,7 +169,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="nav-divider" />
         <nav className="nav-list nav-utility">
-          {utilityModules.slice(0, 3).map(({ href, icon: Icon, label }) => (
+          {workspace.utility.map(({ href, icon: Icon, label }) => (
             <Link
               key={href}
               href={href}

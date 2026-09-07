@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Archive,
   Baby,
+  CircleUser,
   BriefcaseBusiness as BriefcaseIcon,
   BookOpen,
   BriefcaseBusiness,
@@ -29,6 +30,7 @@ export type ModuleKey =
   | "portfolio"
   | "network"
   | "teams"
+  | "my-work"
   | "family"
   | "home"
   | "self"
@@ -195,22 +197,16 @@ export const professionalModules: ModuleDefinition[] = [
       "What is due, what is moving, what is stuck — and the next move on an opportunity.",
   },
   {
-    key: "pipeline",
-    label: "Pipeline",
-    href: "/pipeline",
-    icon: Route,
-    eyebrow: "Opportunity, not anxiety",
+    // A view, not a store: everything here is a life record that already
+    // belongs to a module. What makes it "mine" is being assigned to me or
+    // written by me, which is a question about rows rather than about tables.
+    key: "my-work",
+    label: "My work",
+    href: "/my-work",
+    icon: CircleUser,
+    eyebrow: "Only what is yours",
     description:
-      "Roles, applications and interviews, with the next step always visible.",
-  },
-  {
-    key: "portfolio",
-    label: "Portfolio",
-    href: "/portfolio",
-    icon: FolderKanban,
-    eyebrow: "Evidence beats claims",
-    description:
-      "Case studies, projects and proof you can hand to someone who asks.",
+      "What has been assigned to you and what you set yourself, across every team.",
   },
   {
     key: "teams",
@@ -220,6 +216,15 @@ export const professionalModules: ModuleDefinition[] = [
     eyebrow: "People, and who does what",
     description:
       "Who is in each team, what their role is, and what has been assigned to whom.",
+  },
+  {
+    key: "pipeline",
+    label: "Pipeline",
+    href: "/pipeline",
+    icon: Route,
+    eyebrow: "Opportunity, not anxiety",
+    description:
+      "Roles, applications and interviews, with the next step always visible.",
   },
   {
     key: "network",
@@ -239,20 +244,21 @@ export const professionalModules: ModuleDefinition[] = [
       "Timeline, transition and the narrative that ties the two together.",
   },
   {
-    key: "learning",
-    label: "Learning",
-    href: "/learning",
-    icon: BookOpen,
-    eyebrow: "Small blocks, real progress",
-    description: "German B2, Digital Marketing and future learning programs.",
-  },
-  {
     key: "documents",
     label: "Documents",
     href: "/documents",
     icon: FileText,
     eyebrow: "Find anything in seconds",
     description: "A private, deadline-aware index for important records.",
+  },
+  {
+    key: "portfolio",
+    label: "Portfolio",
+    href: "/portfolio",
+    icon: FolderKanban,
+    eyebrow: "Evidence beats claims",
+    description:
+      "Case studies, projects and proof you can hand to someone who asks.",
   },
 ];
 
@@ -280,6 +286,7 @@ export const workspaces = [
     icon: Home,
     home: "/today",
     modules: primaryModules,
+    utility: utilityModules.slice(0, 3),
   },
   {
     id: "professional" as const,
@@ -288,6 +295,13 @@ export const workspaces = [
     icon: BriefcaseIcon,
     home: "/work",
     modules: professionalModules,
+    // Learning sits below the divider at work: it is something you do around
+    // the job rather than a part of it, and it kept crowding the areas the day
+    // is actually organised by.
+    utility: [
+      primaryModules.find((item) => item.key === "learning")!,
+      ...utilityModules.slice(0, 3),
+    ],
   },
 ];
 

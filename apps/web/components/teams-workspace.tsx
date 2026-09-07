@@ -55,9 +55,17 @@ export function TeamsWorkspace() {
   const [inviteRole, setInviteRole] = useState<"owner" | "member">("member");
   const [inviteLink, setInviteLink] = useState("");
 
+  // Two tabs only when there is genuinely a distinction to draw. Somebody who
+  // only belongs to teams should not be asked to choose between "mine" and
+  // "all" when those are the same list.
+  const owned = workspace.teams.filter((item) => item.canManage);
+  const joined = workspace.teams.filter((item) => !item.canManage);
+  const split = owned.length > 0 && joined.length > 0;
+  const [scope, setScope] = useState<"owned" | "joined">("owned");
+  const listed = split ? (scope === "owned" ? owned : joined) : workspace.teams;
+
   const team: Team | undefined =
-    workspace.teams.find((item) => item.id === selectedId) ??
-    workspace.teams[0];
+    listed.find((item) => item.id === selectedId) ?? listed[0];
 
   const teamTasks = useMemo(
     () => workspace.tasks.filter((task) => task.teamId === team?.id),
@@ -101,6 +109,34 @@ export function TeamsWorkspace() {
           <strong>Your teams</strong>
           <small>{workspace.teams.length}</small>
         </header>
+        {split && (
+          <div className="teams-scope" role="tablist" aria-label="Which teams">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={scope === "owned"}
+              className={scope === "owned" ? "active" : ""}
+              onClick={() => {
+                setScope("owned");
+                setSelectedId(undefined);
+              }}
+            >
+              You own <small>{owned.length}</small>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={scope === "joined"}
+              className={scope === "joined" ? "active" : ""}
+              onClick={() => {
+                setScope("joined");
+                setSelectedId(undefined);
+              }}
+            >
+              You are in <small>{joined.length}</small>
+            </button>
+          </div>
+        )}
         {workspace.loading && workspace.teams.length === 0 && (
           <p className="muted">Loading teams…</p>
         )}
@@ -110,7 +146,7 @@ export function TeamsWorkspace() {
             organised around.
           </p>
         )}
-        {workspace.teams.map((item) => (
+        {listed.map((item) => (
           <button
             type="button"
             key={item.id}
@@ -193,6 +229,32 @@ export function TeamsWorkspace() {
                 {team.canManage ? "You own this team" : "You are a member"}
               </span>
               <h2>{team.name}</h2>
+              {/* Who to ask. A member's first question about a team is who can
+                  answer for it, and a list of names with roles buried below
+                  makes them work it out. */}
+              {(() => {
+                const owners = team.members.filter(
+                  (member) =>
+                    member.role === "owner" && member.userId !== user?.id,
+                );
+                if (team.canManage && owners.length === 0)
+                  return (
+                    <p className="teams-reports-to">
+                      You are the only owner — this team answers to you.
+                    </p>
+                  );
+                if (owners.length === 0) return null;
+                return (
+                  <p className="teams-reports-to">
+                    {team.canManage
+                      ? "You share ownership with"
+                      : "You report to"}{" "}
+                    <strong>
+                      {owners.map((member) => member.name).join(", ")}
+                    </strong>
+                  </p>
+                );
+              })()}
             </div>
             <button
               type="button"

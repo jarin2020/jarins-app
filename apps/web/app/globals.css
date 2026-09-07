@@ -8943,3 +8943,49 @@ fieldset legend {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Which teams you own versus which you are simply in, and who answers for one. */
+.teams-scope {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin-bottom: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.teams-scope button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 6px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+.teams-scope button.active {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: 0 1px 3px rgba(33, 39, 36, 0.09);
+}
+.teams-scope small {
+  opacity: 0.75;
+}
+.teams-reports-to {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.teams-reports-to strong {
+  color: var(--text);
+}
+
+/* My work: the same card system as the other dashboards. */
+.my-work {
+  display: grid;
+  gap: 14px;
+}

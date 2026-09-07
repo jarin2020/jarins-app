@@ -33,6 +33,10 @@ const ProjectEditor = dynamic(
   () => import("./project-editor").then((m) => m.ProjectEditor),
   { ssr: false },
 );
+const SearchOverlay = dynamic(
+  () => import("./search-overlay").then((m) => m.SearchOverlay),
+  { ssr: false },
+);
 const MessageCenter = dynamic(
   () => import("./message-center").then((m) => m.MessageCenter),
   { ssr: false },
@@ -51,12 +55,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [messageUnreadCount, setMessageUnreadCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const [search, setSearch] = useState("");
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const { preferences, save: savePreferences } = usePreferences();
   const workspace = findWorkspace(preferences.workspace);
   const project = resolveProject(preferences, workspace.id);
   const [projectEditorOpen, setProjectEditorOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const { profile, status, signOut, user, avatarUrl } = useAuth();
   const displayName =
     status === "signed-in" && profile
@@ -82,7 +86,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        document.getElementById("global-search")?.focus();
+        setSearchOpen(true);
       }
     };
     document.addEventListener("keydown", onKey);
@@ -114,12 +118,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, [accountMenuOpen]);
-
-  const navigateSearch = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (search.trim())
-      router.push(`/search?q=${encodeURIComponent(search.trim())}`);
-  };
 
   return (
     <div className="app-shell">
@@ -236,17 +234,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Menu size={20} />
           </button>
-          <form className="search-box" onSubmit={navigateSearch} role="search">
+          {/* A button that looks like a field. The field itself lives in the
+              overlay, so there is one search box rather than two that disagree. */}
+          <button
+            type="button"
+            className="search-box"
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search jarins"
+            aria-haspopup="dialog"
+          >
             <Search size={17} />
-            <input
-              id="global-search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search tasks, people, documents…"
-              aria-label="Search jarins"
-            />
+            <span>Search tasks, people, documents…</span>
             <kbd>⌘ S</kbd>
-          </form>
+          </button>
           <div className="top-actions">
             {/* Quick capture lives here now: one icon, the shortcut in the
                 tooltip, and no three-line block eating the sidebar. */}
@@ -426,6 +426,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           setProjectEditorOpen(false);
         }}
       />
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
       <QuickCapture open={captureOpen} onClose={() => setCaptureOpen(false)} />
       <MessageCenter
         open={messagesOpen}

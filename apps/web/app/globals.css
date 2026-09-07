@@ -8548,3 +8548,143 @@ fieldset legend {
 .brand-edit:focus-visible {
   opacity: 1;
 }
+
+/* ---------------------------------------------------------------------------
+   Search as a place: a floating window over whatever you were doing.
+   --------------------------------------------------------------------------- */
+
+/* The bar is a button that looks like a field, so it needs the reset a real
+   input got for free. */
+.topbar button.search-box {
+  text-align: left;
+  font: inherit;
+}
+.topbar button.search-box > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.search-dialog {
+  align-items: start;
+  justify-items: center;
+}
+.search-overlay {
+  width: min(760px, 94vw);
+  max-height: min(78vh, 720px);
+  margin-top: 6vh;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: 0 30px 80px rgba(33, 39, 36, 0.24);
+  overflow: hidden;
+}
+.search-overlay > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+.search-overlay > header input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font-size: 17px;
+}
+.search-overlay > header input:focus {
+  outline: none;
+}
+.search-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.search-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+.search-tabs button.active {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.search-tabs button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.search-tabs button small {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.search-results {
+  padding: 10px 12px 16px;
+  overflow-y: auto;
+}
+.search-results .muted {
+  padding: 26px 10px;
+  text-align: center;
+}
+/* The page-level .search-result draws a top border and colours its spans; both
+   have to be undone here, and by selectors specific enough to outrank a
+   class-plus-element one. */
+.search-overlay .search-result {
+  border-top: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 14px;
+  color: var(--text);
+}
+.search-overlay .search-result:hover {
+  background: var(--surface-soft);
+}
+.search-overlay .search-result-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.search-overlay .search-result strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.search-overlay .search-result-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+@media (max-width: 600px) {
+  .search-overlay .search-result-open {
+    display: none;
+  }
+}

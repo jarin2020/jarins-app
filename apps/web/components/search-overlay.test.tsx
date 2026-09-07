@@ -8,12 +8,30 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchOverlay } from "./search-overlay";
 
+const supabase = vi.hoisted(() => {
+  const filters: Record<string, string> = {};
+  const builder = (table: string) => ({
+    select: () => builder(table),
+    eq: (column: string, value: string) => {
+      filters[`${table}.${column}`] = value;
+      return Promise.resolve({ data: [], error: null });
+    },
+  });
+  return {
+    filters,
+    client: {
+      rpc: () => Promise.resolve({ data: [], error: null }),
+      from: (table: string) => builder(table),
+    },
+  };
+});
+
 vi.mock("./auth-provider", () => ({
   useAuth: () => ({
-    supabase: null,
+    supabase: supabase.client,
     user: { id: "me" },
     householdId: "household-1",
-    status: "demo",
+    status: "signed-in",
   }),
 }));
 
@@ -114,5 +132,19 @@ describe("SearchOverlay", () => {
 
     fireEvent.click(screen.getByText("Passport renewal"));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("asks only for the household you are in", async () => {
+    // Regression: the filters were written and then lost to a bad edit. Nothing
+    // typechecked differently, so only an assertion on the query catches it —
+    // without one, a person in two households sees two Family threads.
+    render(<SearchOverlay open onClose={vi.fn()} />);
+
+    await waitFor(() =>
+      expect(supabase.filters["message_threads.household_id"]).toBe(
+        "household-1",
+      ),
+    );
+    expect(supabase.filters["message_teams.household_id"]).toBe("household-1");
   });
 });

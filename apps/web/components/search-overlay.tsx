@@ -103,10 +103,17 @@ export function SearchOverlay({
     let active = true;
     void Promise.all([
       supabase.rpc("list_household_users"),
+      // Scoped to the household in the same way the message centre is.
+      // Belonging to two of them otherwise surfaces both Family threads here,
+      // which is exactly the confusion that scoping was meant to end.
       supabase
         .from("message_teams")
-        .select("id,name,message_team_members(user_id)"),
-      supabase.from("message_threads").select("id,title,workspace"),
+        .select("id,name,message_team_members(user_id)")
+        .eq("household_id", householdId),
+      supabase
+        .from("message_threads")
+        .select("id,title,workspace")
+        .eq("household_id", householdId),
     ]).then(([people, teams, threads]) => {
       if (!active) return;
       setDirectory({

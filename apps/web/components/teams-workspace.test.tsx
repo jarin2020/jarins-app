@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   inviteToTeam: vi.fn(),
   teams: true,
   householdOwner: true,
+  bothKinds: false,
 }));
 
 vi.mock("@/components/auth-provider", () => ({
@@ -35,29 +36,68 @@ vi.mock("@/lib/team-workspace", () => ({
   useTeamWorkspace: () => ({
     teams: !mocks.teams
       ? []
-      : [
-          {
-            id: "team-1",
-            name: "Growth pod",
-            createdBy: mocks.canManage ? "me" : "someone-else",
-            myRole: mocks.myRole,
-            canManage: mocks.canManage,
-            members: [
-              {
-                userId: "me",
-                name: "Faria",
-                email: "f@example.test",
-                role: mocks.myRole,
-              },
-              {
-                userId: "other",
-                name: "Zaman",
-                email: "z@example.test",
-                role: mocks.myRole === "owner" ? "member" : "owner",
-              },
-            ],
-          },
-        ],
+      : mocks.bothKinds
+        ? [
+            {
+              id: "team-1",
+              name: "Growth pod",
+              createdBy: "me",
+              myRole: "owner",
+              canManage: true,
+              members: [
+                {
+                  userId: "me",
+                  name: "Faria",
+                  email: "f@example.test",
+                  role: "owner",
+                },
+              ],
+            },
+            {
+              id: "team-2",
+              name: "Product",
+              createdBy: "other",
+              myRole: "member",
+              canManage: false,
+              members: [
+                {
+                  userId: "me",
+                  name: "Faria",
+                  email: "f@example.test",
+                  role: "member",
+                },
+                {
+                  userId: "other",
+                  name: "Zaman",
+                  email: "z@example.test",
+                  role: "owner",
+                },
+              ],
+            },
+          ]
+        : [
+            {
+              id: "team-1",
+              name: "Growth pod",
+              createdBy: mocks.canManage ? "me" : "someone-else",
+              myRole: mocks.myRole,
+              canManage: mocks.canManage,
+              members: [
+                {
+                  userId: "me",
+                  name: "Faria",
+                  email: "f@example.test",
+                  role: mocks.myRole,
+                },
+                {
+                  userId: "other",
+                  name: "Zaman",
+                  email: "z@example.test",
+                  role: mocks.myRole === "owner" ? "member" : "owner",
+                },
+              ],
+            },
+          ],
     tasks: [
       {
         id: "task-1",
@@ -106,6 +146,7 @@ describe("TeamsWorkspace", () => {
     mocks.status = "signed-in";
     mocks.teams = true;
     mocks.householdOwner = true;
+    mocks.bothKinds = false;
     mocks.createTeam.mockResolvedValue("team-2");
     mocks.inviteToTeam.mockResolvedValue("t".repeat(64));
   });
@@ -259,5 +300,51 @@ describe("TeamsWorkspace", () => {
 
     expect(screen.queryByLabelText("Email address")).toBeNull();
     expect(screen.getByText(/household owner/i)).toBeTruthy();
+  });
+
+  it("offers no tabs when every team is the same kind", async () => {
+    render(<TeamsWorkspace />);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Growth pod" })).toBeTruthy(),
+    );
+    // One kind of team is not a choice worth asking somebody to make.
+    expect(screen.queryByRole("tab", { name: /You own/ })).toBeNull();
+  });
+
+  it("splits owned from joined only when both exist", async () => {
+    mocks.bothKinds = true;
+    render(<TeamsWorkspace />);
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: /You own 1/ })).toBeTruthy(),
+    );
+    expect(screen.getByRole("tab", { name: /You are in 1/ })).toBeTruthy();
+
+    // The owned tab shows only the owned team.
+    expect(screen.getByRole("heading", { name: "Growth pod" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: /You are in 1/ }));
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Product" })).toBeTruthy(),
+    );
+  });
+
+  it("says who you report to in a team you did not make", async () => {
+    mocks.bothKinds = true;
+    render(<TeamsWorkspace />);
+    await waitFor(() =>
+      expect(screen.getByRole("tab", { name: /You are in 1/ })).toBeTruthy(),
+    );
+    fireEvent.click(screen.getByRole("tab", { name: /You are in 1/ }));
+
+    await waitFor(() => expect(screen.getByText(/You report to/)).toBeTruthy());
+    // "Zaman" is in the member list too, so assert on the line itself.
+    expect(document.querySelector(".teams-reports-to")?.textContent).toContain(
+      "Zaman",
+    );
+  });
+
+  it("tells a sole owner that the team answers to them", async () => {
+    mocks.bothKinds = true;
+    render(<TeamsWorkspace />);
+    await waitFor(() => expect(screen.getByText(/only owner/i)).toBeTruthy());
   });
 });

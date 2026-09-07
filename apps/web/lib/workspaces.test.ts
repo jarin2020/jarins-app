@@ -47,8 +47,10 @@ describe("workspaces", () => {
     );
     // Shared, deliberately: the same records read in a working context
     expect(professionalKeys).toEqual(
-      expect.arrayContaining(["career", "learning", "documents"]),
+      expect.arrayContaining(["career", "documents"]),
     );
+    // Learning moved below the divider — something you do around the job.
+    expect(professionalKeys).not.toContain("learning");
     // And nothing domestic
     expect(professionalKeys).not.toContain("family");
     expect(professionalKeys).not.toContain("home");
@@ -80,5 +82,43 @@ describe("workspaces", () => {
         }
       }
     }
+  });
+
+  it("orders the professional rail the way the work is actually approached", () => {
+    const professional = workspaces.find((w) => w.id === "professional")!;
+    expect(professional.modules.map((item) => item.key)).toEqual([
+      "work",
+      "my-work",
+      "teams",
+      "pipeline",
+      "network",
+      "career",
+      "documents",
+      "portfolio",
+    ]);
+  });
+
+  it("gives each workspace its own second group", () => {
+    const personal = workspaces.find((w) => w.id === "personal")!;
+    const professional = workspaces.find((w) => w.id === "professional")!;
+
+    expect(personal.utility.map((item) => item.key)).toEqual([
+      "inbox",
+      "calendar",
+      "vault",
+    ]);
+    expect(professional.utility.map((item) => item.key)).toEqual([
+      "learning",
+      "inbox",
+      "calendar",
+      "vault",
+    ]);
+  });
+
+  it("routes My work, which is a view rather than a record module", () => {
+    expect(isKnownRoute(["my-work"])).toBe(true);
+    // Deliberately not a life-record module: nothing is filed under "my-work",
+    // it is other modules' rows read through one person.
+    expect(RECORD_MODULES).not.toContain("my-work");
   });
 });

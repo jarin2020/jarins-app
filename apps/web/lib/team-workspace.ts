@@ -51,7 +51,12 @@ type TaskRow = {
   assignee_user_id: string | null;
 };
 
-type DirectoryRow = { user_id: string; display_name: string; email: string };
+type DirectoryRow = {
+  user_id: string;
+  display_name: string;
+  email: string;
+  role: string;
+};
 
 const TASK_COLUMNS =
   "id,kind,title,detail,date,status,team_id,assignee_user_id";
@@ -77,6 +82,9 @@ export function useTeamWorkspace({
   const [teams, setTeams] = useState<Team[]>([]);
   const [tasks, setTasks] = useState<TeamTask[]>([]);
   const [directory, setDirectory] = useState<DirectoryRow[]>([]);
+  // Admitting somebody new to the household is the household owner's to give,
+  // whoever owns the team — so the invite form only appears for them.
+  const [isHouseholdOwner, setIsHouseholdOwner] = useState(false);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState("");
 
@@ -106,6 +114,9 @@ export function useTeamWorkspace({
     }
 
     const people = (peopleResult.data ?? []) as DirectoryRow[];
+    setIsHouseholdOwner(
+      people.some((row) => row.user_id === userId && row.role === "owner"),
+    );
     const nameOf = new Map(people.map((row) => [row.user_id, row]));
     setDirectory(people);
     setTeams(
@@ -155,6 +166,46 @@ export function useTeamWorkspace({
     }
     queueMicrotask(() => void load());
   }, [enabled, load]);
+
+  /** Teams are made here, where the work is, not in the message centre. */
+  const createTeam = useCallback(
+    async (name: string, memberIds: string[] = []) => {
+      if (!supabase) throw new Error("Accounts are not connected.");
+      const { data, error: rpcError } = await supabase.rpc(
+        "create_message_team",
+        { team_name: name.trim(), member_ids: memberIds },
+      );
+      if (rpcError) throw new Error(rpcError.message);
+      await load();
+      return data as string;
+    },
+    [load, supabase],
+  );
+
+  /**
+   * Invites somebody who is not here yet. The invitation carries the team and
+   * the role, so accepting it puts them in the right place with the right
+   * access rather than leaving three steps to remember.
+   */
+  const inviteToTeam = useCallback(
+    async (teamId: string, email: string, role: TeamRole) => {
+      if (!supabase) throw new Error("Accounts are not connected.");
+      const { data, error: rpcError } = await supabase.rpc(
+        "create_team_invitation",
+        {
+          invitee_email: email.trim(),
+          target_team: teamId,
+          invitee_team_role: role,
+        },
+      );
+      if (rpcError) throw new Error(rpcError.message);
+      const row = (data as { invitation_token: string }[] | null)?.[0];
+      if (!row) throw new Error("The invitation could not be created.");
+      await load();
+      return row.invitation_token;
+    },
+    [load, supabase],
+  );
 
   const setMembers = useCallback(
     async (team: Team, memberIds: string[]) => {
@@ -246,9 +297,12 @@ export function useTeamWorkspace({
     teams,
     tasks: tasks as (TeamTask & { teamId: string })[],
     directory,
+    isHouseholdOwner,
     loading,
     error,
     reload: load,
+    createTeam,
+    inviteToTeam,
     setMembers,
     setRole,
     rename,

@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TeamsWorkspace } from "./teams-workspace";
 
@@ -10,6 +16,10 @@ const mocks = vi.hoisted(() => ({
   setMembers: vi.fn(),
   addTask: vi.fn(),
   updateTask: vi.fn(),
+  createTeam: vi.fn(),
+  inviteToTeam: vi.fn(),
+  teams: true,
+  householdOwner: true,
 }));
 
 vi.mock("@/components/auth-provider", () => ({
@@ -23,29 +33,31 @@ vi.mock("@/components/auth-provider", () => ({
 
 vi.mock("@/lib/team-workspace", () => ({
   useTeamWorkspace: () => ({
-    teams: [
-      {
-        id: "team-1",
-        name: "Growth pod",
-        createdBy: mocks.canManage ? "me" : "someone-else",
-        myRole: mocks.myRole,
-        canManage: mocks.canManage,
-        members: [
+    teams: !mocks.teams
+      ? []
+      : [
           {
-            userId: "me",
-            name: "Faria",
-            email: "f@example.test",
-            role: mocks.myRole,
-          },
-          {
-            userId: "other",
-            name: "Zaman",
-            email: "z@example.test",
-            role: mocks.myRole === "owner" ? "member" : "owner",
+            id: "team-1",
+            name: "Growth pod",
+            createdBy: mocks.canManage ? "me" : "someone-else",
+            myRole: mocks.myRole,
+            canManage: mocks.canManage,
+            members: [
+              {
+                userId: "me",
+                name: "Faria",
+                email: "f@example.test",
+                role: mocks.myRole,
+              },
+              {
+                userId: "other",
+                name: "Zaman",
+                email: "z@example.test",
+                role: mocks.myRole === "owner" ? "member" : "owner",
+              },
+            ],
           },
         ],
-      },
-    ],
     tasks: [
       {
         id: "task-1",
@@ -68,6 +80,7 @@ vi.mock("@/lib/team-workspace", () => ({
         assigneeUserId: "other",
       },
     ],
+    isHouseholdOwner: mocks.householdOwner,
     directory: [
       { user_id: "me", display_name: "Faria", email: "f@example.test" },
       { user_id: "other", display_name: "Zaman", email: "z@example.test" },
@@ -78,6 +91,8 @@ vi.mock("@/lib/team-workspace", () => ({
     reload: vi.fn(),
     setMembers: mocks.setMembers,
     setRole: mocks.setRole,
+    createTeam: mocks.createTeam,
+    inviteToTeam: mocks.inviteToTeam,
     rename: vi.fn(),
     addTask: mocks.addTask,
     updateTask: mocks.updateTask,
@@ -89,6 +104,10 @@ describe("TeamsWorkspace", () => {
     mocks.canManage = true;
     mocks.myRole = "owner";
     mocks.status = "signed-in";
+    mocks.teams = true;
+    mocks.householdOwner = true;
+    mocks.createTeam.mockResolvedValue("team-2");
+    mocks.inviteToTeam.mockResolvedValue("t".repeat(64));
   });
   afterEach(() => cleanup());
 
@@ -161,5 +180,84 @@ describe("TeamsWorkspace", () => {
     mocks.status = "signed-out";
     render(<TeamsWorkspace />);
     expect(screen.getByText(/Teams need an account/i)).toBeTruthy();
+  });
+
+  it("creates a team here rather than sending you to Messages", async () => {
+    mocks.teams = false;
+    render(<TeamsWorkspace />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /New team/ })).toBeTruthy(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /New team/ }));
+    fireEvent.change(screen.getByLabelText("Team name"), {
+      target: { value: "Marketing and Sales" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+    await waitFor(() =>
+      expect(mocks.createTeam).toHaveBeenCalledWith("Marketing and Sales"),
+    );
+  });
+
+  it("does not tell you to go to Messages to make one", async () => {
+    mocks.teams = false;
+    render(<TeamsWorkspace />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /New team/ })).toBeTruthy(),
+    );
+    expect(screen.queryByText(/from Messages/i)).toBeNull();
+  });
+
+  it("invites someone into the team with the access chosen", async () => {
+    render(<TeamsWorkspace />);
+    await waitFor(() =>
+      expect(screen.getByLabelText("Email address")).toBeTruthy(),
+    );
+
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "colleague@example.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Access level"), {
+      target: { value: "owner" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Invite/ }));
+
+    await waitFor(() =>
+      expect(mocks.inviteToTeam).toHaveBeenCalledWith(
+        "team-1",
+        "colleague@example.test",
+        "owner",
+      ),
+    );
+    // The link is shown so it can be sent by hand if the mail does not arrive.
+    await waitFor(() =>
+      expect(
+        (screen.getByLabelText("Invitation link") as HTMLInputElement).value,
+      ).toContain("/auth/invite/"),
+    );
+  });
+
+  it("keeps inviting to owners", async () => {
+    mocks.canManage = false;
+    mocks.myRole = "member";
+    render(<TeamsWorkspace />);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Growth pod" })).toBeTruthy(),
+    );
+    expect(screen.queryByLabelText("Email address")).toBeNull();
+  });
+
+  it("leaves admitting a stranger to the household owner", async () => {
+    // Owning a team is not the same as being able to let somebody into the
+    // household around it, so the form is replaced by the reason.
+    mocks.householdOwner = false;
+    render(<TeamsWorkspace />);
+    await waitFor(() =>
+      expect(screen.getByRole("heading", { name: "Growth pod" })).toBeTruthy(),
+    );
+
+    expect(screen.queryByLabelText("Email address")).toBeNull();
+    expect(screen.getByText(/household owner/i)).toBeTruthy();
   });
 });

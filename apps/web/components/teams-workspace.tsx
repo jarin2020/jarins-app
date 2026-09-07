@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   Check,
+  Copy,
   ChevronRight,
   Crown,
   MessageCircle,
@@ -48,6 +49,11 @@ export function TeamsWorkspace() {
   const [taskKind, setTaskKind] = useState(TASK_KINDS[0]);
   const [taskAssignee, setTaskAssignee] = useState("");
   const [taskDate, setTaskDate] = useState("");
+  const [newTeamName, setNewTeamName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"owner" | "member">("member");
+  const [inviteLink, setInviteLink] = useState("");
 
   const team: Team | undefined =
     workspace.teams.find((item) => item.id === selectedId) ??
@@ -100,8 +106,8 @@ export function TeamsWorkspace() {
         )}
         {!workspace.loading && workspace.teams.length === 0 && (
           <p className="muted">
-            No teams yet. Create one from Messages → Teams, then assign work to
-            it here.
+            No teams yet. Marketing, Product, HR — whatever the work is
+            organised around.
           </p>
         )}
         {workspace.teams.map((item) => (
@@ -125,15 +131,58 @@ export function TeamsWorkspace() {
             <ChevronRight size={14} />
           </button>
         ))}
-        <button
-          type="button"
-          className="button secondary small"
-          onClick={() =>
-            window.dispatchEvent(new Event("jarins-open-messages"))
-          }
-        >
-          <Plus size={15} /> New team
-        </button>
+        {creating ? (
+          <form
+            className="teams-new"
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!newTeamName.trim()) return;
+              void run(
+                workspace.createTeam(newTeamName).then((id) => {
+                  setSelectedId(id);
+                  setNewTeamName("");
+                  setCreating(false);
+                }),
+              );
+            }}
+          >
+            <input
+              autoFocus
+              aria-label="Team name"
+              placeholder="Marketing and Sales"
+              value={newTeamName}
+              maxLength={100}
+              disabled={busy}
+              onChange={(event) => setNewTeamName(event.target.value)}
+            />
+            <div>
+              <button
+                type="button"
+                className="button secondary small"
+                onClick={() => {
+                  setCreating(false);
+                  setNewTeamName("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="button primary small"
+                disabled={busy || !newTeamName.trim()}
+              >
+                Create
+              </button>
+            </div>
+          </form>
+        ) : (
+          <button
+            type="button"
+            className="button secondary small"
+            onClick={() => setCreating(true)}
+          >
+            <Plus size={15} /> New team
+          </button>
+        )}
       </aside>
 
       {team ? (
@@ -258,11 +307,90 @@ export function TeamsWorkspace() {
                     ))}
                   </select>
                 </label>
-                <p className="muted">
-                  <UserPlus size={13} /> Only verified household accounts can
-                  join a team.
-                </p>
               </div>
+            )}
+
+            {team.canManage && !workspace.isHouseholdOwner && (
+              <p className="muted teams-member-note">
+                <ShieldCheck size={13} /> Adding someone who is not here yet is
+                the household owner&apos;s to do — joining a team means joining
+                the household around it. Ask them to invite the person, then add
+                them above.
+              </p>
+            )}
+            {team.canManage && workspace.isHouseholdOwner && (
+              <form
+                className="teams-invite"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (!inviteEmail.trim()) return;
+                  setInviteLink("");
+                  void run(
+                    workspace
+                      .inviteToTeam(team.id, inviteEmail, inviteRole)
+                      .then((token) => {
+                        setInviteLink(
+                          `${window.location.origin}/auth/invite/${token}`,
+                        );
+                        setInviteEmail("");
+                      }),
+                  );
+                }}
+              >
+                <div className="profile-section-header">
+                  <h3>Invite someone new</h3>
+                </div>
+                <p className="muted">
+                  <UserPlus size={13} /> They join the household and this team
+                  at once, with the access you choose here.
+                </p>
+                <div className="teams-invite-row">
+                  <input
+                    type="email"
+                    aria-label="Email address"
+                    placeholder="colleague@example.com"
+                    value={inviteEmail}
+                    maxLength={320}
+                    disabled={busy}
+                    onChange={(event) => setInviteEmail(event.target.value)}
+                  />
+                  <select
+                    aria-label="Access level"
+                    value={inviteRole}
+                    disabled={busy}
+                    onChange={(event) =>
+                      setInviteRole(event.target.value as "owner" | "member")
+                    }
+                  >
+                    <option value="member">Member</option>
+                    <option value="owner">Owner</option>
+                  </select>
+                  <button
+                    className="button primary small"
+                    disabled={busy || !inviteEmail.trim()}
+                  >
+                    <UserPlus size={15} /> Invite
+                  </button>
+                </div>
+                {inviteLink && (
+                  <div className="teams-invite-link">
+                    <input
+                      readOnly
+                      value={inviteLink}
+                      aria-label="Invitation link"
+                    />
+                    <button
+                      type="button"
+                      className="button secondary small"
+                      onClick={() =>
+                        void navigator.clipboard.writeText(inviteLink)
+                      }
+                    >
+                      <Copy size={14} /> Copy
+                    </button>
+                  </div>
+                )}
+              </form>
             )}
           </section>
 

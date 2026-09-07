@@ -3983,8 +3983,19 @@ fieldset legend {
   .sidebar {
     padding-inline: 11px;
   }
+  /* The rail is 82px wide here, so the labels go and the icons stay. Lost once
+     when the dead quick-capture rules were stripped out of this block, which
+     merged the hiding into the padding rule below it. */
   .brand > span:last-child,
+  .brand strong,
   .nav-list a span,
+  .workspace-switch button span {
+    display: none;
+  }
+  .workspace-switch {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
   .brand {
     padding-inline: 10px;
   }
@@ -8759,6 +8770,176 @@ fieldset legend {
 
 @media (max-width: 760px) {
   .teams-invite-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Dashboard charts. Drawn from the same tokens as everything else, which is
+   the main reason they are hand-made rather than from a library.
+   --------------------------------------------------------------------------- */
+
+.work-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.work-charts > section {
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.work-charts h2 {
+  margin: 3px 0 14px;
+  font-size: 16px;
+}
+.chart-stack {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-soft);
+}
+.chart-stack-part {
+  height: 100%;
+}
+.chart-empty-bar {
+  width: 100%;
+  background: var(--surface-soft);
+}
+.chart-legend {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.chart-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.chart-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.chart-legend b {
+  margin-left: auto;
+  color: var(--text);
+  font-size: 12px;
+}
+.chart-columns {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 96px;
+}
+.chart-column {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+.chart-column i {
+  width: 100%;
+  border-radius: 5px 5px 2px 2px;
+  background: var(--primary-soft);
+}
+.chart-column.is-today i {
+  background: var(--primary);
+}
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.chart-funnel {
+  display: grid;
+  gap: 9px;
+}
+.chart-funnel > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 10px;
+}
+.chart-funnel span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.chart-funnel i {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--career);
+}
+.chart-funnel i.is-unassigned {
+  background: var(--warm);
+}
+.chart-funnel b {
+  text-align: right;
+  font-size: 12px;
+}
+
+/* Adding and editing, in place. */
+.work-add {
+  margin-bottom: 18px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.work-add .teams-task-form {
+  grid-template-columns: minmax(0, 1.7fr) 150px 160px auto;
+  margin-bottom: 0;
+}
+.work-item-open {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+.work-item-open strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.work-item-open small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+.work-edit {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) 150px 130px auto auto 38px;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.work-edit input,
+.work-edit select {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  color: var(--text);
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .work-add .teams-task-form,
+  .work-edit {
     grid-template-columns: minmax(0, 1fr);
   }
 }

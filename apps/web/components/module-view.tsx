@@ -83,9 +83,13 @@ const TeamsWorkspace = dynamic(
   () => import("./teams-workspace").then((m) => m.TeamsWorkspace),
   { loading, ssr: false },
 );
+// `ssr: false` because the whole screen is a function of what day it is, and
+// the server does not know: useClientNow() is null there, so a server render
+// can only produce a different tree than the client's — a hydration mismatch
+// that left a second, hidden copy of the dashboard in the document.
 const WorkDashboard = dynamic(
   () => import("./work-dashboard").then((m) => m.WorkDashboard),
-  { loading },
+  { loading, ssr: false },
 );
 // The largest settings panel by a wide margin — the photo picker, the link
 // editor and every brand glyph behind it. Only /settings/profile pays for it.
@@ -171,7 +175,7 @@ function LifeModule({
 }) {
   const currentModule = findModule(root);
   const { user } = useAuth();
-  const { records, loading, update } = useLifeRecords();
+  const { records, loading, update, add, remove } = useLifeRecords();
   const sectionRecords = recordsInSection(
     records,
     root as LifeRecord["module"],
@@ -284,7 +288,13 @@ function LifeModule({
       )}
       {root === "teams" && <TeamsWorkspace />}
       {root === "work" && !subsection && (
-        <WorkDashboard records={records} loading={loading} update={update} />
+        <WorkDashboard
+          records={records}
+          loading={loading}
+          update={update}
+          add={add}
+          remove={remove}
+        />
       )}
       {!(
         (root === "family" &&

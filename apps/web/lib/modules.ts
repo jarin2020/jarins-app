@@ -183,13 +183,16 @@ export const utilityModules: ModuleDefinition[] = [
  */
 export const professionalModules: ModuleDefinition[] = [
   {
+    // The route and the record module stay `work` — every existing record is
+    // filed under it, and renaming those means a migration for a label. What
+    // the person reads is "Dashboard", which is what the screen actually is.
     key: "work",
-    label: "Work",
+    label: "Dashboard",
     href: "/work",
     icon: Target,
-    eyebrow: "One day at a time",
+    eyebrow: "The shape of the work",
     description:
-      "What is due, what is moving, and what is blocked — this week's work in one place.",
+      "What is due, what is moving, what is stuck — and the next move on an opportunity.",
   },
   {
     key: "pipeline",

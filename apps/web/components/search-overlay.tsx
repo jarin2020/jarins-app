@@ -61,7 +61,7 @@ export function SearchOverlay({
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const { supabase, user, status } = useAuth();
+  const { supabase, user, householdId, status } = useAuth();
   const { records } = useLifeRecords();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<SearchCategory | "all">("all");
@@ -99,7 +99,7 @@ export function SearchOverlay({
   // People, teams and conversations are not in the record store, so they are
   // fetched once when the overlay opens rather than on every keystroke.
   useEffect(() => {
-    if (!open || !supabase || status !== "signed-in") return;
+    if (!open || !supabase || status !== "signed-in" || !householdId) return;
     let active = true;
     void Promise.all([
       supabase.rpc("list_household_users"),
@@ -148,7 +148,7 @@ export function SearchOverlay({
     return () => {
       active = false;
     };
-  }, [open, supabase, status, user?.id]);
+  }, [open, supabase, status, householdId, user?.id]);
 
   const hits = useMemo<SearchHit[]>(
     () => [

@@ -9,7 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchOverlay } from "./search-overlay";
 
 vi.mock("./auth-provider", () => ({
-  useAuth: () => ({ supabase: null, user: { id: "me" }, status: "demo" }),
+  useAuth: () => ({
+    supabase: null,
+    user: { id: "me" },
+    householdId: "household-1",
+    status: "demo",
+  }),
 }));
 
 vi.mock("@/lib/jarins-store", () => ({

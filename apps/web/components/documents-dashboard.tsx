@@ -176,12 +176,9 @@ export function DocumentsDashboard({ records, loading, update }: Props) {
         </Link>
       </section>
 
-      <section
-        className="documents-dashboard-stats"
-        aria-label="Document status"
-      >
+      <section className="status-tiles" aria-label="Document status">
         <article>
-          <span className="urgent">
+          <span className="status-tile-icon urgent">
             <CircleAlert size={17} />
           </span>
           <div>
@@ -190,7 +187,7 @@ export function DocumentsDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span className="warm">
+          <span className="status-tile-icon warm">
             <FileClock size={17} />
           </span>
           <div>
@@ -199,7 +196,7 @@ export function DocumentsDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span>
+          <span className="status-tile-icon">
             <LockKeyhole size={17} />
           </span>
           <div>
@@ -208,7 +205,7 @@ export function DocumentsDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span className="career">
+          <span className="status-tile-icon career">
             <FolderKey size={17} />
           </span>
           <div>

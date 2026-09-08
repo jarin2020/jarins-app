@@ -205,9 +205,9 @@ export function SelfDashboard({ records, loading, update }: Props) {
         </div>
       </section>
 
-      <section className="self-dashboard-stats" aria-label="Personal status">
+      <section className="status-tiles" aria-label="Personal status">
         <article>
-          <span className="urgent">
+          <span className="status-tile-icon urgent">
             <CircleAlert size={17} />
           </span>
           <div>
@@ -216,7 +216,7 @@ export function SelfDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span>
+          <span className="status-tile-icon">
             <Target size={17} />
           </span>
           <div>
@@ -225,7 +225,7 @@ export function SelfDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span className="warm">
+          <span className="status-tile-icon warm">
             <Sparkles size={17} />
           </span>
           <div>
@@ -234,7 +234,7 @@ export function SelfDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span className="career">
+          <span className="status-tile-icon career">
             <Check size={17} />
           </span>
           <div>

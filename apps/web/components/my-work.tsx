@@ -99,9 +99,9 @@ export function MyWork({ records, loading, update }: Props) {
 
   return (
     <div className="my-work">
-      <section className="self-dashboard-stats" aria-label="Your work">
+      <section className="status-tiles" aria-label="Your work">
         <article>
-          <span className="urgent">
+          <span className="status-tile-icon urgent">
             <CircleAlert size={17} />
           </span>
           <div>
@@ -110,7 +110,7 @@ export function MyWork({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span>
+          <span className="status-tile-icon">
             <Users size={17} />
           </span>
           <div>
@@ -119,7 +119,7 @@ export function MyWork({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span className="career">
+          <span className="status-tile-icon career">
             <Inbox size={17} />
           </span>
           <div>

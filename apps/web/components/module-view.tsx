@@ -6,8 +6,12 @@ import {
   ArrowRight,
   Check,
   ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  Clock3,
   Download,
   FileUp,
+  Layers,
   Search,
   ShieldCheck,
   TimerReset,
@@ -315,20 +319,47 @@ function LifeModule({
         (["home", "self", "documents", "work"].includes(root) && !subsection)
       ) && (
         <>
-          <div className="stat-grid">
-            <div className="stat-card">
-              <strong>{stat(sectionRecords.length)}</strong>
-              <span>Total items</span>
-            </div>
-            <div className="stat-card">
-              <strong>{stat(openCount)}</strong>
-              <span>Need attention</span>
-            </div>
-            <div className="stat-card">
-              <strong>{stat(upcomingCount)}</strong>
-              <span>Upcoming · {stat(doneCount)} done</span>
-            </div>
-          </div>
+          {/* The same status band the dashboards use. It was a taller,
+              iconless card here, so the row changed height as you moved
+              between, say, Learning and My Work. */}
+          <section className="status-tiles" aria-label="Section status">
+            <article>
+              <span className="status-tile-icon">
+                <Layers size={17} />
+              </span>
+              <div>
+                <strong>{stat(sectionRecords.length)}</strong>
+                <small>Total items</small>
+              </div>
+            </article>
+            <article>
+              <span className="status-tile-icon urgent">
+                <CircleAlert size={17} />
+              </span>
+              <div>
+                <strong>{stat(openCount)}</strong>
+                <small>Need attention</small>
+              </div>
+            </article>
+            <article>
+              <span className="status-tile-icon calendar">
+                <Clock3 size={17} />
+              </span>
+              <div>
+                <strong>{stat(upcomingCount)}</strong>
+                <small>Upcoming</small>
+              </div>
+            </article>
+            <article>
+              <span className="status-tile-icon career">
+                <CircleCheck size={17} />
+              </span>
+              <div>
+                <strong>{stat(doneCount)}</strong>
+                <small>Done</small>
+              </div>
+            </article>
+          </section>
           {root === "self" && <CheckinPanel />}
           {root === "career" && <CareerTrail />}
           {root === "documents" && <PrivacyNotice />}

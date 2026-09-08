@@ -237,9 +237,9 @@ export function HomeDashboard({ records, loading, update }: Props) {
         </Link>
       </section>
 
-      <section className="home-system-stats" aria-label="System status">
+      <section className="status-tiles" aria-label="System status">
         <article>
-          <span className="home-stat-icon urgent">
+          <span className="status-tile-icon urgent">
             <CircleAlert size={17} />
           </span>
           <div>
@@ -248,7 +248,7 @@ export function HomeDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span className="home-stat-icon calendar">
+          <span className="status-tile-icon calendar">
             <Clock3 size={17} />
           </span>
           <div>
@@ -257,7 +257,7 @@ export function HomeDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span className="home-stat-icon focus">
+          <span className="status-tile-icon focus">
             <Sparkles size={17} />
           </span>
           <div>
@@ -266,14 +266,14 @@ export function HomeDashboard({ records, loading, update }: Props) {
           </div>
         </article>
         <article>
-          <span className="home-stat-icon family">
+          <span className="status-tile-icon family">
             <UsersRound size={17} />
           </span>
           <div>
             <strong>
               {household.loading ? "—" : household.members.length}
             </strong>
-            <small>Verified family accounts</small>
+            <small>Family accounts</small>
           </div>
         </article>
       </section>

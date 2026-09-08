@@ -1074,30 +1074,6 @@ fieldset legend {
   color: var(--primary);
   background: var(--primary-soft);
 }
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 18px;
-}
-.stat-card {
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--surface-soft);
-}
-.stat-card strong,
-.stat-card span {
-  display: block;
-}
-.stat-card strong {
-  font-size: 26px;
-  letter-spacing: -0.05em;
-}
-.stat-card span {
-  color: var(--muted);
-  font-size: 12px;
-}
 .module-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -4029,7 +4005,6 @@ fieldset legend {
   .two-column,
   .two-column.uneven,
   .module-grid,
-  .stat-grid,
   .reset-layout,
   .settings-layout {
     grid-template-columns: 1fr;
@@ -4582,9 +4557,6 @@ fieldset legend {
   align-items: center;
   font-size: 12px;
 }
-.stat-card span {
-  font-size: 12px;
-}
 .calendar-grid span {
   font-size: 12px;
 }
@@ -4635,19 +4607,6 @@ fieldset legend {
 }
 
 @media (max-width: 760px) {
-  .stat-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .stat-card {
-    padding: 13px 10px;
-  }
-  .stat-card strong {
-    font-size: 22px;
-  }
-  .stat-card span {
-    font-size: 12px;
-  }
   .mobile-nav a,
   .mobile-nav button {
     font-size: 12px;
@@ -6061,22 +6020,36 @@ fieldset legend {
   white-space: nowrap;
   font-size: 12px;
 }
-.home-system-stats {
+/* ---------------------------------------------------------------------------
+   The status band under a page title: tiles with an icon, a number and a word.
+   It existed four times over — .home-system-stats, .documents-dashboard-stats,
+   .self-dashboard-stats and a taller, iconless .stat-card on the module pages
+   — with three different gaps and three different breakpoints, so the row
+   changed size depending on which page you were looking at. One definition.
+   --------------------------------------------------------------------------- */
+.status-tiles {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* auto-fit rather than a fixed four: some bands have three tiles, and a
+     fixed count would leave a hole where the fourth would have been. */
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 11px;
 }
-.home-system-stats article {
+/* On the dashboards the band is one cell of a grid that already spaces its
+   rows, so the margin belongs only where the band sits in ordinary flow. */
+.page-content > .status-tiles {
+  margin-bottom: 18px;
+}
+.status-tiles article {
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 0;
+  gap: 11px;
   padding: 13px 15px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface-soft);
 }
-.home-stat-icon {
+.status-tile-icon {
   width: 34px;
   height: 34px;
   flex: 0 0 auto;
@@ -6086,31 +6059,47 @@ fieldset legend {
   color: var(--primary);
   background: var(--primary-soft);
 }
-.home-stat-icon.urgent {
+.status-tile-icon.urgent {
   color: var(--family);
   background: var(--family-soft);
 }
-.home-stat-icon.calendar {
+.status-tile-icon.calendar,
+.status-tile-icon.career {
   color: var(--career);
   background: var(--career-soft);
 }
-.home-stat-icon.family {
+.status-tile-icon.warm,
+.status-tile-icon.family {
   color: #775720;
   background: var(--warm-soft);
 }
-.home-system-stats strong,
-.home-system-stats small {
+.status-tiles strong,
+.status-tiles small {
   display: block;
 }
-.home-system-stats strong {
+.status-tiles strong {
   font-size: 19px;
   line-height: 1;
 }
-.home-system-stats small {
+.status-tiles small {
   margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
 }
+/* Its own breakpoints live here rather than up in the shared media blocks,
+   which come earlier in the file and would lose to the rule above. Four tiles
+   stop fitting before auto-fit would notice, and two-up beats a ragged 3 + 1. */
+@media (max-width: 760px) {
+  .status-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 540px) {
+  .status-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
 .home-command-grid,
 .home-lower-grid {
   display: grid;
@@ -6387,9 +6376,6 @@ fieldset legend {
   .home-command-pulse > strong {
     margin-top: 12px;
   }
-  .home-system-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 @media (max-width: 540px) {
   .home-command-hero {
@@ -6404,7 +6390,6 @@ fieldset legend {
   .home-command-actions > button {
     min-height: 92px;
   }
-  .home-system-stats,
   .home-area-grid,
   .home-tools > div {
     grid-template-columns: 1fr;
@@ -6537,55 +6522,6 @@ fieldset legend {
 }
 .documents-quick-actions small {
   align-self: start;
-  color: var(--muted);
-  font-size: 12px;
-}
-.documents-dashboard-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 11px;
-}
-.documents-dashboard-stats article {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 13px 15px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--surface-soft);
-}
-.documents-dashboard-stats article > span {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  color: var(--primary);
-  background: var(--primary-soft);
-}
-.documents-dashboard-stats article > span.urgent {
-  color: var(--family);
-  background: var(--family-soft);
-}
-.documents-dashboard-stats article > span.warm {
-  color: #775720;
-  background: var(--warm-soft);
-}
-.documents-dashboard-stats article > span.career {
-  color: var(--career);
-  background: var(--career-soft);
-}
-.documents-dashboard-stats strong,
-.documents-dashboard-stats small {
-  display: block;
-}
-.documents-dashboard-stats strong {
-  font-size: 19px;
-  line-height: 1;
-}
-.documents-dashboard-stats small {
-  margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
 }
@@ -6846,8 +6782,7 @@ fieldset legend {
   }
 }
 @media (max-width: 700px) {
-  .documents-quick-actions,
-  .documents-dashboard-stats {
+  .documents-quick-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -7017,55 +6952,6 @@ fieldset legend {
   font-size: 16px;
 }
 .self-energy-scale span {
-  color: var(--muted);
-  font-size: 12px;
-}
-.self-dashboard-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 11px;
-}
-.self-dashboard-stats article {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 13px 15px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--surface-soft);
-}
-.self-dashboard-stats article > span {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  color: var(--primary);
-  background: var(--primary-soft);
-}
-.self-dashboard-stats article > span.urgent {
-  color: var(--family);
-  background: var(--family-soft);
-}
-.self-dashboard-stats article > span.warm {
-  color: #775720;
-  background: var(--warm-soft);
-}
-.self-dashboard-stats article > span.career {
-  color: var(--career);
-  background: var(--career-soft);
-}
-.self-dashboard-stats strong,
-.self-dashboard-stats small {
-  display: block;
-}
-.self-dashboard-stats strong {
-  font-size: 19px;
-  line-height: 1;
-}
-.self-dashboard-stats small {
-  margin-top: 4px;
   color: var(--muted);
   font-size: 12px;
 }
@@ -7271,9 +7157,6 @@ fieldset legend {
   }
 }
 @media (max-width: 680px) {
-  .self-dashboard-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .self-practice-overview > div,
   .self-direction-card > div {
     grid-template-columns: 1fr;

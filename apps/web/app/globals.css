@@ -553,7 +553,7 @@ h3 {
 }
 .outcome-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
   margin-bottom: 22px;
 }
@@ -1892,18 +1892,22 @@ fieldset legend {
   color: var(--primary);
   font-size: 12px;
 }
-.calendar-master-card {
+/* Calendar and VAULT open with the same card. It is defined once so the two
+   cannot drift a pixel apart again — which is exactly what they had done. */
+.calendar-master-card,
+.vault-master-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
   margin-bottom: 13px;
-  padding: 17px 19px;
+  padding: 19px 21px;
   border: 1px solid #c6dac9;
-  border-radius: 19px;
+  border-radius: 20px;
   background: linear-gradient(135deg, var(--primary-soft), #f5f9f6);
 }
-.calendar-master-icon {
+.calendar-master-icon,
+.vault-master-icon {
   width: 42px;
   height: 42px;
   display: grid;
@@ -1915,8 +1919,9 @@ fieldset legend {
 .calendar-master-card .kicker {
   margin: 0;
 }
-.calendar-master-card h2 {
-  margin: 2px 0;
+.calendar-master-card h2,
+.vault-master-card h2 {
+  margin: 3px 0 1px;
 }
 .calendar-master-card p {
   margin: 0;
@@ -1927,9 +1932,10 @@ fieldset legend {
   display: flex;
   gap: 8px;
 }
-.calendar-master-stats span {
-  min-width: 76px;
-  padding: 8px 10px;
+.calendar-master-stats span,
+.vault-master-stats span {
+  min-width: 84px;
+  padding: 9px 11px;
   border: 1px solid rgba(49, 95, 75, 0.14);
   border-radius: 11px;
   color: var(--muted);
@@ -2070,9 +2076,10 @@ fieldset legend {
   color: var(--muted);
   font-size: 12px;
 }
-.calendar-provider-mark {
-  width: 34px;
-  height: 34px;
+.calendar-provider-mark,
+.vault-provider-mark {
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border-radius: 11px;
@@ -2137,7 +2144,7 @@ fieldset legend {
 .calendar-connection-panel {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) minmax(220px, 0.55fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) minmax(230px, 0.55fr) auto;
   align-items: start;
   gap: 14px;
   padding: 22px;
@@ -2157,8 +2164,10 @@ fieldset legend {
   color: var(--muted);
   font-size: 12px;
 }
-.calendar-auth-status {
+.calendar-auth-status,
+.vault-auth-status {
   display: inline-flex;
+  gap: 4px;
   margin-top: 10px;
   padding: 3px 8px;
   border-radius: 999px;
@@ -2167,11 +2176,13 @@ fieldset legend {
   font-size: 12px;
   font-weight: 750;
 }
-.calendar-auth-status.active {
+.calendar-auth-status.active,
+.vault-auth-status.active {
   color: var(--primary);
   background: var(--primary-soft);
 }
-.calendar-auth-status.error {
+.calendar-auth-status.error,
+.vault-auth-status.error {
   color: #a34d45;
   background: #f9e9e6;
 }
@@ -2816,32 +2827,10 @@ fieldset legend {
   align-items: center;
   gap: 5px;
 }
-.vault-master-card {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 13px;
-  padding: 19px 21px;
-  border: 1px solid #c9d7d0;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #edf5f1, #fafcfb);
-}
-.vault-master-icon {
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  color: white;
-  background: #223d33;
-  box-shadow: 0 9px 22px rgba(34, 61, 51, 0.18);
-}
 .vault-master-card .kicker {
   margin: 0;
 }
 .vault-master-card h2 {
-  margin: 3px 0 1px;
   letter-spacing: 0.08em;
 }
 .vault-master-card p {
@@ -2852,16 +2841,6 @@ fieldset legend {
 .vault-master-stats {
   display: flex;
   gap: 8px;
-}
-.vault-master-stats span {
-  min-width: 84px;
-  padding: 9px 11px;
-  border: 1px solid rgba(34, 61, 51, 0.12);
-  border-radius: 11px;
-  color: var(--muted);
-  background: rgba(255, 255, 255, 0.74);
-  font-size: 12px;
-  text-align: center;
 }
 .vault-master-stats strong {
   display: block;
@@ -2961,8 +2940,8 @@ fieldset legend {
 }
 .vault-provider-grid > button:hover,
 .vault-provider-grid > button.active {
-  border-color: #b7cec2;
-  background: #edf5f1;
+  border-color: #c6dac9;
+  background: var(--primary-soft);
 }
 .vault-provider-grid .vault-provider-mark {
   grid-row: 1 / 3;
@@ -2980,15 +2959,6 @@ fieldset legend {
 .vault-provider-grid small {
   color: var(--muted);
   font-size: 12px;
-}
-.vault-provider-mark {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border-radius: 11px;
-  color: #246b43;
-  background: #e4f3e9;
 }
 .vault-provider-mark.onedrive {
   color: #27659b;
@@ -3086,30 +3056,10 @@ fieldset legend {
   color: var(--muted);
   font-size: 12px;
 }
-.vault-auth-status {
-  display: inline-flex;
-  margin-top: 10px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  color: #8a6428;
-  background: var(--warm-soft);
-  font-size: 12px;
-  font-weight: 750;
-}
-.vault-auth-status.active {
-  gap: 4px;
-  color: #246b43;
-  background: #e4f3e9;
-}
 .vault-auth-status.syncing,
 .vault-auth-status.connecting {
   color: #27659b;
   background: #e2eff9;
-}
-.vault-auth-status.error {
-  gap: 4px;
-  color: #a14036;
-  background: #fae9e6;
 }
 .vault-connection-copy .vault-setup-note {
   max-width: 560px;
@@ -3991,13 +3941,12 @@ fieldset legend {
      merged the hiding into the padding rule below it. */
   .brand > span:last-child,
   .brand strong,
+  .brand-edit,
   .nav-list a span,
-  .workspace-switch button span {
+  /* The sidebar's switch, not every switch: the Messages one wears the same
+     class in the middle of a modal that has room for words. */
+  .sidebar .workspace-switch button span {
     display: none;
-  }
-  .workspace-switch {
-    grid-template-columns: 1fr;
-    gap: 2px;
   }
   .brand {
     padding-inline: 10px;
@@ -4014,13 +3963,15 @@ fieldset legend {
   .career-trail > div {
     grid-template-columns: repeat(3, 1fr);
   }
-  .calendar-provider-grid {
+  .calendar-provider-grid,
+  .vault-provider-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .calendar-connect-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .calendar-connection-panel {
+  .calendar-connection-panel,
+  .vault-connection-panel {
     grid-template-columns: auto minmax(0, 1fr) auto;
   }
   .calendar-sync-controls {
@@ -4075,7 +4026,6 @@ fieldset legend {
     padding: 22px 15px 100px;
   }
   .today-hero,
-  .outcome-grid,
   .two-column,
   .two-column.uneven,
   .module-grid,
@@ -4609,9 +4559,6 @@ fieldset legend {
 /* Visual consistency and readability pass */
 .page-intro h1 {
   text-transform: none;
-}
-.outcome-grid {
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 .snapshot-main p,
 .soft-notice,
@@ -5432,8 +5379,17 @@ fieldset legend {
     min-height: 0;
     border-radius: 20px;
   }
+  /* Title, switch and close do not fit on one line of a phone. The switch
+     takes a row of its own rather than losing its labels, which is what it
+     used to do — two unlabelled icons are not a switch. */
   .message-center-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
     padding: 15px;
+  }
+  .message-workspace-switch {
+    grid-row: 2;
+    grid-column: 1 / -1;
   }
   .message-center-body {
     grid-template-columns: 1fr;
@@ -8236,9 +8192,6 @@ fieldset legend {
 .message-workspace-switch button span {
   overflow: visible;
 }
-.message-workspace-switch button {
-  padding: 7px 6px;
-}
 .directory-detail {
   display: grid;
   gap: 14px;
@@ -8270,7 +8223,10 @@ fieldset legend {
   border-radius: 14px;
   background: var(--surface);
 }
-.directory-member-list article > span {
+/* The avatar, which is the first cell — not every span in the row. Unscoped,
+   this also caught the role-and-remove controls and crushed them into a 34px
+   square that spilled out of the row. */
+.directory-member-list article > span:first-child {
   width: 34px;
   height: 34px;
   display: grid;
@@ -8295,8 +8251,11 @@ fieldset legend {
 }
 .directory-member-list div > small {
   display: block;
+  overflow: hidden;
   color: var(--muted);
   font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .directory-member-list em {
   color: var(--muted);
@@ -8471,6 +8430,19 @@ fieldset legend {
   background: white;
   color: var(--text);
   font-size: 12px;
+}
+/* On a phone the role and the remove button do not fit beside a name and an
+   email address: three columns became a wrapped name with the address running
+   underneath the dropdown. They take a line of their own instead. */
+@media (max-width: 760px) {
+  .directory-member-list article {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+  .teams-member-actions,
+  .directory-member-list em {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
 }
 .teams-add-member {
   margin-top: 12px;

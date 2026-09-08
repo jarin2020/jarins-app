@@ -253,21 +253,25 @@ function LifeModule({
         }
         description={currentModule.description}
       />
-      <nav className="subnav" aria-label={`${currentModule.label} sections`}>
-        {subnav[root]?.map((item) => {
-          const part = item.toLowerCase().replaceAll(" ", "-");
-          const href = part === "overview" ? `/${root}` : `/${root}/${part}`;
-          return (
-            <Link
-              key={item}
-              href={href}
-              className={(subsection ?? "overview") === part ? "active" : ""}
-            >
-              {item}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Not every module divides into sections. Rendering the bar anyway left
+          an empty bordered pill under the title on Teams, My Work and Today. */}
+      {(subnav[root]?.length ?? 0) > 0 && (
+        <nav className="subnav" aria-label={`${currentModule.label} sections`}>
+          {subnav[root]!.map((item) => {
+            const part = item.toLowerCase().replaceAll(" ", "-");
+            const href = part === "overview" ? `/${root}` : `/${root}/${part}`;
+            return (
+              <Link
+                key={item}
+                href={href}
+                className={(subsection ?? "overview") === part ? "active" : ""}
+              >
+                {item}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
       {root === "family" && !subsection && (
         <FamilyOverview records={sectionRecords} />
       )}
